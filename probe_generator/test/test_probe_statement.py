@@ -40,6 +40,17 @@ class TestProbeStatement(unittest.TestCase):
                     "\tABC # exon[\n1\n] -    20/DEF#intron[3]+30")
                 )
 
+    def test_alphanumerics_and_punctuation_are_valid_in_gene_names(self):
+        """
+        Certain punctuation characters as well as alphanumerics are valid in
+        the names of genes.
+
+        """
+        try:
+            statement.parse("abc123#exon[1] -1 / b.a/n_a-na#intron[2] -3")
+        except statement.InvalidStatement:
+            self.fail("Statement could not be parsed")
+
     # In the names of the following tests, elements of a statement are
     # 'globbable' if they can be replaced by the '*' character.
     def test_probe_statement_genes_are_not_globbable(self):

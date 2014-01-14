@@ -6,7 +6,7 @@ import re
 
 _PROBE_STATEMENT = r""" # The regex for one side of a probe statement
         \s*             # non-significant whitespace
-        ([a-z-_./]+)    # gene name
+        ([a-z0-9-_./]+) # gene name
         \s*\#\s*        # hash-separator
         ([a-z]+|\*)     # feature name
         \s*\[\s*        # bracket-delimiter
