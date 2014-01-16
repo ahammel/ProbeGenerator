@@ -66,16 +66,15 @@ class TestExons(unittest.TestCase):
     def test_exons_returns_exon_position_tuples(self):
         """
         Given a properly-formatted UCSC table row, annotations.exons returns a
-        list of tuples of the cardinality of the exon, the exon's start
-        position and the exon's end position.
+        list of tuples the exon's start position and the exon's end position.
 
         """
         row = {'exonStarts': '10,30,50,', 'exonEnds': '20,40,60,'}
         self.assertEqual(
                 annotation.exons(row),
-                [(1, 10, 20),
-                 (2, 30, 40),
-                 (3, 50, 60)])
+                [(10, 20),
+                 (30, 40),
+                 (50, 60)])
 
     def test_exons_raises_FormattingError_on_empty_dictionary(self):
         message = "key 'exonStarts' not in fields: \[\]"
@@ -125,7 +124,7 @@ class TestAnnotationValidation(unittest.TestCase):
         try:
             mock_row, = tuple(matching_features)
             exons = annotation.exons(mock_row)
-            self.assertEqual(exons, [(1, 2, 3)])
+            self.assertEqual(exons, [(2, 3)])
         except ValueError as error:
             self.fail(
                     "Unexpected number of mock genes: {}".format(error))
