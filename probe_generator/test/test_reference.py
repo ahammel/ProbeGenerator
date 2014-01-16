@@ -2,6 +2,7 @@ import unittest
 import os
 
 import probe_generator.reference as reference
+from probe_generator.test.test_constants import VALIDATION_DATA_DIR
 
 MOCK_GENOME_FILE = [ # input is any iter of strings
     (">1 CM000663.1 Homo sapiens chromosome 1, "
@@ -22,13 +23,7 @@ MOCK_REFERENCE_GENOME = {
 # The test production genome file is a file with 1% of the sequence of the
 # actual genome reference in production, not including the unmapped contigs
 PRODUCTION_GENOME_FILE = os.path.join(
-        "/",
-        "genesis",
-        "scratch",
-        "validations",
-        "test_probe_generator",
-        "test_genome.fa"
-        )
+        VALIDATION_DATA_DIR, "test_genome.fa")
 
 
 class TestReferenceBases(unittest.TestCase):
