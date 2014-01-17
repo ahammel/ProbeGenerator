@@ -2,6 +2,7 @@
 
 """
 import re
+import itertools
 
 
 _PROBE_STATEMENT = r""" # The regex for one side of a probe statement
@@ -77,6 +78,62 @@ def parse(probe_statement):
             }
 
 
+def expand(specification, left_features=None, right_features=None):
+    """Yield fully-realized probe statements.
+
+    Given a probe_statement with globs, iterate through all the possible
+    interpretations of that statement.
+
+    `right_features` and `left_features` are the the total number of features
+    expected in specification['feature1'] and specification['feature2'],
+    respectively. These arguments must be specified when expaning a
+    specification with the feature number globbed.
+
+    Fully realized probe statements may have a glob value for 'bases'.
+
+    If the statement has no globs, return a generator containing only that
+    statement.
+
+    WARNING: globbing feature types is not supported. In fact, exons are the
+    only feature that are supported.
+
+    """
+    fields = [] # Globbed fields
+    values = [] # Possible values for globbed fields
+
+    if specification['side1'] == '*':
+        fields.append('side1')
+        values.append(('start', 'end'))
+    if specification['side2'] == '*':
+        fields.append('side2')
+        values.append(('start', 'end'))
+
+    feature_1, feature_number_1 = specification['feature1']
+    feature_2, feature_number_2 = specification['feature2']
+
+    if feature_number_1 == '*':
+        if left_features is None:
+            raise ExpandError(
+                    "number of features must be specified "
+                    "when feature number is globbed")
+        fields.append('feature1')
+        values.append(tuple((feature_1, n+1) for n in range(left_features)))
+    if feature_number_2 == '*':
+        if right_features is None:
+            raise ExpandError(
+                    "number of features must be specified "
+                    "when feature number is globbed")
+        fields.append('feature2')
+        values.append(tuple((feature_2, n+1) for n in range(right_features)))
+
+    if fields:
+        for parameters in itertools.product(*values):
+            new_parameters = dict(zip(fields, parameters))
+            yield dict(specification, **new_parameters)
+    else:
+        yield specification
+
+
 def _maybe_int(string):
     """Try to parse the `string` to an `int`. Return the string if this fails.
 
@@ -89,5 +146,11 @@ def _maybe_int(string):
 
 class InvalidStatement(Exception):
     """Raised when a probe statement is poorly formatted.
+
+    """
+
+
+class ExpandError(Exception):
+    """Raised when `expand` has insufficient information to complete.
 
     """
