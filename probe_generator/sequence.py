@@ -13,7 +13,8 @@ def sequence_range(specification, row_1, row_2):
 
     `specification` is a probe specification, such as is returned by
     `probe_statement.parse`. The `specification` must be fully-realized (i.e.,
-    no globs) `row_1` and `row_2` rows from a UCSC annotation table.
+    no globs except int the 'bases' field). `row_1` and `row_2` are rows from a
+    UCSC annotation table.
 
     Returns a dict in the format:
 
@@ -73,11 +74,16 @@ def _get_base_positions(specification, row, row_number):
                     number=which_exon,
                     length=len(exon_postitions)))
 
-    assert side in ('start', 'end')
-    if side == 'start':
+    if bases == '*':
+        return exon_start, exon_end
+    elif side == 'start':
         return exon_start, exon_start+bases
-    else:
+    elif side == 'end':
         return exon_end-bases, exon_end
+    else:
+        # unreachable
+        assert False, ("specification['side'] not in ('start', 'end')\n"
+                       "That's bad. Contact the maintainer")
 
 
 def _get_rev_comp_flag(specification, row_1, row_2):

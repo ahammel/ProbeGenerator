@@ -86,6 +86,16 @@ class TestSequenceRanges(unittest.TestCase):
                 ('2', 42, 62))
         self.assertTrue('reverse' in range_spec)
 
+    def test_sequence_range_returns_entire_feature_when_bases_globbed(self):
+        self.probe_specification['bases1'] = '*'
+        range_spec = sequence.sequence_range(
+                self.probe_specification,
+                self.feature_1,
+                self.feature_2)
+        self.assertEqual(
+                range_spec['range_1'],
+                ('1', 50, 150))
+
     def test_rev_comp_True_when_strands_opposite_and_sides_opposite(self):
         # This is the case by default
         self.assert_reverse_complement_flag_equals(True)
