@@ -75,12 +75,14 @@ def exons(row):
 
     Given a dictionary with this data, we return of a list of tuples:
 
-        (cardinality, exonStart, exonEnd)
+        (exonStart, exonEnd)
+
+    in the same order as was given in the strings
 
     E.g.:
 
-        >>> exons({'exonStarts': '10,', 'exonEnds': '20,'})
-        [(1, 10, 20)]
+        >>> exons({'exonStarts': '10,15', 'exonEnds': '20,25'})
+        [(10, 20), (15, 25)]
 
     Raises a FormattingError when the `row` does not appear to come from a
     valid UCSC gene table.
@@ -93,7 +95,6 @@ def exons(row):
         raise FormattingError(
                 "key {!s} not in fields: {!r}".format(
                     error, list(row.keys())))
-    index = 1
     positions = []
     for start, end in zip(exon_starts, exon_ends):
         if start != '' and end != '':
@@ -104,8 +105,7 @@ def exons(row):
                         "unexpected values for 'exonStarts' and 'exonEnds' "
                         "fields: {!r} and {!r}".format(
                             row['exonStarts'], row['exonEnds']))
-            positions.append((index, start, end))
-            index += 1
+            positions.append((start, end))
     return positions
 
 
