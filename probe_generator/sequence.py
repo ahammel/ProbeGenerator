@@ -44,9 +44,13 @@ def sequence_range(specification, row_1, row_2):
     reverse_complement_flag = _get_rev_comp_flag(
             specification, row_1, row_2)
 
-    return {'range_1': (left_chromosome, left_start, left_end),
-            'range_2': (right_chromosome, right_start, right_end),
-            'reverse': reverse_complement_flag}
+    return {'chromosome1': left_chromosome,
+            'start1':      left_start,
+            'end1':        left_end,
+            'chromosome2': right_chromosome,
+            'start2':      right_start,
+            'end2':        right_end,
+            'inversion': reverse_complement_flag}
 
 
 def _get_base_positions(specification, row, row_number):
@@ -77,9 +81,9 @@ def _get_base_positions(specification, row, row_number):
     if bases == '*':
         return exon_start, exon_end
     elif side == 'start':
-        return exon_start, exon_start+bases
+        return exon_start, (exon_start + bases - 1)
     elif side == 'end':
-        return exon_end-bases, exon_end
+        return (exon_end - bases - 1), exon_end
     else:
         # unreachable
         assert False, ("specification['side'] not in ('start', 'end')\n"

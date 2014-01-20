@@ -55,7 +55,7 @@ class TestSequenceRanges(unittest.TestCase):
 
     def assert_reverse_complement_flag_equals(self, flag):
         """Call `sequence.sequence_range` on the internal feature and
-        probe_specification objects and assert that the 'reverse' value of the
+        probe_specification objects and assert that the 'inversion' value of the
         return value is equal to 'flag'.
 
         """
@@ -63,7 +63,7 @@ class TestSequenceRanges(unittest.TestCase):
                 self.probe_specification,
                 self.feature_1,
                 self.feature_2)
-        self.assertEqual(range_spec['reverse'], flag)
+        self.assertEqual(range_spec['inversion'], flag)
 
 
     def test_sequence_range_returns_incusive_ranges_and_rev_comp_flag(self):
@@ -79,12 +79,14 @@ class TestSequenceRanges(unittest.TestCase):
                 self.feature_1,
                 self.feature_2)
         self.assertEqual(
-                range_spec['range_1'],
-                ('1', 50, 100))
-        self.assertEqual(
-                range_spec['range_2'],
-                ('2', 42, 62))
-        self.assertTrue('reverse' in range_spec)
+                range_spec,
+                {'chromosome1': '1',
+                 'start1':      50,
+                 'end1':        99,
+                 'chromosome2': '2',
+                 'start2':      41,
+                 'end2':        62,
+                 'inversion':   True})
 
     def test_sequence_range_returns_entire_feature_when_bases_globbed(self):
         self.probe_specification['bases1'] = '*'
@@ -93,7 +95,9 @@ class TestSequenceRanges(unittest.TestCase):
                 self.feature_1,
                 self.feature_2)
         self.assertEqual(
-                range_spec['range_1'],
+                (range_spec['chromosome1'],
+                 range_spec['start1'],
+                 range_spec['end1']),
                 ('1', 50, 150))
 
     def test_rev_comp_True_when_strands_opposite_and_sides_opposite(self):
