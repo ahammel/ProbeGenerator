@@ -11,11 +11,11 @@ class TestCoordinateStatementParse(unittest.TestCase):
         self.statement = statement.parse("1:100-10/2:200+20")
         self.specification = {
                   "chromosome1": '1',
-                  "start1":       90,
+                  "start1":       91,
                   "end1":         100,
                   "chromosome2":  '2',
                   "start2":       200,
-                  "end2":         220}
+                  "end2":         219}
 
     def test_parse_simple_coordinate_statement(self):
          self.assertEqual(
