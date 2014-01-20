@@ -16,6 +16,15 @@ from docopt import docopt
 
 VERSION = '0.0'
 
+_COMPLEMENT = str.maketrans('acgtACGT', 'tgcaTGCA')
+
+
+def reverse_complement(string):
+    """Return the reverse-complement of a string of nucleotides.
+
+    """
+    return ''.join(reversed(string.translate(_COMPLEMENT)))
+
 
 def print_fasta(head, sequence):
     """Print a single string in FASTA format.
@@ -38,6 +47,8 @@ def bases_from_coordinate(coordinate, ref_genome):
             coordinate['chromosome2'],
             coordinate['start2'],
             coordinate['end2'])
+    if coordinate['inversion']:
+        second_bases = reverse_complement(second_bases)
     return first_bases + second_bases
 
 
