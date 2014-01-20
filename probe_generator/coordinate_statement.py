@@ -41,19 +41,17 @@ def parse(statement):
          'end(1|2):       int
         }
 
-    Specifications are interpreted as 1-based inclusive ranges. For example,
-    bases 1-10 on chromsome '1' would be the first ten bases of the first
-    chromsome. Chromsome '1' from 0-10 is not a valid range.
+    'start' and 'end' values in the specification are 1-based inclusive ranges.
 
     Example:
 
         >>> parse("1:100-10/2:200+20")
         {"chromosome1":  "1",
-         "start1":       90,
+         "start1":       89,
          "end1":         100,
          "chromosome2":  "2",
          "start2":       200,
-         "end2":         220}
+         "end2":         219}
 
     """
     match = _COORDINATE_STATEMENT_REGEX.match(statement)
@@ -87,9 +85,9 @@ def _parse_range(start, operation, bases):
 
     """
     if operation == '+':
-        return int(start), int(start) + int(bases)
+        return int(start), (int(start) + int(bases) - 1)
     elif operation == '-':
-        return int(start) - int(bases), int(start)
+        return (int(start) - int(bases) + 1), int(start)
     else:
         assert False, ("Operation not in '[+-]'.\n"
                        "That's bad. Contact the maintainer.")
