@@ -106,6 +106,8 @@ def exons(row):
                         "fields: {!r} and {!r}".format(
                             row['exonStarts'], row['exonEnds']))
             positions.append((start, end))
+    if row['strand'] == '-':
+        positions.reverse()
     return positions
 
 

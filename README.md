@@ -1,4 +1,4 @@
-probe-generator: make short sequences of virtual fusion events
+probe-generator: make short sequences to probe for fusion events
 
 `probe-generator` is a tool to make short sequences of base pairs representing
 fusion events. These probes can be used to screen high-throughput sequencing
@@ -36,6 +36,46 @@ field, the interpretation is that the entire feature is desired.
 
 Whitespace is not significant.
 
+*EXONS ARE CURRENTLY THE ONLY FEATURE WHICH IS SUPPORTED*
+
+The exact genomic location of the breakpoints of the fusion event can also be
+specified directly using the coordinate-statement format:
+
+    "chr:breakpoint(+|-)bases/chr:breakpoint(+|-)bases"
+
+No globbing is allowed in coordinate statements. Whitespace is ignored.
+
+## Ambiguity
+
+Probe statements—unlike coordinate statements—do not necessarily specify a
+unique location in the genome. When a probe statement could refer to any of
+several genomic locations, `probe-generator` returns probes for every possible
+location.
+
+A probe statement can be ambiguous for three reasons:
+
+    1. Globbing
+    2. Alternative transcripts
+    3. Non-unique gene names
+
+Consider the following probe statement:
+
+    FOO#exon[3] -25 / BAR#exon[*] +25
+
+Imainge that FOO is alternatively spliced, so that there are two different
+exons that could possibly be called the third. Furthermore, we will assume that
+the symbol BAR identifies two different genes, each with two exons. In this
+case, eight different probes will be generated:
+
+    > FOO exon 3[a] / BAR[a] exon 1
+    > FOO exon 3[a] / BAR[a] exon 2
+    > FOO exon 3[a] / BAR[b] exon 1
+    > FOO exon 3[a] / BAR[b] exon 2
+    > FOO exon 3[b] / BAR[a] exon 1
+    > FOO exon 3[b] / BAR[a] exon 2
+    > FOO exon 3[b] / BAR[b] exon 1
+    > FOO exon 3[b] / BAR[b] exon 2
+
 ## Examples
 
 To specifiy a probe covering the last 20 bases of the first exon of the gene
@@ -57,6 +97,36 @@ features covered:
 
     "SPAM#*[*] ** / EGGS#*[*] **"
 
+A between the 100th base pair of chromosome 1 and the 200th base pair of
+chromsome Y, with 25 bases on either side:
+
+    "1:100-25/Y:200+25"
+
 # Usage
 
-[comment]: TODO
+    probe-generator --statement STMT  --genome GENOME --annotation FILE...
+    probe-generator --coordinate COORD  --genome GENOME
+
+    Options:
+        -c COORD --coordinate=COORD     a file contatinng coordinate statements
+        -s STMT --statement=STMT        a file containg fusion statements
+        -g GENOME --genome=GENOME       the Ensembl reference genome
+                                        (FASTA format)
+        -a FILE --annotation=FILE       a genome annotation file in UCSC format
+
+
+Currently, the RefSeq Genes and UCSC Genes annotation files are supported. More
+than one annotation file can be specified for a single run:
+
+    $ probe-generator -s statements.txt -g genome.fa \
+                      -a refseq_genes.txt            \
+                      -a ucsc_genes.txt
+
+The resulting probes are printed to stdout in FASTA format. The titles of the
+probes are the probe statements, followed by the unique identifiers of the rows
+in the annotation file which were used, if applicable.
+
+Annotations can be downloaded from [the UCSC table browser][ucsc_tables].
+
+
+[ucsc_tables]: http://genome.ucsc.edu/cgi-bin/hgTables

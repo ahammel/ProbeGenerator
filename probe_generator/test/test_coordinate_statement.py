@@ -15,7 +15,8 @@ class TestCoordinateStatementParse(unittest.TestCase):
                   "end1":         100,
                   "chromosome2":  '2',
                   "start2":       200,
-                  "end2":         219}
+                  "end2":         219,
+                  "inversion":    False}
 
     def test_parse_simple_coordinate_statement(self):
          self.assertEqual(
@@ -31,3 +32,9 @@ class TestCoordinateStatementParse(unittest.TestCase):
         message = "could not parse coordinate statement 'banana'"
         with self.assertRaisesRegex(statement.InvalidFormat, message):
             statement.parse('banana')
+
+    def test_parse_returns_an_inversion_when_operations_equal(self):
+        self.specification['inversion'] = True
+        self.assertEqual(
+                statement.parse("1:91+10/2:200+20"),
+                self.specification)
