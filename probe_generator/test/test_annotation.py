@@ -63,18 +63,31 @@ class TestExons(unittest.TestCase):
     """Test cases for the annotation.exons function
 
     """
+    def setUp(self):
+        self.row = {
+                'strand': '+',
+                'exonStarts': '10,30,50,',
+                'exonEnds': '20,40,60,'}
+
     def test_exons_returns_exon_position_tuples(self):
         """
         Given a properly-formatted UCSC table row, annotations.exons returns a
         list of tuples the exon's start position and the exon's end position.
 
         """
-        row = {'exonStarts': '10,30,50,', 'exonEnds': '20,40,60,'}
         self.assertEqual(
-                annotation.exons(row),
+                annotation.exons(self.row),
                 [(10, 20),
                  (30, 40),
                  (50, 60)])
+
+    def test_exons_returns_reversed_positions_when_strand_minus(self):
+        self.row['strand'] = '-'
+        self.assertEqual(
+                annotation.exons(self.row),
+                [(50, 60),
+                 (30, 40),
+                 (10, 20)])
 
     def test_exons_raises_FormattingError_on_empty_dictionary(self):
         message = "key 'exonStarts' not in fields: \[\]"

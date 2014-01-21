@@ -12,7 +12,7 @@ def mock_exons(feature):
     if feature['feature_number_sentinel'] == 1:
         return [(50, 150)]
     elif feature['feature_number_sentinel'] == 2:
-        return [(1, 10), (20, 62)]
+        return [(200, 300), (20, 62)]
 
 
 class TestSequenceRanges(unittest.TestCase):
@@ -41,8 +41,8 @@ class TestSequenceRanges(unittest.TestCase):
                 'feature_number_sentinel': 2,
                 'strand': '-',
                 'chrom': 'chr2',
-                'exonStarts': '1,20,',
-                'exonEnds':  '10,62,'
+                'exonStarts': '20,200,', # Feature is on '-' strand, so exon
+                'exonEnds':  '62,300'    # numbers are reversed relative to '+'
                 }
 
         self.patcher = mock.patch(
