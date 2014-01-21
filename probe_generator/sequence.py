@@ -50,7 +50,7 @@ def sequence_range(specification, row_1, row_2):
             'chromosome2': right_chromosome,
             'start2':      right_start,
             'end2':        right_end,
-            'inversion': reverse_complement_flag}
+            'inversion':   reverse_complement_flag}
 
 
 def _get_base_positions(specification, row, row_number):
@@ -65,6 +65,7 @@ def _get_base_positions(specification, row, row_number):
                 'feature{}'.format(row_number)]
         bases = specification['bases{}'.format(row_number)]
         side = specification['side{}'.format(row_number)]
+        strand = row['strand']
     except KeyError as error:
         raise InterfaceError(str(error))
 
@@ -80,14 +81,25 @@ def _get_base_positions(specification, row, row_number):
 
     if bases == '*':
         return exon_start, exon_end
-    elif side == 'start':
+    elif (side == 'start') == (strand == '+'): # <-- see below
         return exon_start, (exon_start + bases - 1)
-    elif side == 'end':
-        return (exon_end - bases - 1), exon_end
     else:
-        # unreachable
-        assert False, ("specification['side'] not in ('start', 'end')\n"
-                       "That's bad. Contact the maintainer")
+        return (exon_end - bases - 1), exon_end
+    # In UCSC genome files, the starting base pairs of exons are given from
+    # left to right across the '+' strand of the chromosome, regardless of the
+    # orientation of the gene. The locations of the 'start' and the 'end' of an
+    # exon are switched for a gene on the minus strand.
+    #
+    # The interpretation of the weird-looking conditional pointed out above is
+    # this: the _rightmost_ set of base pairs is the _start_ of a feature on
+    # the plus strand, or the _end_ of a feature on the minus strand:
+    #
+    #                 start |                end |
+    #                       --------------------->
+    #       + .....................................................
+    #       - .....................................................
+    #                       <---------------------
+    #                       ^ end                ^ start
 
 
 def _get_rev_comp_flag(specification, row_1, row_2):
