@@ -33,14 +33,14 @@ class TestSequenceRanges(unittest.TestCase):
         self.feature_1 = {
                 'feature_number_sentinel': 1, # Fake field for mocking purposes
                 'strand': '+',
-                'chromosome': 'chr1',
+                'chrom': 'chr1',
                 'exonStarts': '50,',
                 'exonEnds':  '150,'
                 }
         self.feature_2 = {
                 'feature_number_sentinel': 2,
                 'strand': '-',
-                'chromosome': 'chr2',
+                'chrom': 'chr2',
                 'exonStarts': '1,20,',
                 'exonEnds':  '10,62,'
                 }

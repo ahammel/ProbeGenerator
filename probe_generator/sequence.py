@@ -33,8 +33,8 @@ def sequence_range(specification, row_1, row_2):
     of the range of the the `row`.
 
     """
-    left_chromosome = row_1['chromosome'].lstrip('chr')
-    right_chromosome = row_2['chromosome'].lstrip('chr')
+    left_chromosome = row_1['chrom'].lstrip('chr')
+    right_chromosome = row_2['chrom'].lstrip('chr')
 
     left_start, left_end = _get_base_positions(
             specification, row_1, 1)
