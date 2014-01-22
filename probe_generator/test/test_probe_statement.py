@@ -1,4 +1,5 @@
 import unittest
+import re
 
 import probe_generator.probe_statement as statement
 
@@ -8,14 +9,14 @@ class AbstractProbeStatementTestCase(unittest.TestCase):
 
     """
     def setUp(self):
-        self.probe_statement = "ABC#exon[1] -20 / DEF#intron[3] +30"
+        self.probe_statement = "ABC#exon[1] -20 / DEF#exon[3] +30"
         self.probe_specification = {
                     'gene1':    'ABC',
                     'feature1': ('exon', 1),
                     'side1':    'end',
                     'bases1':   20,
                     'gene2':    'DEF',
-                    'feature2': ('intron', 3),
+                    'feature2': ('exon', 3),
                     'side2':    'start',
                     'bases2':   30,
                 }
@@ -44,9 +45,9 @@ class TestProbeStatement(AbstractProbeStatementTestCase):
     def test_probe_statements_are_whitespace_insensitive(self):
         self.assertEqual(
                 statement.parse(
-                    "ABC#exon[1] -20 / DEF#intron[3] +30"),
+                    "ABC#exon[1] -20 / DEF#exon[3] +30"),
                 statement.parse(
-                    "\tABC # exon[\n1\n] -    20/DEF#intron[3]+30")
+                    "\tABC # exon[\n1\n] -    20/DEF#exon[3]+30")
                 )
 
     def test_alphanumerics_and_punctuation_are_valid_in_gene_names(self):
@@ -56,7 +57,7 @@ class TestProbeStatement(AbstractProbeStatementTestCase):
 
         """
         try:
-            statement.parse("abc123#exon[1] -1 / b.a/n_a-na#intron[2] -3")
+            statement.parse("abc123#exon[1] -1 / b.a/n_a-na#exon[2] -3")
         except statement.InvalidStatement:
             self.fail("Statement could not be parsed")
 
@@ -64,36 +65,29 @@ class TestProbeStatement(AbstractProbeStatementTestCase):
     # 'globbable' if they can be replaced by the '*' character.
     def test_probe_statement_genes_are_not_globbable(self):
         with self.assertRaises(statement.InvalidStatement):
-            statement.parse("*#exon[1] -20 / DEF#intron[3] +30")
+            statement.parse("*#exon[1] -20 / DEF#exon[3] +30")
         with self.assertRaises(statement.InvalidStatement):
-            statement.parse("ABC#exon[1] -20 / *#intron[3] +30")
-
-    def test_probe_statement_features_are_globbable(self):
-        self.probe_specification['feature1'] = ('*', 1)
-        self.probe_specification['feature2'] = ('*', 3)
-        self.assertEqual(
-                statement.parse("ABC#*[1] -20 / DEF#*[3] +30"),
-                self.probe_specification)
+            statement.parse("ABC#exon[1] -20 / *#exon[3] +30")
 
     def test_probe_statement_feature_numbers_are_globbable(self):
         self.probe_specification['feature1'] = ('exon', '*')
-        self.probe_specification['feature2'] = ('intron', '*')
+        self.probe_specification['feature2'] = ('exon', '*')
         self.assertEqual(
-                statement.parse("ABC#exon[*] -20 / DEF#intron[*] +30"),
+                statement.parse("ABC#exon[*] -20 / DEF#exon[*] +30"),
                 self.probe_specification)
 
     def test_probe_statement_sides_are_globbable(self):
         self.probe_specification['side1'] = '*'
         self.probe_specification['side2'] = '*'
         self.assertEqual(
-                statement.parse("ABC#exon[1] *20 / DEF#intron[3] *30"),
+                statement.parse("ABC#exon[1] *20 / DEF#exon[3] *30"),
                 self.probe_specification)
 
     def test_probe_statement_bases_are_globbable(self):
         self.probe_specification['bases1'] = '*'
         self.probe_specification['bases2'] = '*'
         self.assertEqual(
-                statement.parse("ABC#exon[1] -* / DEF#intron[3] +*"),
+                statement.parse("ABC#exon[1] -* / DEF#exon[3] +*"),
                 self.probe_specification)
 
     def test_probe_statement_glob_eveything(self):
@@ -101,15 +95,23 @@ class TestProbeStatement(AbstractProbeStatementTestCase):
         A test where everything that can be globbed is globbed.
 
         """
-        self.probe_specification['feature1'] = ('*', '*')
-        self.probe_specification['feature2'] = ('*', '*')
+        self.probe_specification['feature1'] = ('exon', '*')
+        self.probe_specification['feature2'] = ('exon', '*')
         self.probe_specification['side1'] = '*'
         self.probe_specification['side2'] = '*'
         self.probe_specification['bases1'] = '*'
         self.probe_specification['bases2'] = '*'
         self.assertEqual(
-                statement.parse("ABC#*[*] ** / DEF#*[*] **"),
+                statement.parse("ABC#exon[*] ** / DEF#exon[*] **"),
                 self.probe_specification)
+
+
+    def test_parsing_a_non_exon_features_raises_not_supported_message(self):
+        message = re.escape(
+                   "could not parse 'FOO#intron[1]+1/BAR#*[2]-1': "
+                   "currently only exons are supported")
+        with self.assertRaisesRegex(statement.InvalidStatement, message):
+            statement.parse('FOO#intron[1]+1/BAR#*[2]-1')
 
 
 class TestExpand(AbstractProbeStatementTestCase):

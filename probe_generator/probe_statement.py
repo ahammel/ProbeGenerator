@@ -40,6 +40,7 @@ def parse(probe_statement):
 
       'feature(1|2)':  The name and number of the feature e.g.: ('exon', 2)
                        ("str" or "*", int or "*")
+                       Currently only the value 'exon' is supported.
 
       'side(1|2)':     The end of the feature from which to construct the probe
                        "start", "end", or "*"
@@ -66,6 +67,11 @@ def parse(probe_statement):
      feature_number_2,
      side_2,
      bases_2) = match.groups()
+    feature_1, feature_2 = feature_1.lower(), feature_2.lower()
+    if not feature_1 == feature_2 == 'exon':
+        raise InvalidStatement("could not parse {!r}: "
+                               "currently only exons are supported".format(
+                                   probe_statement))
     return {
             'gene1':    gene_1,
             'feature1': (feature_1, _maybe_int(feature_number_1)),

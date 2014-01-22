@@ -18,8 +18,10 @@ Statements in probe lanugage are in the form:
     <gene>:    the name of the gene of interest. Acceptable characters are
                alphanumerics plus '_-/.'. Case is not significant.
 
-    <feature>: the name of the feature of interest ('exon', 'intron', etc.), or
-               '*'. Case is not significant.
+    <feature>: the name of the feature of interest ('exon', 'intron', etc.).
+               Case is not significant.
+               *CURRENTLY ONLY EXONS ARE SUPPORTED* so this field must be given
+               the value 'exon'.
 
     <number>:  the cardinality of the feature of interest (1 for the first exon,
                etc.). Must be a digit or '*'.
@@ -88,14 +90,14 @@ The same fusion, but with *any* exon of DEF:
 
     "ABC#exon[1] -20 / DEF#exon[*] +30"
 
-Any fusion between introns of FOO and BAR with exactly 40 bases covered:
+Any fusion between exons of FOO and BAR with exactly 40 bases covered:
 
-    "FOO#intron[*] *20 / BAR#intron[*] *20"
+    "FOO#exon[*] *20 / BAR#exon[*] *20"
 
-Any fusion between any two features of SPAM and EGGS, with the entirety of both
+Any fusion between any two exons of SPAM and EGGS, with the entirety of both
 features covered:
 
-    "SPAM#*[*] ** / EGGS#*[*] **"
+    "SPAM#exon[*] ** / EGGS#exon[*] **"
 
 A between the 100th base pair of chromosome 1 and the 200th base pair of
 chromsome Y, with 25 bases on either side:
