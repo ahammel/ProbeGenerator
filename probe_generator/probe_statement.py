@@ -29,7 +29,7 @@ _PROBE_STATEMENT_REGEX = re.compile(r"""
 def parse(probe_statement):
     """Return a probe specification given a statement in probe language.
 
-    Parses the `probe_statement` string, returning a dictionary specifiying the
+    Parses the `probe_statement` string, returning a dictionary specifying the
     location and breakpoints of the fusion event specified. The returned
     dictionary has eight fields, as follows:
 
