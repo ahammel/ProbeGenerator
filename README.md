@@ -16,12 +16,12 @@ Statements in probe lanugage are in the form:
 
 
     <gene>:    the name of the gene of interest. Acceptable characters are
-               alphanumerics plus '_-/.' Case is not significant.
+               alphanumerics plus '_-/.'. Case is not significant.
 
     <feature>: the name of the feature of interest ('exon', 'intron', etc.), or
-               '*' Case is not significant.
+               '*'. Case is not significant.
 
-    <number>:  the cardinality of the feature of intrest (1 for the first exon,
+    <number>:  the cardinality of the feature of interest (1 for the first exon,
                etc.). Must be a digit or '*'.
 
     <side>:    Whether to return a sequence at the start or end of the feature.
@@ -78,7 +78,7 @@ case, eight different probes will be generated:
 
 ## Examples
 
-To specifiy a probe covering the last 20 bases of the first exon of the gene
+To specify a probe covering the last 20 bases of the first exon of the gene
 ABC and the first 30 bases of the third exon of DEF, you would pass the
 following probe statement:
 
@@ -88,11 +88,11 @@ The same fusion, but with *any* exon of DEF:
 
     "ABC#exon[1] -20 / DEF#exon[*] +30"
 
-Any fusion between introns of FOO and BAR with at least 40 bases covered:
+Any fusion between introns of FOO and BAR with exactly 40 bases covered:
 
     "FOO#intron[*] *20 / BAR#intron[*] *20"
 
-Any fusion between any two features of SPAM and EGGS, with the entirity of both
+Any fusion between any two features of SPAM and EGGS, with the entirety of both
 features covered:
 
     "SPAM#*[*] ** / EGGS#*[*] **"
