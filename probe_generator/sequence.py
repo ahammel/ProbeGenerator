@@ -84,7 +84,7 @@ def _get_base_positions(specification, row, row_number):
     elif (side == 'start') == (strand == '+'): # <-- see below
         return exon_start, (exon_start + bases - 1)
     else:
-        return (exon_end - bases - 1), exon_end
+        return (exon_end - bases + 1), exon_end
     # In UCSC genome files, the starting base pairs of exons are given from
     # left to right across the '+' strand of the chromosome, regardless of the
     # orientation of the gene. The locations of the 'start' and the 'end' of an

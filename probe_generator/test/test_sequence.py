@@ -223,28 +223,28 @@ class TestSequenceRanges(unittest.TestCase):
         self.endwise_test(
                 ('start', 'start', '+', '-'),
                 {'start1': 100, 'end1': 149,
-                 'start2': 349, 'end2': 400,
+                 'start2': 351, 'end2': 400,
                  'inversion': False})
 
     def test_endwise_start_start_minus_plus(self):
         self.endwise_test(
                 ('start', 'start', '-', '+'),
-                {'start1': 149, 'end1': 200,
+                {'start1': 151, 'end1': 200,
                  'start2': 300, 'end2': 349,
                  'inversion': False})
 
     def test_endwise_start_start_minus_minus(self):
         self.endwise_test(
                 ('start', 'start', '-', '-'),
-                {'start1': 149, 'end1': 200,
-                 'start2': 349, 'end2': 400,
+                {'start1': 151, 'end1': 200,
+                 'start2': 351, 'end2': 400,
                  'inversion': True})
 
     def test_endwise_start_end_plus_plus(self):
         self.endwise_test(
                 ('start', 'end', '+', '+'),
                 {'start1': 100, 'end1': 149,
-                 'start2': 349, 'end2': 400,
+                 'start2': 351, 'end2': 400,
                  'inversion': False})
 
     def test_endwise_start_end_plus_minus(self):
@@ -257,29 +257,29 @@ class TestSequenceRanges(unittest.TestCase):
     def test_endwise_start_end_minus_plus(self):
         self.endwise_test(
                 ('start', 'end', '-', '+'),
-                {'start1': 149, 'end1': 200,
-                 'start2': 349, 'end2': 400,
+                {'start1': 151, 'end1': 200,
+                 'start2': 351, 'end2': 400,
                  'inversion': True})
 
     def test_endwise_start_end_minus_minus(self):
         self.endwise_test(
                 ('start', 'end', '-', '-'),
-                {'start1': 149, 'end1': 200,
+                {'start1': 151, 'end1': 200,
                  'start2': 300, 'end2': 349,
                  'inversion': False})
 
     def test_endwise_end_start_plus_plus(self):
         self.endwise_test(
                 ('end', 'start', '+', '+'),
-                {'start1': 149, 'end1': 200,
+                {'start1': 151, 'end1': 200,
                  'start2': 300, 'end2': 349,
                  'inversion': False})
 
     def test_endwise_end_start_plus_minus(self):
         self.endwise_test(
                 ('end', 'start', '+', '-'),
-                {'start1': 149, 'end1': 200,
-                 'start2': 349, 'end2': 400,
+                {'start1': 151, 'end1': 200,
+                 'start2': 351, 'end2': 400,
                  'inversion': True})
 
     def test_endwise_end_start_minus_plus(self):
@@ -293,20 +293,20 @@ class TestSequenceRanges(unittest.TestCase):
         self.endwise_test(
                 ('end', 'start', '-', '-'),
                 {'start1': 100, 'end1': 149,
-                 'start2': 349, 'end2': 400,
+                 'start2': 351, 'end2': 400,
                  'inversion': False})
 
     def test_endwise_end_end_plus_plus(self):
         self.endwise_test(
                 ('end', 'end', '+', '+'),
-                {'start1': 149, 'end1': 200,
-                 'start2': 349, 'end2': 400,
+                {'start1': 151, 'end1': 200,
+                 'start2': 351, 'end2': 400,
                  'inversion': True})
 
     def test_endwise_end_end_plus_minus(self):
         self.endwise_test(
                 ('end', 'end', '+', '-'),
-                {'start1': 149, 'end1': 200,
+                {'start1': 151, 'end1': 200,
                  'start2': 300, 'end2': 349,
                  'inversion': False})
 
@@ -314,7 +314,7 @@ class TestSequenceRanges(unittest.TestCase):
         self.endwise_test(
                 ('end', 'end', '-', '+'),
                 {'start1': 100, 'end1': 149,
-                 'start2': 349, 'end2': 400,
+                 'start2': 351, 'end2': 400,
                  'inversion': False})
 
     def test_endwise_end_end_minus_minus(self):
