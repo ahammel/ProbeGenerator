@@ -351,5 +351,5 @@ class TestSequenceRangesProbeStatementParseIntegration(TestSequenceRanges):
         super(TestSequenceRangesProbeStatementParseIntegration, self).setUp()
         self.probe_specification = probe_statement.parse(
                 "FOO#exon[1] +50 / BAR#exon[2] -20")
-        self.endwise_probe_specification = probe_statement.parse(
-                "LEFT#exon[1]*20/RIGHT#exon[1]*20")
+        self.endwise_specification = probe_statement.parse(
+                "LEFT#exon[1]*50/RIGHT#exon[1]*50")
