@@ -9,7 +9,7 @@ def bases(reference_genome, chromosome, start, end):
     The string of base pairs is from the `start` to `end` _inclusive_,
     where the first base of the chromosome is 1.
 
-    `reference_genome` is a dictionary relating chromsome names to base pair
+    `reference_genome` is a dictionary relating chromosome names to base pair
     sequences (which are strings). `chromosome` is a string, `start` and `end`
     are ints.
 
@@ -27,6 +27,10 @@ def bases(reference_genome, chromosome, start, end):
                 "unsupported values for `start` and `end`: "
                 "({!r}, {!r})".format(
                     start, end))
+    if start > end:
+        raise InvalidRange("unsupported values for `start` and `end`: "
+                           "({}, {}). `start` must be  <= `end`".format(
+                               start, end))
     if end-start+1 != len(bases):
         raise NonContainedRange(
                 "range [{0}:{1}] outside the "
@@ -36,9 +40,10 @@ def bases(reference_genome, chromosome, start, end):
 
 
 def reference_genome(genome):
-    """Map chromsomes to base pair sequences.
+    """Map chromosomes to base pair sequences.
 
     `genome` is a handle to a reference genome in Ensembl FASTA format.
+
     Returns a dictionary.
 
     """
@@ -67,7 +72,7 @@ def reference_genome(genome):
 
 
 class MissingChromosome(Exception):
-    """Raised when a chromsome is not present in the reference genome.
+    """Raised when a chromosome is not present in the reference genome.
 
     """
 
@@ -80,7 +85,7 @@ class InvalidRange(TypeError):
 
 class NonContainedRange(Exception):
     """Raised when the range of base pairs which is to be sliced from a
-    chromosome includes base pairs outside the chromsome.
+    chromosome includes base pairs outside the chromosome.
 
     """
 
