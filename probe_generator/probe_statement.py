@@ -102,9 +102,9 @@ def expand(specification, left_features=None, right_features=None):
     Given a probe_statement with globs, iterate through all the possible
     interpretations of that statement.
 
-    `right_features` and `left_features` are the the total number of features
+    `left_features` and `right_features` are the the total number of features
     expected in specification['feature1'] and specification['feature2'],
-    respectively. These arguments must be specified when expaning a
+    respectively. These arguments must be specified when expanding a
     specification with the feature number globbed.
 
     Fully realized probe statements may have a glob value for 'bases'.

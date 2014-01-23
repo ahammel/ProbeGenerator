@@ -22,7 +22,7 @@ def sequence_range(specification, row_1, row_2):
          'range_2': (chromosome2, start2, end2),
          'reverse': flag}
 
-    Where the chormosome, start, and end specify the genomic locations of the
+    Where the chromosome, start, and end specify the genomic locations of the
     probe sequence, and the `flag` is a boolean indicating whether or not the
     second sequence should be reverse-complemented.
 
@@ -30,7 +30,7 @@ def sequence_range(specification, row_1, row_2):
     are improperly formatted.
 
     Raises a `NoFeatureError` if the `specification` asks for a feature outside
-    of the range of the the `row`.
+    of the range of the `row`.
 
     """
     left_chromosome = row_1['chrom'].lstrip('chr')
@@ -59,7 +59,7 @@ def _get_base_positions(specification, row, row_number):
     Returns a 2-tuple of integers.
 
     """
-    exon_postitions = annotation.exons(row)
+    exon_positions = annotation.exons(row)
     try:
         feature_type, which_exon = specification[
                 'feature{}'.format(row_number)]
@@ -70,14 +70,14 @@ def _get_base_positions(specification, row, row_number):
         raise InterfaceError(str(error))
 
     try:
-        exon_start, exon_end = exon_postitions[which_exon-1] # zero-indexed list
+        exon_start, exon_end = exon_positions[which_exon-1] # zero-indexed list
     except IndexError:
         raise NoFeatureError(
                 "specification requires feature {type!r}[{number!s}], "
                 "but row specifies only {length} {type!r}(s)".format(
                     type=feature_type,
                     number=which_exon,
-                    length=len(exon_postitions)))
+                    length=len(exon_positions)))
 
     if bases == '*':
         return exon_start, exon_end
