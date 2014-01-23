@@ -43,9 +43,9 @@ def parse_ucsc_file(handle):
     """Return a csv.DictReader object relating fields of UCSC annotation files
     to values.
 
-    `handle` is an iterator of lines with to a file, which must be in the
-    standard UCSC format (i.e., tab-delimited file, first line starts with '#'
-    and specifies field names.
+    `handle` is an iterator of the lines of file, which must be in the standard
+    UCSC format (i.e., tab-delimited file, first line starts with '#' and
+    specifies field names.
 
     """
     lines = (line.lstrip('#') for line in handle)
@@ -110,6 +110,12 @@ def exons(row):
                 raise FormattingError(
                         "unexpected values for 'exonStarts' and 'exonEnds' "
                         "fields: {!r} and {!r}".format(
+                            row['exonStarts'], row['exonEnds']))
+            if start >= end:
+                raise FormattingError(
+                        "unexpected values for 'exonStarts' and 'exonEnds' "
+                        "fields: {!r} and {!r}. exonEnds values must be "
+                        "strictly greater than exonStarts".format(
                             row['exonStarts'], row['exonEnds']))
             positions.append((start, end))
     if row['strand'] == '-':
