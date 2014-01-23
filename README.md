@@ -4,6 +4,55 @@ probe-generator: make short sequences to probe for fusion events
 fusion events. These probes can be used to screen high-throughput sequencing
 libraries for evidence of the events represented by the probe.
 
+# Installation
+
+`probe-generator` requires Python v3.2 or later and the `docopt` python package
+v0.6.1 or later.
+
+If you have root permissions, installation is as easy as using `pip` or
+`easy_install` to install docopt and the runnning the `setup.py` script:
+
+    $ easy_install docopt
+    Searching for docopt
+    Best match: docopt 0.6.1
+    Processing docopt-0.6.1-py2.6.egg
+    [...]
+    $ python3 setup.py install
+    running install
+    running build
+    running build_py
+    running install_lib
+    [...]
+
+Installing in your home folder without root permissions is only slightly more
+complicated. This requires making a local directory for python packages and
+installing everything there:
+
+    $ mdkir -p $HOME/lib
+    $ echo "[easy_install]" >> ~/.pydistutils.cfg
+    $ echo "install_dir = $HOME/lib" >> ~/.pydistutils.cfg
+    $ easy_install docopt
+    Searching for docopt
+    Best match: docopt 0.6.1
+    Processing docopt-0.6.1-py2.6.egg
+    [...]
+    $ python3 setup.py install --prefix $HOME/lib
+    running install
+    running build
+    running build_py
+    running install_lib
+    [...]
+    $ export PYTHONPATH=$PTYHONPATH:$HOME/lib
+    $ export PYTHONPATH=$PYTHONPATH:$HOME/lib/python3.2/site-packages
+    # ^ Add these two lines to $HOME/.bashrc as well
+
+In either case, copy or link the script under `bin/probe-generator` to
+somewhere in your $PATH and test that everything worked:
+
+    $ probe-generator --version
+    ProbeGenerator version 0.0
+
+
 # Probe language
 
 The input to `probe-generator` consists of statements in *probe language*.
