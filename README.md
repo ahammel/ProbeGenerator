@@ -131,6 +131,15 @@ in the annotation file which were used, if applicable.
 Annotations can be downloaded from [the UCSC table browser][ucsc_tables]. Make
 sure to use the output format 'all fields from selected table'.
 
+## Performance
+
+Using the hg19 human genome reference, `probe-generator` uses about 15.5 Gb of
+memory at peak. This will run comfortably on `all.q` or `xhost08`, but I don't
+recommend trying it on your workstation unless you have a much nicer computer
+than mine.
+
+As a rule of thumb, the peak memory usage will be about 5 times the size of the
+sum of the text input (annotations and genome) on disk.
 
 
 [ucsc_tables]: http://genome.ucsc.edu/cgi-bin/hgTables
