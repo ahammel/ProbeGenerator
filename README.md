@@ -149,7 +149,7 @@ features covered:
     "SPAM#exon[*] ** / EGGS#exon[*] **"
 
 A between the 100th base pair of chromosome 1 and the 200th base pair of
-chromsome Y, with 25 bases on either side:
+chromosome Y, with 25 bases on either side:
 
     "1:100-25/Y:200+25"
 

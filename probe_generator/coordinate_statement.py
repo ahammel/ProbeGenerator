@@ -36,7 +36,7 @@ def parse(statement):
 
     Coordinate specifications are dictionaries in the format:
 
-        {'chromsome(1|2): str
+        {'chromosome(1|2): str
          'start(1|2):     int
          'end(1|2):       int
         }
