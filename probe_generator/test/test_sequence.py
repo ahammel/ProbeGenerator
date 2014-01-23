@@ -88,6 +88,16 @@ class TestSequenceRanges(unittest.TestCase):
                  'end2':        62,
                  'inversion':   True})
 
+    def test_sequence_range_returns_one_base_range_when_bases_is_1(self):
+        self.probe_specification['bases1'] = 1
+        range_spec = sequence.sequence_range(
+                self.probe_specification,
+                self.feature_1,
+                self.feature_2)
+        self.assertEqual(
+                (range_spec['start1'], range_spec['end1']),
+                (50, 50))
+
     def test_sequence_range_returns_entire_feature_when_bases_globbed(self):
         self.probe_specification['bases1'] = '*'
         range_spec = sequence.sequence_range(
