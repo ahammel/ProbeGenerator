@@ -1,7 +1,7 @@
 import unittest
 import re
 
-import probe_generator.probe_statement as statement
+from probe_generator import probe_statement as statement
 
 
 class AbstractProbeStatementTestCase(unittest.TestCase):

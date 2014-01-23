@@ -5,7 +5,7 @@ the genomic location of a probe sequence, given a row of a UCSC gene table and
 a fully-realized specification (one without wild-card characters).
 
 """
-import probe_generator.annotation as annotation
+from probe_generator import annotation
 
 
 def sequence_range(specification, row_1, row_2):
