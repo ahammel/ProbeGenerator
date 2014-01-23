@@ -55,9 +55,9 @@ def parse_ucsc_file(handle):
 def lookup_gene(gene_name, ucsc_file):
     """Yield data for features in a `uscs_file` for a specific gene.
 
-    `uscs_file` is an iterator of dictionaries giving the data from a UCSC gene
+    `ucsc_file` is an iterator of dictionaries giving the data from a UCSC gene
     file, as might be returned by `parse_ucsc_file`. Currently supported
-    formats are given in the docstring.
+    formats are given in the docstring of the `annotation` module.
 
     """
     for row in ucsc_file:
@@ -77,12 +77,18 @@ def exons(row):
 
         (exonStart, exonEnd)
 
-    in the same order as was given in the strings
+    If the 'strand' of the row is '-', the function return the exons in
+    reversed order. In this case, the first exon relative the the direction of
+    transcription (which is probably what the user means, is the last exon
+    along the chromosome reading from left to right along the '+' strand (which
+    is how the data are stored in UCSC tables).
 
     E.g.:
 
-        >>> exons({'exonStarts': '10,15', 'exonEnds': '20,25'})
+        >>> exons({'exonStarts': '10,15', 'exonEnds': '20,25', 'strand': '+'})
         [(10, 20), (15, 25)]
+        >>> exons({'exonStarts': '1,3', 'exonEnds': '2,4', 'strand': '-'})
+        [(3, 4), (1, 2)]
 
     Raises a FormattingError when the `row` does not appear to come from a
     valid UCSC gene table.

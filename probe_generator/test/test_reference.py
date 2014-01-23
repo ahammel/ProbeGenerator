@@ -97,7 +97,7 @@ class TestReferenceGenomeBasesIntegration(TestReferenceBases):
 
 class TestBasesCoordinateStatementIntegration(unittest.TestCase):
     """Test cases for the integration of the interface between the
-`coordinate_statement.parse` and `refernce.bases`.
+    `coordinate_statement.parse` and `refernce.bases`.
 
     """
     def setUp(self):
@@ -128,7 +128,7 @@ class TestBasesCoordinateStatementIntegration(unittest.TestCase):
 class TestReferenceGenomeValidation(unittest.TestCase):
     """Validation tests for reference.reference_genome.
 
-    Calls reference.refernce_genome on production data.
+    Calls `reference.refernce_genome` on production data.
 
     """
     @classmethod
@@ -137,16 +137,13 @@ class TestReferenceGenomeValidation(unittest.TestCase):
             cls.ref_genome = reference.reference_genome(handle)
 
     def test_ref_genome_has_proper_chromosomes(self):
-        """
-        22 autosomes + 2 sex chromosomes
-
-        """
         chromosomes = [
                 "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11",
                 "12", "13", "14", "15", "16", "17", "18", "19", "20", "21",
                 "22", "X", "Y", "MT"]
-        for chr in chromosomes:
-            self.assertIn(chr, self.ref_genome)
+        self.assertCountEqual(
+                chromosomes,
+                self.ref_genome.keys())
 
     def test_all_bases_have_only_base_pair_sequences(self):
         for sequence in self.ref_genome.values():

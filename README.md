@@ -128,7 +128,9 @@ The resulting probes are printed to stdout in FASTA format. The titles of the
 probes are the probe statements, followed by the unique identifiers of the rows
 in the annotation file which were used, if applicable.
 
-Annotations can be downloaded from [the UCSC table browser][ucsc_tables].
+Annotations can be downloaded from [the UCSC table browser][ucsc_tables]. Make
+sure to use the output format 'all fields from selected table'.
+
 
 
 [ucsc_tables]: http://genome.ucsc.edu/cgi-bin/hgTables

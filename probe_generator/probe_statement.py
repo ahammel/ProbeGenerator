@@ -51,6 +51,18 @@ def parse(probe_statement):
 
     See the README for the probe language specification.
 
+    Example:
+
+        >>> parse("FOO#exon[1]+20/BAR#exon[*]-30")
+        {'gene1':    'FOO',
+         'feature1': ('exon', 1),
+         'side1':    'start',
+         'bases1':   20,
+         'gene2':    'BAR',
+         'feature2': ('exon', '*'),
+         'bases2':   30,
+         'side2':    'end'}
+
     """
     match = _PROBE_STATEMENT_REGEX.match(probe_statement)
     if not match:

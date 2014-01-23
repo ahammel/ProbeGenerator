@@ -13,7 +13,7 @@ def sequence_range(specification, row_1, row_2):
 
     `specification` is a probe specification, such as is returned by
     `probe_statement.parse`. The `specification` must be fully-realized (i.e.,
-    no globs except int the 'bases' field). `row_1` and `row_2` are rows from a
+    no globs except in the 'bases' field). `row_1` and `row_2` are rows from a
     UCSC annotation table.
 
     Returns a dict in the format:
@@ -117,15 +117,15 @@ def _get_rev_comp_flag(specification, row_1, row_2):
 
 
               |---------->                |----------->
-            --------------------------------------------------
-            --------------------------------------------------
+            ..................................................
+            ..................................................
                          ^                            ^
 
         2. the two features are on opposite strands and fused at opposite ends:
 
               |----------->
-            --------------------------------------------------
-            --------------------------------------------------
+            ..................................................
+            ..................................................
                           ^              <-------------|
                                                        ^
 

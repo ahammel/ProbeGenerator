@@ -40,6 +40,9 @@ def combine_annotations(annotation_files):
 def probe_name(statement, left_row, right_row):
     """Return a header for a FASTA-format probe.
 
+    Currently the header consists of the statment plus the unique 'name' of
+    each row.
+
     """
     return "{} {} {}".format(
             statement.strip(),

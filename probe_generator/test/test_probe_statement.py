@@ -105,7 +105,6 @@ class TestProbeStatement(AbstractProbeStatementTestCase):
                 statement.parse("ABC#exon[*] ** / DEF#exon[*] **"),
                 self.probe_specification)
 
-
     def test_parsing_a_non_exon_features_raises_not_supported_message(self):
         message = re.escape(
                    "could not parse 'FOO#intron[1]+1/BAR#*[2]-1': "
