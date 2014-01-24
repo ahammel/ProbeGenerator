@@ -47,7 +47,7 @@ def parse(statement):
 
         >>> parse("1:100-10/2:200+20")
         {"chromosome1":  "1",
-         "start1":       89,
+         "start1":       91,
          "end1":         100,
          "chromosome2":  "2",
          "start2":       200,
