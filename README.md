@@ -62,19 +62,22 @@ Consider the following probe statement:
 
     FOO#exon[3] -25 / BAR#exon[*] +25
 
-Imainge that FOO is alternatively spliced, so that there are two different
+Imagine that FOO is alternatively spliced, so that there are two different
 exons that could possibly be called the third. Furthermore, we will assume that
 the symbol BAR identifies two different genes, each with two exons. In this
 case, eight different probes will be generated:
 
-    > FOO exon 3[a] / BAR[a] exon 1
-    > FOO exon 3[a] / BAR[a] exon 2
-    > FOO exon 3[a] / BAR[b] exon 1
-    > FOO exon 3[a] / BAR[b] exon 2
-    > FOO exon 3[b] / BAR[a] exon 1
-    > FOO exon 3[b] / BAR[a] exon 2
-    > FOO exon 3[b] / BAR[b] exon 1
-    > FOO exon 3[b] / BAR[b] exon 2
+    > FOO exon 3a / BARa exon 1
+    > FOO exon 3a / BARa exon 2
+    > FOO exon 3a / BARb exon 1
+    > FOO exon 3a / BARb exon 2
+    > FOO exon 3b / BARa exon 1
+    > FOO exon 3b / BARa exon 2
+    > FOO exon 3b / BARb exon 1
+    > FOO exon 3b / BARb exon 2
+
+where _3a_ and _3b_ are the two possible third exons of FOO and _BARa_ and
+_BARb_ are the two genes called 'BAR'.
 
 ## Examples
 
@@ -97,8 +100,8 @@ features covered:
 
     "SPAM#*[*] ** / EGGS#*[*] **"
 
-A between the 100th base pair of chromosome 1 and the 200th base pair of
-chromsome Y, with 25 bases on either side:
+A probe for a fusion event between the 100th base pair of chromosome 1 and the
+200th base pair of chromsome Y, with 25 bases on either side:
 
     "1:100-25/Y:200+25"
 
@@ -108,8 +111,8 @@ chromsome Y, with 25 bases on either side:
     probe-generator --coordinate COORD  --genome GENOME
 
     Options:
-        -c COORD --coordinate=COORD     a file contatinng coordinate statements
-        -s STMT --statement=STMT        a file containg fusion statements
+        -c COORD --coordinate=COORD     a file containing coordinate statements
+        -s STMT --statement=STMT        a file containing fusion statements
         -g GENOME --genome=GENOME       the Ensembl reference genome
                                         (FASTA format)
         -a FILE --annotation=FILE       a genome annotation file in UCSC format
