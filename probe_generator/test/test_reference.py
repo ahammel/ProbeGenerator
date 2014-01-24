@@ -97,14 +97,14 @@ class TestReferenceGenomeBasesIntegration(TestReferenceBases):
 
 class TestBasesCoordinateStatementIntegration(unittest.TestCase):
     """Test cases for the integration of the interface between the
-`coordinate_statement.parse` and `refernce.bases`.
+    `coordinate_statement.parse` and `reference.bases`.
 
     """
     def setUp(self):
         self.statement = "1:16-8/X:1+6"
         self.spec = coordinate_statement.parse(self.statement)
 
-    def test_bases_extracted_correctly_downstream_of_refernce_base(self):
+    def test_bases_extracted_correctly_downstream_of_reference_base(self):
         self.assertEqual(
                 reference.bases(
                     MOCK_REFERENCE_GENOME,
@@ -128,7 +128,7 @@ class TestBasesCoordinateStatementIntegration(unittest.TestCase):
 class TestReferenceGenomeValidation(unittest.TestCase):
     """Validation tests for reference.reference_genome.
 
-    Calls reference.refernce_genome on production data.
+    Calls reference.reference_genome on production data.
 
     """
     @classmethod
