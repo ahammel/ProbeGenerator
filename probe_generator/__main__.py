@@ -5,9 +5,9 @@ Usage:
     probe-generator --coordinate COORD  --genome GENOME
 
 Options:
-    -c COORD --coordinate=COORD     a file contatinng coordinate statements
+    -c COORD --coordinate=COORD     a file containing coordinate statements
                                     e.g. "1:100-10/2:200+20"
-    -s STMT --statement=STMT        a file containg fusion statements
+    -s STMT --statement=STMT        a file containing fusion statements
                                     e.g. "FOO#exon[1]-10/BAR#exon[2]+20"
     -g GENOME --genome=GENOME       the Ensembl reference genome
                                     (FASTA format)

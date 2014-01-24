@@ -106,7 +106,7 @@ def from_coordinate(statements_file, genome_file):
 
 
 def from_statements(statements_file, genome_file, annotation_files):
-    """Print probes in FASTA format give a rerence genome file, a file
+    """Print probes in FASTA format given a rererence genome file, a file
     containing probe statements, and UCSC genome annotations.
 
     """
