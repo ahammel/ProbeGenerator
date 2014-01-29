@@ -43,6 +43,8 @@ def probe_name(statement, left_row, right_row):
     Currently the header consists of the statment plus the unique 'name' of
     each row.
 
+    `left_row` and `right_row` are rows from a UCSC gene table.
+
     """
     return "{} {} {}".format(
             statement.strip(),
@@ -106,7 +108,7 @@ def from_coordinate(statements_file, genome_file):
 
 
 def from_statements(statements_file, genome_file, annotation_files):
-    """Print probes in FASTA format given a rererence genome file, a file
+    """Print probes in FASTA format given a reference genome file, a file
     containing probe statements, and UCSC genome annotations.
 
     """

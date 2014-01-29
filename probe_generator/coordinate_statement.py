@@ -37,8 +37,8 @@ def parse(statement):
     Coordinate specifications are dictionaries in the format:
 
         {'chromosome(1|2): str
-         'start(1|2):     int
-         'end(1|2):       int
+         'start(1|2):      int
+         'end(1|2):        int
         }
 
     'start' and 'end' values in the specification are 1-based inclusive ranges.
