@@ -5,7 +5,7 @@ the genomic location of a probe sequence, given a row of a UCSC gene table and
 a fully-realized specification (one without wild-card characters).
 
 """
-import probe_generator.annotation as annotation
+from probe_generator import annotation
 
 
 def sequence_range(specification, row_1, row_2):
@@ -13,7 +13,7 @@ def sequence_range(specification, row_1, row_2):
 
     `specification` is a probe specification, such as is returned by
     `probe_statement.parse`. The `specification` must be fully-realized (i.e.,
-    no globs except int the 'bases' field). `row_1` and `row_2` are rows from a
+    no globs except in the 'bases' field). `row_1` and `row_2` are rows from a
     UCSC annotation table.
 
     Returns a dict in the format:
@@ -22,7 +22,7 @@ def sequence_range(specification, row_1, row_2):
          'range_2': (chromosome2, start2, end2),
          'reverse': flag}
 
-    Where the chormosome, start, and end specify the genomic locations of the
+    Where the chromosome, start, and end specify the genomic locations of the
     probe sequence, and the `flag` is a boolean indicating whether or not the
     second sequence should be reverse-complemented.
 
@@ -30,7 +30,7 @@ def sequence_range(specification, row_1, row_2):
     are improperly formatted.
 
     Raises a `NoFeatureError` if the `specification` asks for a feature outside
-    of the range of the the `row`.
+    of the range of the `row`.
 
     """
     left_chromosome = row_1['chrom'].lstrip('chr')
@@ -50,7 +50,7 @@ def sequence_range(specification, row_1, row_2):
             'chromosome2': right_chromosome,
             'start2':      right_start,
             'end2':        right_end,
-            'inversion': reverse_complement_flag}
+            'inversion':   reverse_complement_flag}
 
 
 def _get_base_positions(specification, row, row_number):
@@ -59,35 +59,47 @@ def _get_base_positions(specification, row, row_number):
     Returns a 2-tuple of integers.
 
     """
-    exon_postitions = annotation.exons(row)
+    exon_positions = annotation.exons(row)
     try:
         feature_type, which_exon = specification[
                 'feature{}'.format(row_number)]
         bases = specification['bases{}'.format(row_number)]
         side = specification['side{}'.format(row_number)]
+        strand = row['strand']
     except KeyError as error:
         raise InterfaceError(str(error))
 
     try:
-        exon_start, exon_end = exon_postitions[which_exon-1] # zero-indexed list
+        exon_start, exon_end = exon_positions[which_exon-1] # zero-indexed list
     except IndexError:
         raise NoFeatureError(
                 "specification requires feature {type!r}[{number!s}], "
                 "but row specifies only {length} {type!r}(s)".format(
                     type=feature_type,
                     number=which_exon,
-                    length=len(exon_postitions)))
+                    length=len(exon_positions)))
 
     if bases == '*':
         return exon_start, exon_end
-    elif side == 'start':
+    elif (side == 'start') == (strand == '+'): # <-- see below
         return exon_start, (exon_start + bases - 1)
-    elif side == 'end':
-        return (exon_end - bases - 1), exon_end
     else:
-        # unreachable
-        assert False, ("specification['side'] not in ('start', 'end')\n"
-                       "That's bad. Contact the maintainer")
+        return (exon_end - bases + 1), exon_end
+    # In UCSC genome files, the starting base pairs of exons are given from
+    # left to right across the '+' strand of the chromosome, regardless of the
+    # orientation of the gene. The locations of the 'start' and the 'end' of an
+    # exon are switched for a gene on the minus strand.
+    #
+    # The interpretation of the weird-looking conditional pointed out above is
+    # this: the _rightmost_ set of base pairs is the _start_ of a feature on
+    # the plus strand, or the _end_ of a feature on the minus strand:
+    #
+    #                 start |                end |
+    #                       --------------------->
+    #       + .....................................................
+    #       - .....................................................
+    #                       <---------------------
+    #                       ^ end                ^ start
 
 
 def _get_rev_comp_flag(specification, row_1, row_2):
@@ -105,15 +117,15 @@ def _get_rev_comp_flag(specification, row_1, row_2):
 
 
               |---------->                |----------->
-            --------------------------------------------------
-            --------------------------------------------------
+            ..................................................
+            ..................................................
                          ^                            ^
 
         2. the two features are on opposite strands and fused at opposite ends:
 
               |----------->
-            --------------------------------------------------
-            --------------------------------------------------
+            ..................................................
+            ..................................................
                           ^              <-------------|
                                                        ^
 

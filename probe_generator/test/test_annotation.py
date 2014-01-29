@@ -1,5 +1,6 @@
 import unittest
 import os
+import re
 
 import mock
 
@@ -95,13 +96,24 @@ class TestExons(unittest.TestCase):
             annotation.exons({})
 
     def test_exons_raises_FormattingError_on_non_int_values_in_string(self):
-        message = ("unexpected values for 'exonStarts' and 'exonEnds' fields: "
+        message = re.escape(
+                   "unexpected values for 'exonStarts' and 'exonEnds' fields: "
                    "'1,banana,' and '2,surprise,'")
         with self.assertRaisesRegex(annotation.FormattingError, message):
             annotation.exons({
                 'exonStarts': '1,banana,',
                 'exonEnds': '2,surprise,'
                 })
+
+    def test_exons_raises_FormattingError_when_start_greater_than_end(self):
+        message = re.escape(
+                "unexpected values for 'exonStarts' and 'exonEnds' fields: "
+                "'10,20,' and '1,2,'. exonEnds values must be strictly "
+                "greater than exonStarts")
+        with self.assertRaisesRegex(annotation.FormattingError, message):
+            annotation.exons({
+                'exonStarts': '10,20,',
+                'exonEnds': '1,2,'})
 
 
 class TestAnnotationLookupGeneIntegration(TestLookupGene):

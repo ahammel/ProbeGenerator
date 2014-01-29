@@ -4,6 +4,55 @@ probe-generator: make short sequences to probe for fusion events
 fusion events. These probes can be used to screen high-throughput sequencing
 libraries for evidence of the events represented by the probe.
 
+# Installation
+
+`probe-generator` requires Python v3.2 or later and the `docopt` python package
+v0.6.1 or later.
+
+If you have root permissions, installation is as easy as using `pip` or
+`easy_install` to install docopt and the runnning the `setup.py` script:
+
+    $ easy_install docopt
+    Searching for docopt
+    Best match: docopt 0.6.1
+    Processing docopt-0.6.1-py2.6.egg
+    [...]
+    $ python3 setup.py install
+    running install
+    running build
+    running build_py
+    running install_lib
+    [...]
+
+Installing in your home folder without root permissions is only slightly more
+complicated. This requires making a local directory for python packages and
+installing everything there:
+
+    $ mdkir -p $HOME/lib
+    $ echo "[easy_install]" >> ~/.pydistutils.cfg
+    $ echo "install_dir = $HOME/lib" >> ~/.pydistutils.cfg
+    $ easy_install docopt
+    Searching for docopt
+    Best match: docopt 0.6.1
+    Processing docopt-0.6.1-py2.6.egg
+    [...]
+    $ python3 setup.py install --prefix $HOME/lib
+    running install
+    running build
+    running build_py
+    running install_lib
+    [...]
+    $ export PYTHONPATH=$PTYHONPATH:$HOME/lib
+    $ export PYTHONPATH=$PYTHONPATH:$HOME/lib/python3.2/site-packages
+    # ^ Add these two lines to $HOME/.bashrc as well
+
+In either case, copy or link the script under `bin/probe-generator` to
+somewhere in your $PATH and test that everything worked:
+
+    $ probe-generator --version
+    ProbeGenerator version 0.1
+
+
 # Probe language
 
 The input to `probe-generator` consists of statements in *probe language*.
@@ -16,12 +65,14 @@ Statements in probe lanugage are in the form:
 
 
     <gene>:    the name of the gene of interest. Acceptable characters are
-               alphanumerics plus '_-/.' Case is not significant.
+               alphanumerics plus '_-/.'. Case is not significant.
 
-    <feature>: the name of the feature of interest ('exon', 'intron', etc.), or
-               '*' Case is not significant.
+    <feature>: the name of the feature of interest ('exon', 'intron', etc.).
+               Case is not significant.
+               *CURRENTLY ONLY EXONS ARE SUPPORTED* so this field must be given
+               the value 'exon'.
 
-    <number>:  the cardinality of the feature of intrest (1 for the first exon,
+    <number>:  the cardinality of the feature of interest (1 for the first exon,
                etc.). Must be a digit or '*'.
 
     <side>:    Whether to return a sequence at the start or end of the feature.
@@ -62,23 +113,26 @@ Consider the following probe statement:
 
     FOO#exon[3] -25 / BAR#exon[*] +25
 
-Imainge that FOO is alternatively spliced, so that there are two different
+Imagine that FOO is alternatively spliced, so that there are two different
 exons that could possibly be called the third. Furthermore, we will assume that
 the symbol BAR identifies two different genes, each with two exons. In this
 case, eight different probes will be generated:
 
-    > FOO exon 3[a] / BAR[a] exon 1
-    > FOO exon 3[a] / BAR[a] exon 2
-    > FOO exon 3[a] / BAR[b] exon 1
-    > FOO exon 3[a] / BAR[b] exon 2
-    > FOO exon 3[b] / BAR[a] exon 1
-    > FOO exon 3[b] / BAR[a] exon 2
-    > FOO exon 3[b] / BAR[b] exon 1
-    > FOO exon 3[b] / BAR[b] exon 2
+    > FOO exon 3a / BARa exon 1
+    > FOO exon 3a / BARa exon 2
+    > FOO exon 3a / BARb exon 1
+    > FOO exon 3a / BARb exon 2
+    > FOO exon 3b / BARa exon 1
+    > FOO exon 3b / BARa exon 2
+    > FOO exon 3b / BARb exon 1
+    > FOO exon 3b / BARb exon 2
+
+where _3a_ and _3b_ are the two possible third exons of FOO and _BARa_ and
+_BARb_ are the two genes called 'BAR'.
 
 ## Examples
 
-To specifiy a probe covering the last 20 bases of the first exon of the gene
+To specify a probe covering the last 20 bases of the first exon of the gene
 ABC and the first 30 bases of the third exon of DEF, you would pass the
 following probe statement:
 
@@ -88,17 +142,17 @@ The same fusion, but with *any* exon of DEF:
 
     "ABC#exon[1] -20 / DEF#exon[*] +30"
 
-Any fusion between introns of FOO and BAR with at least 40 bases covered:
+Any fusion between exons of FOO and BAR with exactly 40 bases covered:
 
-    "FOO#intron[*] *20 / BAR#intron[*] *20"
+    "FOO#exon[*] *20 / BAR#exon[*] *20"
 
-Any fusion between any two features of SPAM and EGGS, with the entirity of both
+Any fusion between any two exons of SPAM and EGGS, with the entirety of both
 features covered:
 
-    "SPAM#*[*] ** / EGGS#*[*] **"
+    "SPAM#exon[*] ** / EGGS#exon[*] **"
 
-A between the 100th base pair of chromosome 1 and the 200th base pair of
-chromsome Y, with 25 bases on either side:
+A probe for a fusion event between the 100th base pair of chromosome 1 and the
+200th base pair of chromsome Y, with 25 bases on either side:
 
     "1:100-25/Y:200+25"
 
@@ -108,8 +162,8 @@ chromsome Y, with 25 bases on either side:
     probe-generator --coordinate COORD  --genome GENOME
 
     Options:
-        -c COORD --coordinate=COORD     a file contatinng coordinate statements
-        -s STMT --statement=STMT        a file containg fusion statements
+        -c COORD --coordinate=COORD     a file containing coordinate statements
+        -s STMT --statement=STMT        a file containing fusion statements
         -g GENOME --genome=GENOME       the Ensembl reference genome
                                         (FASTA format)
         -a FILE --annotation=FILE       a genome annotation file in UCSC format
@@ -126,7 +180,18 @@ The resulting probes are printed to stdout in FASTA format. The titles of the
 probes are the probe statements, followed by the unique identifiers of the rows
 in the annotation file which were used, if applicable.
 
-Annotations can be downloaded from [the UCSC table browser][ucsc_tables].
+Annotations can be downloaded from [the UCSC table browser][ucsc_tables]. Make
+sure to use the output format 'all fields from selected table'.
+
+## Performance
+
+Using the hg19 human genome reference, `probe-generator` uses about 15.5 Gb of
+memory at peak. This will run comfortably on `all.q` or `xhost08`, but I don't
+recommend trying it on your workstation unless you have a much nicer computer
+than mine.
+
+As a rule of thumb, the peak memory usage will be about 5 times the size of the
+sum of the text input (annotations and genome) on disk.
 
 
 [ucsc_tables]: http://genome.ucsc.edu/cgi-bin/hgTables

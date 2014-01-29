@@ -36,9 +36,9 @@ def parse(statement):
 
     Coordinate specifications are dictionaries in the format:
 
-        {'chromsome(1|2): str
-         'start(1|2):     int
-         'end(1|2):       int
+        {'chromosome(1|2): str
+         'start(1|2):      int
+         'end(1|2):        int
         }
 
     'start' and 'end' values in the specification are 1-based inclusive ranges.
@@ -47,7 +47,7 @@ def parse(statement):
 
         >>> parse("1:100-10/2:200+20")
         {"chromosome1":  "1",
-         "start1":       89,
+         "start1":       91,
          "end1":         100,
          "chromosome2":  "2",
          "start2":       200,
@@ -76,8 +76,7 @@ def parse(statement):
             'chromosome2': chr_2,
             'start2':      start_2,
             'end2':        end_2,
-            'inversion':   operation_1 == operation_2,
-            }
+            'inversion':   operation_1 == operation_2}
 
 
 def _parse_range(start, operation, bases):

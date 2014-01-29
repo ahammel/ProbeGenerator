@@ -43,9 +43,9 @@ def parse_ucsc_file(handle):
     """Return a csv.DictReader object relating fields of UCSC annotation files
     to values.
 
-    `handle` is an iterator of lines with to a file, which must be in the
-    standard UCSC format (i.e., tab-delimited file, first line starts with '#'
-    and specifies field names.
+    `handle` is an iterator of the lines of file, which must be in the standard
+    UCSC format (i.e., tab-delimited file, first line starts with '#' and
+    specifies field names.
 
     """
     lines = (line.lstrip('#') for line in handle)
@@ -55,9 +55,9 @@ def parse_ucsc_file(handle):
 def lookup_gene(gene_name, ucsc_file):
     """Yield data for features in a `uscs_file` for a specific gene.
 
-    `uscs_file` is an iterator of dictionaries giving the data from a UCSC gene
+    `ucsc_file` is an iterator of dictionaries giving the data from a UCSC gene
     file, as might be returned by `parse_ucsc_file`. Currently supported
-    formats are given in the docstring.
+    formats are given in the docstring of the `annotation` module.
 
     """
     for row in ucsc_file:
@@ -77,12 +77,18 @@ def exons(row):
 
         (exonStart, exonEnd)
 
-    in the same order as was given in the strings
+    If the 'strand' of the row is '-', the function return the exons in
+    reversed order. In this case, the first exon relative the the direction of
+    transcription (which is probably what the user means, is the last exon
+    along the chromosome reading from left to right along the '+' strand (which
+    is how the data are stored in UCSC tables).
 
     E.g.:
 
-        >>> exons({'exonStarts': '10,15', 'exonEnds': '20,25'})
+        >>> exons({'exonStarts': '10,15', 'exonEnds': '20,25', 'strand': '+'})
         [(10, 20), (15, 25)]
+        >>> exons({'exonStarts': '1,3', 'exonEnds': '2,4', 'strand': '-'})
+        [(3, 4), (1, 2)]
 
     Raises a FormattingError when the `row` does not appear to come from a
     valid UCSC gene table.
@@ -104,6 +110,12 @@ def exons(row):
                 raise FormattingError(
                         "unexpected values for 'exonStarts' and 'exonEnds' "
                         "fields: {!r} and {!r}".format(
+                            row['exonStarts'], row['exonEnds']))
+            if start >= end:
+                raise FormattingError(
+                        "unexpected values for 'exonStarts' and 'exonEnds' "
+                        "fields: {!r} and {!r}. exonEnds values must be "
+                        "strictly greater than exonStarts".format(
                             row['exonStarts'], row['exonEnds']))
             positions.append((start, end))
     if row['strand'] == '-':

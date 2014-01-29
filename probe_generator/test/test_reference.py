@@ -45,6 +45,9 @@ class TestReferenceBases(unittest.TestCase):
         self.assertEqual(
                 reference.bases(self.ref_genome, 'X', 16, 16),
                 't')
+        self.assertEqual(
+                reference.bases(self.ref_genome, '1', 1, 16),
+                'AAAACCCCGGGGTTTT')
 
     def test_bases_raises_MissingChromosome_when_chromosome_key_missing(self):
         message = "no such chromosome: 'banana'"
@@ -57,11 +60,16 @@ class TestReferenceBases(unittest.TestCase):
         with self.assertRaisesRegex(reference.InvalidRange, message):
             reference.bases(self.ref_genome, '1', 'foo', 'bar')
 
-    def test_bases_raises_NonContainedRange_on_range_outside_of_chromsome(self):
+    def test_bases_raises_NonContainedRange_on_range_outside_of_chromosome(self):
         message = "range \[1:100\] outside the range of chromosome '1'"
         with self.assertRaisesRegex(reference.NonContainedRange, message):
             reference.bases(self.ref_genome, '1', 1, 100)
 
+    def test_bases_raises_InvalidRange_when_start_greater_than_end(self):
+        message = ("unsupported values for `start` and `end`: "
+                   "\(100, 1\). `start` must be  <= `end`")
+        with self.assertRaisesRegex(reference.InvalidRange, message):
+            reference.bases(self.ref_genome, '1', 100, 1)
 
 class TestReferenceGenome(unittest.TestCase):
     """Test cases for the reference.reference_genome function.
@@ -84,7 +92,7 @@ class TestReferenceGenome(unittest.TestCase):
 
 
 class TestReferenceGenomeBasesIntegration(TestReferenceBases):
-    """Inegration tests for reference.reference_genome and reference.bases.
+    """Integration tests for reference.reference_genome and reference.bases.
 
     Calls all the tests of the TestReferenceBases case using a reference
     genome parsed from the MOCK_GENOME_FILE instead of one specified in
@@ -97,14 +105,14 @@ class TestReferenceGenomeBasesIntegration(TestReferenceBases):
 
 class TestBasesCoordinateStatementIntegration(unittest.TestCase):
     """Test cases for the integration of the interface between the
-`coordinate_statement.parse` and `refernce.bases`.
+    `coordinate_statement.parse` and `reference.bases`.
 
     """
     def setUp(self):
         self.statement = "1:16-8/X:1+6"
         self.spec = coordinate_statement.parse(self.statement)
 
-    def test_bases_extracted_correctly_downstream_of_refernce_base(self):
+    def test_bases_extracted_correctly_downstream_of_reference_base(self):
         self.assertEqual(
                 reference.bases(
                     MOCK_REFERENCE_GENOME,
@@ -128,7 +136,7 @@ class TestBasesCoordinateStatementIntegration(unittest.TestCase):
 class TestReferenceGenomeValidation(unittest.TestCase):
     """Validation tests for reference.reference_genome.
 
-    Calls reference.refernce_genome on production data.
+    Calls `reference.reference_genome` on production data.
 
     """
     @classmethod
@@ -137,16 +145,13 @@ class TestReferenceGenomeValidation(unittest.TestCase):
             cls.ref_genome = reference.reference_genome(handle)
 
     def test_ref_genome_has_proper_chromosomes(self):
-        """
-        22 autosomes + 2 sex chromosomes
-
-        """
         chromosomes = [
                 "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11",
                 "12", "13", "14", "15", "16", "17", "18", "19", "20", "21",
                 "22", "X", "Y", "MT"]
-        for chr in chromosomes:
-            self.assertIn(chr, self.ref_genome)
+        self.assertCountEqual(
+                chromosomes,
+                self.ref_genome.keys())
 
     def test_all_bases_have_only_base_pair_sequences(self):
         for sequence in self.ref_genome.values():
