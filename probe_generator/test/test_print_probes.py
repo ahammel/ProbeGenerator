@@ -11,8 +11,8 @@ class TestPrintProbes(unittest.TestCase):
     """
     def setUp(self):
         self.annotations = [
-                {'name':       'transcript1',
-                 'name2':      'FOO',
+                {'name':       'transcript1', # unique ID from UCSC table
+                 'name2':      'FOO',         # gene symbol in RefSeq tables
                  'exonStarts': '10,',
                  'exonEnds':   '20,',
                  'strand':     '+',
