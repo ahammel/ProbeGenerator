@@ -18,7 +18,7 @@ from docopt import docopt
 
 from probe_generator import print_probes
 
-VERSION = '0.0'
+VERSION = '0.1'
 
 
 def main():
