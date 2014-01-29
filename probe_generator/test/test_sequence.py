@@ -194,7 +194,7 @@ class TestSequenceRanges(unittest.TestCase):
                     self.feature_2)
 
     def endwise_test(self, sides_and_strands, result):
-        """Assert that the results is correct, given the sides and strands of
+        """Assert that the results are correct, given the sides and strands of
         the features.
 
         `sides_and_strands` is the value of the side of the left feature, the
