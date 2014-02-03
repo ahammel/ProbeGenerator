@@ -29,6 +29,9 @@ complicated. This requires making a local directory for python packages and
 installing everything there:
 
     $ mdkir -p $HOME/lib
+    $ export PYTHONPATH=$PYTHONPATH:$HOME/lib
+    $ export PYTHONPATH=$PYTHONPATH:$HOME/lib/lib/python3.2/site-packages
+    # ^ Add these two lines to $HOME/.bashrc as well
     $ echo "[easy_install]" >> ~/.pydistutils.cfg
     $ echo "install_dir = $HOME/lib" >> ~/.pydistutils.cfg
     $ easy_install docopt
@@ -42,9 +45,6 @@ installing everything there:
     running build_py
     running install_lib
     [...]
-    $ export PYTHONPATH=$PTYHONPATH:$HOME/lib
-    $ export PYTHONPATH=$PYTHONPATH:$HOME/lib/python3.2/site-packages
-    # ^ Add these two lines to $HOME/.bashrc as well
 
 In either case, copy or link the script under `bin/probe-generator` to
 somewhere in your $PATH and test that everything worked:
