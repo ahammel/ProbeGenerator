@@ -158,8 +158,8 @@ A probe for a fusion event between the 100th base pair of chromosome 1 and the
 
 # Usage
 
-    probe-generator --statement STMT  --genome GENOME --annotation FILE...
-    probe-generator --coordinate COORD  --genome GENOME
+    probe-generator --statement STMT  --genome GENOME --annotation FILE... [-f]
+    probe-generator --coordinate COORD  --genome GENOME [-f]
 
     Options:
         -c COORD --coordinate=COORD     a file containing coordinate statements
@@ -167,6 +167,8 @@ A probe for a fusion event between the 100th base pair of chromosome 1 and the
         -g GENOME --genome=GENOME       the Ensembl reference genome
                                         (FASTA format)
         -a FILE --annotation=FILE       a genome annotation file in UCSC format
+        -f --force                      run even if the total system memory is
+                                        insufficient or cannot be determined
 
 
 Currently, the RefSeq Genes and UCSC Genes annotation files are supported. More
@@ -182,6 +184,16 @@ in the annotation file which were used, if applicable.
 
 Annotations can be downloaded from [the UCSC table browser][ucsc_tables]. Make
 sure to use the output format 'all fields from selected table'.
+
+To prevent memory errors (see below), `probe-generator` will raise a warning if
+it detects that the total system memory in the current environment is less than
+10Gb, or if the total sytem memory cannot be determined (the memory can only be
+determined on a Linux system at present).
+
+The `--force` flag can be used to override this warning in testing situations
+with a genome file, or if the user is pretty sure that enough memory is
+available. Runnning with `--force` set is STRONGLY discouraged for ordinary
+use, however.
 
 ## Performance
 
