@@ -42,7 +42,7 @@ class TestSequenceRangePositional(AbstractSequenceRangeTestCase):
 
     """
     def setUp(self):
-        super(TestSequenceRangePositional, self).setUp()
+        super().setUp()
         self.probe_specification = {
                 'gene1': 'FOO',
                 'feature1': ('exon', 1),
@@ -167,7 +167,7 @@ class TestSequenceRangesEndwise(AbstractSequenceRangeTestCase):
 
     """
     def setUp(self):
-        super(TestSequenceRangesEndwise, self).setUp()
+        super().setUp()
         self.endwise_specification = {
                 'gene1': 'LEFT',
                 'feature1': ('exon', 1),
@@ -349,7 +349,7 @@ class TestSequenceRangeReadThrough(TestSequenceRangePositional):
 
     """
     def setUp(self):
-        super(TestSequenceRangeReadThrough, self).setUp()
+        super().setUp()
         self.probe_specification = {
                 'gene1':     'BAR',
                 'feature1':  ('exon', 2),
@@ -367,7 +367,7 @@ class TestSequenceRangeReadThrough(TestSequenceRangePositional):
         sys.stderr = io.StringIO()
 
     def tearDown(self):
-        super(TestSequenceRangeReadThrough, self).tearDown()
+        super().tearDown()
         sys.stderr.close()
         sys.stderr = self.stderr_backup
 
@@ -440,7 +440,7 @@ class TestExonsIntegrationPositional(TestSequenceRangePositional):
 
     """
     def setUp(self):
-        super(TestExonsIntegrationPositional, self).setUp()
+        super().setUp()
         mock.patch.stopall()
 
     def tearDown(self):
@@ -456,7 +456,7 @@ class TestExonsIntegrationReadThrough(TestSequenceRangeReadThrough):
 
     """
     def setUp(self):
-        super(TestExonsIntegrationReadThrough, self).setUp()
+        super().setUp()
         mock.patch.stopall()
 
     def tearDown(self):
@@ -473,7 +473,7 @@ class TestProbeStatementParseIntegrationPositional(TestSequenceRangePositional):
 
     """
     def setUp(self):
-        super(TestProbeStatementParseIntegrationPositional, self).setUp()
+        super().setUp()
         self.probe_specification = probe_statement.parse(
                 "FOO#exon[1] +50 / BAR#exon[2] -20")
 
@@ -487,6 +487,6 @@ class TestProbeStatementParseIntegrationReadThrough(TestSequenceRangeReadThrough
 
     """
     def setUp(self):
-        super(TestProbeStatementParseIntegrationReadThrough, self).setUp()
+        super().setUp()
         self.probe_specification = probe_statement.parse(
                 "BAR#exon[2] -20 -> FOO#exon[1] + 50")
