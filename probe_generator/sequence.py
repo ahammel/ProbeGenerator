@@ -5,7 +5,15 @@ the genomic location of a probe sequence, given a row of a UCSC gene table and
 a fully-realized specification (one without wild-card characters).
 
 """
+import sys
+
 from probe_generator import annotation
+
+WARNING_MESSAGE = (
+        "WARNING: probes generated using the '->' syntax may not have the \n"
+        "expected value when the end of the first exon is not joined to the \n"
+        "start of the second.\n\n"
+        "Double-check that your probe statments are specified correctly.\n")
 
 
 def sequence_range(specification, row_1, row_2):
@@ -33,13 +41,110 @@ def sequence_range(specification, row_1, row_2):
     of the range of the `row`.
 
     """
-    left_chromosome = row_1['chrom'].lstrip('chr')
-    right_chromosome = row_2['chrom'].lstrip('chr')
+    if specification.get('separator') == '/':
+        return _positional_sequence_range(
+                specification, row_1, row_2)
+    elif specification.get('separator') == '->':
+        return _read_through_sequence_range(
+                specification, row_1, row_2)
+    else:
+        raise InterfaceError
 
-    left_start, left_end = _get_base_positions(
-            specification, row_1, 1)
-    right_start, right_end = _get_base_positions(
-            specification, row_2, 2)
+
+def _read_through_sequence_range(specification, row_1, row_2):
+    """Return the sequence range for a 'read through' probe specification.
+
+    This strategy returns a sequence range for a fusion that is oriented such
+    that the two exons form a single transcriptional unit that can potentially
+    be transcribed and translated.
+
+    In practice, this is similar to the positional strategy indicated by the
+    '/' operator, but with two differences:
+
+        1. The start and end operators are less relevant, as a read-through
+           event only makes sense when it covers the end of the first gene and
+           the beginning of the second gene.
+
+        2. The two sequences are rearranged such that the end of the first
+           gene touches the start of the second.
+
+    For example:
+                                                BAR
+                                               |=========>
+            ..............................................
+            ..............................................
+            <-------|
+                 FOO
+
+
+            FOO-/BAR+
+                    <----====|
+            FOO->BAR
+                    ====|<----
+    """
+    _check_read_through_spec(specification)
+    if row_1.get('strand') == '+':
+        return _positional_sequence_range(
+                specification,
+                row_1,
+                row_2)
+    elif row_1.get('strand') == '-':
+        return _positional_sequence_range(
+                _flip_specification(specification),
+                row_2,
+                row_1)
+
+
+def _flip_specification(specification):
+    """Return the specification with all of the fields ending in '1' replaced
+    with the corresponding field ending in '2' and vice-versa.
+
+    """
+    try:
+        return dict(
+                specification,
+                gene1=specification['gene2'],
+                gene2=specification['gene1'],
+                feature1=specification['feature2'],
+                feature2=specification['feature1'],
+                side1=specification['side2'],
+                side2=specification['side1'],
+                bases1=specification['bases2'],
+                bases2=specification['bases1'])
+    except KeyError as error:
+        raise InterfaceError(error)
+
+
+def _check_read_through_spec(specification):
+    """Raises a warning message if the sides of the specification don't make
+    sense.
+
+    This is only an issue for probes specified using the read-through syntax.
+    In fact, I may make it illegal to specify sides at all for read-through
+    statements in a future version.
+
+    """
+    try:
+        sides_ok = (specification['side1'] == 'end' and
+                    specification['side2'] == 'start')
+    except KeyError:
+        raise InterfaceError
+    if not sides_ok:
+        print(WARNING_MESSAGE, file=sys.stderr, end="")
+
+
+def _positional_sequence_range(specification, row_1, row_2):
+    """Return the sequence range for a positional probe specification.
+
+    This strategy returns a sequence range based on the sides of the exons
+    specified in the probe statement.
+
+    """
+    left_chromosome, right_chromosome  = _get_chromosomes(row_1, row_2)
+    (left_start,
+     left_end,
+     right_start,
+     right_end) = _get_base_positions(specification, row_1, row_2)
 
     reverse_complement_flag = _get_rev_comp_flag(
             specification, row_1, row_2)
@@ -53,43 +158,65 @@ def sequence_range(specification, row_1, row_2):
             'inversion':   reverse_complement_flag}
 
 
-def _get_base_positions(specification, row, row_number):
-    """Return the genomic coordinates of a probe.
+def _get_chromosomes(*rows):
+    """Return the chromosomes of the rows with the 'chr' prefix removed if it
+    exists.
 
-    Returns a 2-tuple of integers.
+    """
+    return (row['chrom'].lstrip('chr') for row in rows)
+
+
+def _get_base_positions(specification, *rows):
+    """Yield the genomic coordinates of a probe, given a set of rows.
+
+    Yields the start and end of each row in the order in which they are passed
+    to the function.
+
+    """
+    for index, row in enumerate(rows, start=1):
+        start, end = _get_base_position_per_row(specification, row, index)
+        yield start
+        yield end
+
+
+def _get_base_position_per_row(specification, row, index):
+    """Return the start and end positions for one side of an event, given a
+    row and its index.
 
     """
     exon_positions = annotation.exons(row)
     try:
-        feature_type, which_exon = specification[
-                'feature{}'.format(row_number)]
-        bases = specification['bases{}'.format(row_number)]
-        side = specification['side{}'.format(row_number)]
+        _, which_exon = specification[
+                'feature{}'.format(index)]
+        bases = specification['bases{}'.format(index)]
+        side = specification['side{}'.format(index)]
         strand = row['strand']
     except KeyError as error:
         raise InterfaceError(str(error))
 
-    try:
-        exon_start, exon_end = exon_positions[which_exon-1] # zero-indexed list
-    except IndexError:
-        raise NoFeatureError(
-                "specification requires feature {type!r}[{number!s}], "
-                "but row specifies only {length} {type!r}(s)".format(
-                    type=feature_type,
-                    number=which_exon,
-                    length=len(exon_positions)))
+    exon_start, exon_end = _get_exon(exon_positions, which_exon)
 
     if bases == '*':
         return exon_start, exon_end
-    elif (side == 'start') == (strand == '+'): # <-- see below
-        return exon_start, (exon_start + bases - 1)
     else:
-        return (exon_end - bases + 1), exon_end
-    # In UCSC genome files, the starting base pairs of exons are given from
-    # left to right across the '+' strand of the chromosome, regardless of the
-    # orientation of the gene. The locations of the 'start' and the 'end' of an
-    # exon are switched for a gene on the minus strand.
-    #
+        return _get_base_pair_range(bases, exon_start, exon_end, side, strand)
+
+
+def _get_base_pair_range(bases, start, end, side, strand):
+    """Return the desired sub-range of a genomic feature, given its range, the
+    number of base-pairs required, the side from which the sub-range is to be
+    extracted, and the strand of the feature.
+
+    In UCSC genome files, the starting base pairs of exons are given from left
+    to right across the '+' strand of the chromosome, regardless of the
+    orientation of the gene. The locations of the 'start' and the 'end' of an
+    exon are switched for a gene on the minus strand.
+
+    """
+    if (side == 'start') == (strand == '+'): # <-- see below
+        return start, (start + bases - 1)
+    else:
+        return (end - bases + 1), end
     # The interpretation of the weird-looking conditional pointed out above is
     # this: the _rightmost_ set of base pairs is the _start_ of a feature on
     # the plus strand, or the _end_ of a feature on the minus strand:
@@ -100,6 +227,20 @@ def _get_base_positions(specification, row, row_number):
     #       - .....................................................
     #                       <---------------------
     #                       ^ end                ^ start
+
+
+def _get_exon(positions, index):
+    """Return the exon at the (1-based) `index` in the `positions` list.
+
+    """
+    try:
+        return positions[index-1] # zero-indexed list
+    except IndexError:
+        raise NoFeatureError(
+                "specification requires feature 'exon'[{number!s}], "
+                "but row specifies only {length} 'exon'(s)".format(
+                    number=index,
+                    length=len(positions)))
 
 
 def _get_rev_comp_flag(specification, row_1, row_2):
