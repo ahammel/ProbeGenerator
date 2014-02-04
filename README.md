@@ -61,7 +61,7 @@ be detected by the probe.
 
 Statements in probe lanugage are in the form:
 
-    "<gene>#<feature>[<number>] <side><bases> / <gene>#<feature>[<number>] <side><bases>"
+    "<gene>#<feature>[<number>] <side><bases> <sep> <gene>#<feature>[<number>] <side><bases>"
 
 
     <gene>:    the name of the gene of interest. Acceptable characters are
@@ -81,7 +81,9 @@ Statements in probe lanugage are in the form:
     <bases>:   The length of probe sequence to return for this feature. Must be
                a digit or '*'.
 
- Any of "<feature>", "<number>", "<side>", or "<bases>" can be replaced with the
+    <sep>:     The separator. One of '/' or '->'. Determines the probing type.
+
+Any of "<feature>", "<number>", "<side>", or "<bases>" can be replaced with the
 glob character ("*"), to indicate that any value is acceptable. In the "<bases>"
 field, the interpretation is that the entire feature is desired.
 
@@ -130,6 +132,62 @@ case, eight different probes will be generated:
 where _3a_ and _3b_ are the two possible third exons of FOO and _BARa_ and
 _BARb_ are the two genes called 'BAR'.
 
+## Probe Type
+
+Two types of probes are currently supported: _positional_ and _read-through_.
+
+Positional probes, indicated by the '/' separator, are created by appending the
+bases indicated on the left to the bases indicated on the right, regardless of
+the orientation of the genes. This is the most flexible way to specify a probe,
+but it may require the user to know the orientations of the events when
+specifying a probe.
+
+Read-through probes, indicated by the '->' separator, are used to specify a
+fusion such that transcription may continue from the end of the first gene to
+the start of the second gene, resulting in a fusion transcript. This is very
+useful for specifying probes for oncogenic fusion events, but it is less
+flexible than a positional representation, as read-through probes must be
+specified as joining the end of the first exon to the start of the second.
+
+Consider these two (simplified) probe statements:
+
+    ABC-3 /  DEF+3
+    ABC-3 -> DEF+3
+
+If the both features are on the plus strand, the two statements are equivalent:
+
+        ABC             DEF
+        |----->         +=====>
+        .......................
+        .......................
+
+
+        probe: -->+==>
+
+
+If both are on the minus strand, however, the statements result in different
+probes:
+
+        .......................
+        .......................
+        <-----|         <=====+
+        ABC             DEF
+
+
+        positional:    <--==+
+        read-through:  ==+<--
+
+
+Note that the read-through statement rearranges the probe so that the end of
+ABC is joined to the beginning of DEF.
+
+Read-through statements are normally specified so that the end of the first
+feature is fused to the beginning of the second. If some other arrangement is
+used, a warning message is printed.
+
+Future versions of probe-generator may remove the necessity of speciying sides
+for a a read-through statement.
+
 ## Examples
 
 To specify a probe covering the last 20 bases of the first exon of the gene
@@ -145,6 +203,11 @@ The same fusion, but with *any* exon of DEF:
 Any fusion between exons of FOO and BAR with exactly 40 bases covered:
 
     "FOO#exon[*] *20 / BAR#exon[*] *20"
+
+A 50 base-pair 'read-through' fusion between the first exon of BAM and any exon
+of POW:
+
+    "BAM#exon[1] -25 -> POW#exon[*] + 25"
 
 Any fusion between any two exons of SPAM and EGGS, with the entirety of both
 features covered:
