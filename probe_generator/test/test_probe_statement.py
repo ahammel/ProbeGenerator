@@ -28,7 +28,7 @@ class TestProbeStatement(AbstractProbeStatementTestCase):
 
     """
     def setUp(self):
-        super(TestProbeStatement, self).setUp()
+        super().setUp()
 
     def test_parse_basic_probe_statement(self):
         self.assertEqual(
@@ -129,7 +129,7 @@ class TestExpand(AbstractProbeStatementTestCase):
 
     """
     def setUp(self):
-        super(TestExpand, self).setUp()
+        super().setUp()
 
     def test_expand_returns_one_statement_for_fully_realized_statement(self):
         self.assertEqual(
