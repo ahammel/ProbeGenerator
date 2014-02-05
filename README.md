@@ -132,6 +132,10 @@ case, eight different probes will be generated:
 where _3a_ and _3b_ are the two possible third exons of FOO and _BARa_ and
 _BARb_ are the two genes called 'BAR'.
 
+In many cases, most or all of the exon junctions in two alternative transcripts
+are redundant. `probe-generator` will not print more than one probe with
+identical genomic coordinates.
+
 ## Probe Type
 
 Two types of probes are currently supported: _positional_ and _read-through_.
@@ -257,6 +261,31 @@ The `--force` flag can be used to override this warning in testing situations
 with a genome file, or if the user is pretty sure that enough memory is
 available. Runnning with `--force` set is STRONGLY discouraged for ordinary
 use, however.
+
+## Output
+
+Probes are printed to $STDOUT in FASTA format. The contents of the headers of
+the probes depend on the type of statement used to specify the probes.
+
+If probes were specified using coordinate statements, the coordinate statement
+is printed in the header of each probe:
+
+    # 1:10-20/2:30-40 -->
+
+    > 1:10-20/2:30-40
+    AAAAAAAAAATTTTTTTTTT
+
+If probe statements are used, the header consists of the probe statement
+(expanded if necessary), the coordinates of the probe and the unique
+identifiers of the transcripts used in determining the location of the probe:
+
+    # FOO#exon[1] -10 -> BAR#exon[*] +10 -->
+
+    > FOO#exon[1] -10 -> BAR#exon[1] +10 1:100/2:200 N000001 N0000002
+    ACGTTACGTTGCGCGCGCGC
+    > FOO#exon[1] -10 -> BAR#exon[2] +10 1:100/2:250 N000001 N0000002
+    ACGTTACGTTATATATATAT
+    ... etc
 
 ## Performance
 
