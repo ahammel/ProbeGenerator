@@ -33,6 +33,10 @@ _PROBE_STATEMENT_REGEX = re.compile(r"""
                    separator=_SEPARATOR),
         re.VERBOSE | re.IGNORECASE)
 
+_PROBE_STATEMENT_SKELETON = (
+        "{gene1}#{feature1[0]}[{feature1[1]}]{side1}{bases1} {separator} "
+        "{gene2}#{feature2[0]}[{feature2[1]}]{side2}{bases2}")
+
 
 def parse(probe_statement):
     """Return a probe specification given a statement in probe language.
@@ -169,6 +173,19 @@ def _maybe_int(string):
         return int(string)
     except ValueError:
         return string
+
+
+
+def to_string(specification):
+    """Return a string representation of a probe specification.
+
+    """
+    side1 = '+' if specification['side1'] == 'start' else '-'
+    side2 = '+' if specification['side2'] == 'start' else '-'
+    return _PROBE_STATEMENT_SKELETON.format(
+            **dict(specification,
+                   side1=side1,
+                   side2=side2))
 
 
 class InvalidStatement(Exception):

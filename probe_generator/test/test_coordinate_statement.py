@@ -8,7 +8,7 @@ class TestCoordinateStatementParse(unittest.TestCase):
 
     """
     def setUp(self):
-        self.statement = statement.parse("1:100-10/2:200+20")
+        self.statement = "1:100-10/2:200+20"
         self.specification = {
                   "chromosome1": '1',
                   "start1":       91,
@@ -20,7 +20,7 @@ class TestCoordinateStatementParse(unittest.TestCase):
 
     def test_parse_simple_coordinate_statement(self):
          self.assertEqual(
-                 self.statement,
+                 statement.parse(self.statement),
                  self.specification)
 
     def test_parse_is_whitespace_insensitive(self):
@@ -38,3 +38,8 @@ class TestCoordinateStatementParse(unittest.TestCase):
         self.assertEqual(
                 statement.parse("1:91+10/2:200+20"),
                 self.specification)
+
+    def test_breakpoint_string_returns_string_representation_of_statement(self):
+        self.assertEqual(
+                statement.breakpoint_string(self.specification),
+                "1:100/2:200")
