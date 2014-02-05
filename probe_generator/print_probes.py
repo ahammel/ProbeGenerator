@@ -2,6 +2,7 @@
 
 """
 import itertools
+import sys
 
 from probe_generator import (reference,
                              coordinate_statement,
@@ -120,8 +121,41 @@ def from_statements(statements_file, genome_file, annotation_files):
         ref_genome = reference.reference_genome(genome)
         exploded_statements = explode_statements(
                 statements, combined_annotation)
-        for spec, left_row, right_row in exploded_statements:
-            coordinate = sequence.sequence_range(spec, left_row, right_row)
-            name = probe_name(spec, coordinate, left_row, right_row)
-            bases = bases_from_coordinate(coordinate, ref_genome)
+        for name, bases in get_sequences(exploded_statements, ref_genome):
             print_fasta(name, bases)
+
+
+def get_sequences(statements, genome):
+    """Given 3-tuples of coordinates specifications and associated rows, yield
+    the names and sequences of the probes.
+
+    `genome` is the reference genome from which to extract the probes.
+
+    Skips probes with redundant coordinates, printing a warning to stderr.
+
+    """
+    cached_coords = set()
+    for statement in statements:
+        spec, left_row, right_row = statement
+        coordinate = sequence.sequence_range(spec, left_row, right_row)
+        bases = bases_from_coordinate(coordinate, genome)
+        coord_hash = dict_hash(coordinate)
+        if not coord_hash in cached_coords:
+            cached_coords.add(coord_hash)
+            yield probe_name(spec, coordinate, left_row, right_row), bases
+        else:
+            print(
+                "{} {} {} appears to be redundant. Skipping...".format(
+                    probe_statement.to_string(spec),
+                    left_row['name'],
+                    right_row['name']),
+                file=sys.stderr)
+
+
+def dict_hash(dictionary):
+    """Return a unique dicitonary identifier.
+
+    Requires both the keys and values of the dictionary to be hashable.
+
+    """
+    return hash(tuple(sorted(dictionary.items())))

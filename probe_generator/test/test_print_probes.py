@@ -28,8 +28,6 @@ class TestPrintProbes(unittest.TestCase):
         self.stdout_backup = sys.stdout
         sys.stdout = io.StringIO()
 
-        self.maxDiff = None
-
     def tearDown(self):
         sys.stdout.close()
         sys.stdout = self.stdout_backup
