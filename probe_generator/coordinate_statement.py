@@ -21,6 +21,9 @@ _COORDINATE_STATEMENT_REGEX = re.compile(r"""
         {0}
         """.format(_COORDINATE), re.VERBOSE)
 
+_COORDINATE_STATEMENT_SKELETON = ("{chromosome1}:{end1}/"
+                                  "{chromosome2}:{start2}")
+
 
 def parse(statement):
     """Return a coordinate specification from a statement.
@@ -91,6 +94,18 @@ def _parse_range(start, operation, bases):
     else:
         assert False, ("Operation not in '[+-]'.\n"
                        "That's bad. Contact the maintainer.")
+
+
+def breakpoint_string(specification):
+    """Return a string representation of the breakpoint of a coordinate
+    specification.
+
+    Returns the chromosome and index of the two bases touching one another in
+    the middle of the probe.
+
+
+    """
+    return _COORDINATE_STATEMENT_SKELETON.format(**specification)
 
 
 class InvalidFormat(Exception):

@@ -28,6 +28,8 @@ class TestPrintProbes(unittest.TestCase):
         self.stdout_backup = sys.stdout
         sys.stdout = io.StringIO()
 
+        self.maxDiff = None
+
     def tearDown(self):
         sys.stdout.close()
         sys.stdout = self.stdout_backup
@@ -54,24 +56,37 @@ class TestPrintProbes(unittest.TestCase):
         which `explode_statement` calls are not mocked in.
 
         """
-        self.assertCountEqual(
+        left, right = self.annotations
+        self.assertEqual(
                 list(print_probes.explode_statements(
-                        [self.statement],
-                        self.annotations)),
-                [({'chromosome1': '1',
-                    'start1':      16,
-                    'end1':        20,
-                    'chromosome2': '1',
-                    'start2':      30,
-                    'end2':        34,
-                    'inversion': False},
-                    'FOO#exon[1]-5/BAR#exon[*]+5 transcript1 transcript2'),
-                 ({'chromosome1': '1',
-                     'start1':      16,
-                     'end1':        20,
-                     'chromosome2': '1',
-                     'start2':      50,
-                     'end2':        54,
-                     'inversion': False},
-                     'FOO#exon[1]-5/BAR#exon[*]+5 transcript1 transcript2')
+                    [self.statement],
+                    self.annotations)),
+                [({'gene1': 'FOO',
+                  'feature1': ('exon', 1),
+                  'side1': 'end',
+                  'bases1': 5,
+                  'gene2': 'BAR',
+                  'feature2': ('exon', 1),
+                  'side2': 'start',
+                  'bases2': 5,
+                  'separator': '/'},
+                  left, right),
+                  ({'gene1': 'FOO',
+                    'feature1': ('exon', 1),
+                    'side1': 'end',
+                    'bases1': 5,
+                    'gene2': 'BAR',
+                    'feature2': ('exon', 2),
+                    'side2': 'start',
+                    'bases2': 5,
+                    'separator': '/'},
+                    left, right),
                   ])
+
+    def test_explode_statement_preserves_separator(self):
+        exploded_statements = print_probes.explode_statements(
+                [self.statement.replace('/', '->')],
+                self.annotations)
+        self.assertTrue(
+                all(spec['separator'] == '->'
+                    for spec, _, _ in exploded_statements))

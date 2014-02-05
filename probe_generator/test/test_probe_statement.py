@@ -9,7 +9,7 @@ class AbstractProbeStatementTestCase(unittest.TestCase):
 
     """
     def setUp(self):
-        self.probe_statement = "ABC#exon[1] -20 / DEF#exon[3] +30"
+        self.probe_statement = "ABC#exon[1]-20 / DEF#exon[3]+30"
         self.probe_specification = {
                     'gene1':     'ABC',
                     'feature1':  ('exon', 1),
@@ -27,9 +27,6 @@ class TestProbeStatement(AbstractProbeStatementTestCase):
     """Test cases for probe language parsing functionality
 
     """
-    def setUp(self):
-        super().setUp()
-
     def test_parse_basic_probe_statement(self):
         self.assertEqual(
                 statement.parse(self.probe_statement),
@@ -128,9 +125,6 @@ class TestExpand(AbstractProbeStatementTestCase):
     """Test case for the `probe_statement.expand` function.
 
     """
-    def setUp(self):
-        super().setUp()
-
     def test_expand_returns_one_statement_for_fully_realized_statement(self):
         self.assertEqual(
                 list(statement.expand(self.probe_specification)),
@@ -185,3 +179,13 @@ class TestExpand(AbstractProbeStatementTestCase):
             self.probe_specification['feature1'] = ('exon', '*')
             for _ in statement.expand(self.probe_specification):
                 pass
+
+
+class TestToString(AbstractProbeStatementTestCase):
+    """Test cases for printing probe statements.
+
+    """
+    def test_print_basic_probe_statement(self):
+        self.assertEqual(
+                statement.to_string(self.probe_specification),
+                self.probe_statement)
