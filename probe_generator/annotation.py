@@ -96,7 +96,7 @@ def exons(row):
     """
     try:
         exon_starts = row['exonStarts'].split(',')
-        exon_ends =   row['exonEnds'].split(',')
+        exon_ends = row['exonEnds'].split(',')
     except KeyError as error:
         raise FormattingError(
                 "key {!s} not in fields: {!r}".format(

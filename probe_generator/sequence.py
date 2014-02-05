@@ -140,7 +140,7 @@ def _positional_sequence_range(specification, row_1, row_2):
     specified in the probe statement.
 
     """
-    left_chromosome, right_chromosome  = _get_chromosomes(row_1, row_2)
+    left_chromosome, right_chromosome = _get_chromosomes(row_1, row_2)
     (left_start,
      left_end,
      right_start,
