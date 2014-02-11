@@ -26,20 +26,21 @@ from probe_generator import print_probes, check_memory
 
 VERSION = '0.1'
 
-MINIMUM_SYSTEM_MEMORY = 10485760 # 10Gb in Kb
+REQUIRED_SYSTEM_MEMORY = 10485760 # 10Gb in Kb
 
 
 def main():
     ARGS = docopt(__doc__, version='ProbeGenerator {}'.format(VERSION))
     if not ARGS['--force']:
         try:
-            if check_memory.total_ram() < MINIMUM_SYSTEM_MEMORY:
+            if check_memory.total_ram() < REQUIRED_SYSTEM_MEMORY:
                 print("\nWARNING: total system memory is less than the "
                       "recommended minimum\n\n"
                       "Use '--force' to run anyway, but ONLY IF YOU KNOW "
                       "WHAT YOU'RE DOING\n\n"
                       "Alternatively, run probe-generator in in a "
-                      "high-memory environment such as xhost08 or genesis\n",
+                      "high-memory environment such as xhost08 or a genesis\n"
+                      "cluster\n",
                       file=sys.stderr)
                 sys.exit(1)
         except check_memory.Error as error:
