@@ -74,9 +74,9 @@ def bases_from_coordinate(coordinate, ref_genome):
 
 
 def explode_statements(statements, annotation_files):
-    """Yield expanded probes statements along with the associated rows.
+    """Yield expanded probe statements along with the associated rows.
 
-    Yields three-tuples of dictionaries of the form:
+    Yields 3-tuples of dictionaries of the form:
 
         (probe_specification, right_row, left_row)
 
