@@ -136,11 +136,11 @@ _BARb_ are the two genes called 'BAR'.
 
 Two types of probes are currently supported: _positional_ and _read-through_.
 
-Positional probes, indicated by the '/' separator, are created by appending the
-bases indicated on the left to the bases indicated on the right, regardless of
-the orientation of the genes. This is the most flexible way to specify a probe,
-but it may require the user to know the orientations of the events when
-specifying a probe.
+Positional probes, indicated by the '/' separator, are created by appending
+the bases indicated on the left of the separator to the bases indicated on the
+right, regardless of the orientation of the genes. This is the most flexible
+way to specify a probe, but it may require the user to know the orientations
+of the events when specifying a probe.
 
 Read-through probes, indicated by the '->' separator, are used to specify a
 fusion such that transcription may continue from the end of the first gene to
@@ -185,8 +185,8 @@ Read-through statements are normally specified so that the end of the first
 feature is fused to the beginning of the second. If some other arrangement is
 used, a warning message is printed.
 
-Future versions of probe-generator may remove the necessity of speciying sides
-for a a read-through statement.
+Future versions of probe-generator may remove the necessity of specifying sides
+for a read-through statement.
 
 ## Examples
 
@@ -207,7 +207,7 @@ Any fusion between exons of FOO and BAR with exactly 40 bases covered:
 A 50 base-pair 'read-through' fusion between the first exon of BAM and any exon
 of POW:
 
-    "BAM#exon[1] -25 -> POW#exon[*] + 25"
+    "BAM#exon[1] -25 -> POW#exon[*] +25"
 
 Any fusion between any two exons of SPAM and EGGS, with the entirety of both
 features covered:
