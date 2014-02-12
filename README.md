@@ -264,8 +264,8 @@ use, however.
 
 ## Output
 
-Probes are printed to $STDOUT in FASTA format. The contents of the headers of
-the probes depend on the type of statement used to specify the probes.
+Probes are printed to standard out in FASTA format. The contents of the headers
+of the probes depend on the type of statement used to specify the probes.
 
 If probes were specified using coordinate statements, the coordinate statement
 is printed in the header of each probe:

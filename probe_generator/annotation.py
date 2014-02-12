@@ -96,15 +96,12 @@ def exons(row):
     """
     try:
         exon_starts = row['exonStarts'].split(',')
-        exon_ends =   row['exonEnds'].split(',')
+        exon_ends = row['exonEnds'].split(',')
         strand = row['strand']
     except KeyError as error:
         raise FormattingError(
                 "key {!s} not in fields: {!r}".format(
                     error, list(row.keys())))
-
-    exon_starts = row['exonStarts'].split(',')
-    exon_ends =   row['exonEnds'].split(',')
     positions = []
     for start, end in zip(exon_starts, exon_ends):
         if start != '' and end != '':
