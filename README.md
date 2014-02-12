@@ -132,15 +132,19 @@ case, eight different probes will be generated:
 where _3a_ and _3b_ are the two possible third exons of FOO and _BARa_ and
 _BARb_ are the two genes called 'BAR'.
 
+In many cases, most or all of the exon junctions in two alternative transcripts
+are redundant. `probe-generator` will not print more than one probe with
+identical genomic coordinates.
+
 ## Probe Type
 
 Two types of probes are currently supported: _positional_ and _read-through_.
 
-Positional probes, indicated by the '/' separator, are created by appending the
-bases indicated on the left to the bases indicated on the right, regardless of
-the orientation of the genes. This is the most flexible way to specify a probe,
-but it may require the user to know the orientations of the events when
-specifying a probe.
+Positional probes, indicated by the '/' separator, are created by appending
+the bases indicated on the left of the separator to the bases indicated on the
+right, regardless of the orientation of the genes. This is the most flexible
+way to specify a probe, but it may require the user to know the orientations
+of the events when specifying a probe.
 
 Read-through probes, indicated by the '->' separator, are used to specify a
 fusion such that transcription may continue from the end of the first gene to
@@ -185,8 +189,8 @@ Read-through statements are normally specified so that the end of the first
 feature is fused to the beginning of the second. If some other arrangement is
 used, a warning message is printed.
 
-Future versions of probe-generator may remove the necessity of speciying sides
-for a a read-through statement.
+Future versions of probe-generator may remove the necessity of specifying sides
+for a read-through statement.
 
 ## Examples
 
@@ -207,7 +211,7 @@ Any fusion between exons of FOO and BAR with exactly 40 bases covered:
 A 50 base-pair 'read-through' fusion between the first exon of BAM and any exon
 of POW:
 
-    "BAM#exon[1] -25 -> POW#exon[*] + 25"
+    "BAM#exon[1] -25 -> POW#exon[*] +25"
 
 Any fusion between any two exons of SPAM and EGGS, with the entirety of both
 features covered:
@@ -257,6 +261,31 @@ The `--force` flag can be used to override this warning in testing situations
 with a genome file, or if the user is pretty sure that enough memory is
 available. Runnning with `--force` set is STRONGLY discouraged for ordinary
 use, however.
+
+## Output
+
+Probes are printed to $STDOUT in FASTA format. The contents of the headers of
+the probes depend on the type of statement used to specify the probes.
+
+If probes were specified using coordinate statements, the coordinate statement
+is printed in the header of each probe:
+
+    # 1:10-20/2:30-40 -->
+
+    > 1:10-20/2:30-40
+    AAAAAAAAAATTTTTTTTTT
+
+If probe statements are used, the header consists of the probe statement
+(expanded if necessary), the coordinates of the probe and the unique
+identifiers of the transcripts used in determining the location of the probe:
+
+    # FOO#exon[1] -10 -> BAR#exon[*] +10 -->
+
+    > FOO#exon[1] -10 -> BAR#exon[1] +10 1:100/2:200 N000001 N0000002
+    ACGTTACGTTGCGCGCGCGC
+    > FOO#exon[1] -10 -> BAR#exon[2] +10 1:100/2:250 N000001 N0000002
+    ACGTTACGTTATATATATAT
+    ... etc
 
 ## Performance
 

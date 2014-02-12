@@ -3,13 +3,13 @@
 """
 
 
-def bases(reference_genome, chromosome, start, end):
+def bases(ref_genome, chromosome, start, end):
     """Return the base pairs of `chromosome` from `start` to `end`.
 
     The string of base pairs is from the `start` to `end` _inclusive_,
     where the first base of the chromosome is 1.
 
-    `reference_genome` is a dictionary relating chromosome names to base pair
+    `ref_genome` is a dictionary relating chromosome names to base pair
     sequences (which are strings). `chromosome` is a string, `start` and `end`
     are ints.
 
@@ -17,7 +17,7 @@ def bases(reference_genome, chromosome, start, end):
 
     """
     try:
-        bases = reference_genome[chromosome][start-1:end]
+        sequence = ref_genome[chromosome][start-1:end]
     except KeyError:
         raise MissingChromosome(
                 "no such chromosome: {!r}".format(
@@ -31,12 +31,12 @@ def bases(reference_genome, chromosome, start, end):
         raise InvalidRange("unsupported values for `start` and `end`: "
                            "({}, {}). `start` must be  <= `end`".format(
                                start, end))
-    if end-start+1 != len(bases):
+    if end-start+1 != len(sequence):
         raise NonContainedRange(
                 "range [{0}:{1}] outside the "
                 "range of chromosome {2!r}".format(
                     start, end, chromosome))
-    return bases
+    return sequence
 
 
 def reference_genome(genome):
