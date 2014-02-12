@@ -149,6 +149,14 @@ class TestSequenceRangePositional(AbstractSequenceRangeTestCase):
                     self.feature_1,
                     self.feature_2)
 
+    def test_raises_InterfaceError_when_row_missing_strand(self):
+        with self.assertRaises(sequence.InterfaceError):
+            del self.feature_1['strand']
+            print(sequence.sequence_range(
+                    self.probe_specification,
+                    self.feature_1,
+                    self.feature_2))
+
     def test_raises_NoFeatureError_when_exon_out_of_range(self):
         message = ("specification requires feature 'exon'\[20\], but "
                    "row specifies only [12] 'exon'\(s\)")
@@ -371,10 +379,10 @@ class TestSequenceRangeReadThrough(TestSequenceRangePositional):
         sys.stderr.close()
         sys.stderr = self.stderr_backup
 
-    def chromsomes_swapped(self):
+    def chromosomes_swapped(self):
         """Return True if the chromosome1 of the coordinate specification
         returned by sequence.sequence_range corresponds to
-        self.feature2['chromosome'] and vice versa.
+        self.feature2['chrom'] and vice versa.
 
         """
         coords = sequence.sequence_range(
@@ -401,22 +409,22 @@ class TestSequenceRangeReadThrough(TestSequenceRangePositional):
     def test_genes_not_swapped_when_both_features_on_plus_strand(self):
         self.feature_1['strand'] = '+'
         self.feature_2['strand'] = '+'
-        self.assertFalse(self.chromsomes_swapped())
+        self.assertFalse(self.chromosomes_swapped())
 
     def test_genes_not_swapped_when_feature_1_plus_feature_2_minus(self):
         self.feature_1['strand'] = '+'
         self.feature_2['strand'] = '-'
-        self.assertFalse(self.chromsomes_swapped())
+        self.assertFalse(self.chromosomes_swapped())
 
     def test_genes_swapped_when_feature_1_minus_feature_2_plus(self):
         self.feature_1['strand'] = '-'
         self.feature_2['strand'] = '+'
-        self.assertTrue(self.chromsomes_swapped())
+        self.assertTrue(self.chromosomes_swapped())
 
     def test_genes_swapped_when_feature_1_minus_feature_2_minus(self):
         self.feature_1['strand'] = '-'
         self.feature_2['strand'] = '-'
-        self.assertTrue(self.chromsomes_swapped())
+        self.assertTrue(self.chromosomes_swapped())
 
     def test_no_warning_raised_when_side_1_is_end_and_side_2_is_start(self):
         # this is the case by default
@@ -427,6 +435,11 @@ class TestSequenceRangeReadThrough(TestSequenceRangePositional):
         self.assert_warning_raised(sequence.WARNING_MESSAGE)
 
     def test_warning_raised_when_side_2_is_end(self):
+        self.probe_specification['side2'] = 'end'
+        self.assert_warning_raised(sequence.WARNING_MESSAGE)
+
+    def test_warning_raised_when_side_1_is_staat_and_side_2_is_end(self):
+        self.probe_specification['side1'] = 'start'
         self.probe_specification['side2'] = 'end'
         self.assert_warning_raised(sequence.WARNING_MESSAGE)
 

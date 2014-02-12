@@ -93,6 +93,8 @@ def _read_through_sequence_range(specification, row_1, row_2):
                 _flip_specification(specification),
                 row_2,
                 row_1)
+    else:
+        raise InterfaceError
 
 
 def _flip_specification(specification):
@@ -140,7 +142,7 @@ def _positional_sequence_range(specification, row_1, row_2):
     specified in the probe statement.
 
     """
-    left_chromosome, right_chromosome  = _get_chromosomes(row_1, row_2)
+    left_chromosome, right_chromosome = _get_chromosomes(row_1, row_2)
     (left_start,
      left_end,
      right_start,
@@ -166,33 +168,43 @@ def _get_chromosomes(*rows):
     return (row['chrom'].lstrip('chr') for row in rows)
 
 
-def _get_base_positions(specification, *rows):
-    """Yield the genomic coordinates of a probe, given a set of rows.
-
-    Yields the start and end of each row in the order in which they are passed
-    to the function.
+def _get_base_positions(specification, row_1, row_2):
+    """Return a 4-tuple of the start and end positions of row_1 and row_2.
 
     """
-    for index, row in enumerate(rows, start=1):
-        start, end = _get_base_position_per_row(specification, row, index)
-        yield start
-        yield end
-
-
-def _get_base_position_per_row(specification, row, index):
-    """Return the start and end positions for one side of an event, given a
-    row and its index.
-
-    """
-    exon_positions = annotation.exons(row)
     try:
-        _, which_exon = specification[
-                'feature{}'.format(index)]
-        bases = specification['bases{}'.format(index)]
-        side = specification['side{}'.format(index)]
+        (first_feature,
+         first_bases,
+         first_side,
+         second_feature,
+         second_bases,
+         second_side) = (specification['feature1'],
+                         specification['bases1'],
+                         specification['side1'],
+                         specification['feature2'],
+                         specification['bases2'],
+                         specification['side2'])
+    except KeyError as error:
+        raise InterfaceError(str(error))
+    start_1, end_1 = _get_base_position_per_row(
+            first_feature, first_bases, first_side, row_1)
+    start_2, end_2 = _get_base_position_per_row(
+            second_feature, second_bases, second_side, row_2)
+    return start_1, end_1, start_2, end_2
+
+
+def _get_base_position_per_row(feature, bases, side, row):
+    """Return the start and end positions of a probe, given a feature, the
+    side of the feature, the number of bases required (may be a glob) and the
+    related row of a UCSC gene annotation table.
+
+    """
+    _, which_exon = feature
+    try:
         strand = row['strand']
     except KeyError as error:
         raise InterfaceError(str(error))
+    exon_positions = annotation.exons(row)
 
     exon_start, exon_end = _get_exon(exon_positions, which_exon)
 

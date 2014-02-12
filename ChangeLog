@@ -1,3 +1,9 @@
+Feb 12, 2014	Alex Hammel		<ahammel@bcgsc.ca>
+	* Release version 0.2
+		* Added read-through probe syntax ('->')
+		* Made probe headers more informative
+		* Suppressed printing of redundant probes
+
 Jan 24, 2014	Alex Hammel		<ahammel@bcgsc.ca>
 
 	* Release version 0.1

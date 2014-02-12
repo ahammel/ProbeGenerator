@@ -96,7 +96,8 @@ def exons(row):
     """
     try:
         exon_starts = row['exonStarts'].split(',')
-        exon_ends =   row['exonEnds'].split(',')
+        exon_ends = row['exonEnds'].split(',')
+        strand = row['strand']
     except KeyError as error:
         raise FormattingError(
                 "key {!s} not in fields: {!r}".format(
@@ -118,7 +119,7 @@ def exons(row):
                         "strictly greater than exonStarts".format(
                             row['exonStarts'], row['exonEnds']))
             positions.append((start, end))
-    if row['strand'] == '-':
+    if strand == '-':
         positions.reverse()
     return positions
 

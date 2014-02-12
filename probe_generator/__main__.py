@@ -24,22 +24,23 @@ from docopt import docopt
 
 from probe_generator import print_probes, check_memory
 
-VERSION = '0.1'
+VERSION = '0.2'
 
-MINIMUM_SYSTEM_MEMORY = 10485760 # 10Gb in Kb
+REQUIRED_SYSTEM_MEMORY = 10485760 # 10Gb in Kb
 
 
 def main():
-    ARGS = docopt(__doc__, version='ProbeGenerator {}'.format(VERSION))
-    if not ARGS['--force']:
+    args = docopt(__doc__, version='ProbeGenerator {}'.format(VERSION))
+    if not args['--force']:
         try:
-            if check_memory.total_ram() < MINIMUM_SYSTEM_MEMORY:
+            if check_memory.total_ram() < REQUIRED_SYSTEM_MEMORY:
                 print("\nWARNING: total system memory is less than the "
                       "recommended minimum\n\n"
                       "Use '--force' to run anyway, but ONLY IF YOU KNOW "
                       "WHAT YOU'RE DOING\n\n"
                       "Alternatively, run probe-generator in in a "
-                      "high-memory environment such as xhost08 or genesis\n",
+                      "high-memory environment such as xhost08 or the\n"
+                      "genesis cluster\n",
                       file=sys.stderr)
                 sys.exit(1)
         except check_memory.Error as error:
@@ -49,11 +50,11 @@ def main():
                   "See README.md for details".format(error),
                   file=sys.stderr)
             sys.exit(1)
-    if ARGS['--coordinate'] is not None:
-        print_probes.from_coordinate(ARGS['--coordinate'], ARGS['--genome'])
+    if args['--coordinate'] is not None:
+        print_probes.from_coordinate(args['--coordinate'], args['--genome'])
     else:
         print_probes.from_statements(
-                ARGS['--statement'], ARGS['--genome'], ARGS['--annotation'])
+                args['--statement'], args['--genome'], args['--annotation'])
 
 
 if __name__ == '__main__':
