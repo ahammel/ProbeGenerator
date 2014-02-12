@@ -39,8 +39,8 @@ def main():
                       "Use '--force' to run anyway, but ONLY IF YOU KNOW "
                       "WHAT YOU'RE DOING\n\n"
                       "Alternatively, run probe-generator in in a "
-                      "high-memory environment such as xhost08 or a genesis\n"
-                      "cluster\n",
+                      "high-memory environment such as xhost08 or the\n"
+                      "genesis cluster\n",
                       file=sys.stderr)
                 sys.exit(1)
         except check_memory.Error as error:

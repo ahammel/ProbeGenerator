@@ -149,6 +149,14 @@ class TestSequenceRangePositional(AbstractSequenceRangeTestCase):
                     self.feature_1,
                     self.feature_2)
 
+    def test_raises_InterfaceError_when_row_missing_strand(self):
+        with self.assertRaises(sequence.InterfaceError):
+            del self.feature_1['strand']
+            print(sequence.sequence_range(
+                    self.probe_specification,
+                    self.feature_1,
+                    self.feature_2))
+
     def test_raises_NoFeatureError_when_exon_out_of_range(self):
         message = ("specification requires feature 'exon'\[20\], but "
                    "row specifies only [12] 'exon'\(s\)")
@@ -434,6 +442,7 @@ class TestSequenceRangeReadThrough(TestSequenceRangePositional):
         self.probe_specification['side1'] = 'start'
         self.probe_specification['side2'] = 'end'
         self.assert_warning_raised(sequence.WARNING_MESSAGE)
+
 
 class TestExonsIntegrationPositional(TestSequenceRangePositional):
     """Integration tests for `sequence.sequence_range` and `annotation.exons`

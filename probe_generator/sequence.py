@@ -93,6 +93,8 @@ def _read_through_sequence_range(specification, row_1, row_2):
                 _flip_specification(specification),
                 row_2,
                 row_1)
+    else:
+        raise InterfaceError
 
 
 def _flip_specification(specification):
@@ -166,19 +168,6 @@ def _get_chromosomes(*rows):
     return (row['chrom'].lstrip('chr') for row in rows)
 
 
-def _get_base_positions(specification, *rows):
-    """Yield the genomic coordinates of a probe, given a set of rows.
-
-    Yields the start and end of each row in the order in which they are passed
-    to the function.
-
-    """
-    for index, row in enumerate(rows, start=1):
-        start, end = _get_base_position_per_row(specification, row, index)
-        yield start
-        yield end
-
-
 def _get_base_positions(specification, row_1, row_2):
     """Return a 4-tuple of the start and end positions of row_1 and row_2.
 
@@ -213,7 +202,7 @@ def _get_base_position_per_row(feature, bases, side, row):
     _, which_exon = feature
     try:
         strand = row['strand']
-    except KeyErro as error:
+    except KeyError as error:
         raise InterfaceError(str(error))
     exon_positions = annotation.exons(row)
 
