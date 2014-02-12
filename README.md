@@ -29,6 +29,9 @@ complicated. This requires making a local directory for python packages and
 installing everything there:
 
     $ mdkir -p $HOME/lib
+    $ export PYTHONPATH=$PYTHONPATH:$HOME/lib
+    $ export PYTHONPATH=$PYTHONPATH:$HOME/lib/lib/python3.2/site-packages
+    # ^ Add these two lines to $HOME/.bashrc as well
     $ echo "[easy_install]" >> ~/.pydistutils.cfg
     $ echo "install_dir = $HOME/lib" >> ~/.pydistutils.cfg
     $ easy_install docopt
@@ -42,15 +45,12 @@ installing everything there:
     running build_py
     running install_lib
     [...]
-    $ export PYTHONPATH=$PTYHONPATH:$HOME/lib
-    $ export PYTHONPATH=$PYTHONPATH:$HOME/lib/python3.2/site-packages
-    # ^ Add these two lines to $HOME/.bashrc as well
 
 In either case, copy or link the script under `bin/probe-generator` to
 somewhere in your $PATH and test that everything worked:
 
     $ probe-generator --version
-    ProbeGenerator version 0.1
+    ProbeGenerator version 0.2
 
 
 # Probe language
@@ -61,7 +61,7 @@ be detected by the probe.
 
 Statements in probe lanugage are in the form:
 
-    "<gene>#<feature>[<number>] <side><bases> / <gene>#<feature>[<number>] <side><bases>"
+    "<gene>#<feature>[<number>] <side><bases> <sep> <gene>#<feature>[<number>] <side><bases>"
 
 
     <gene>:    the name of the gene of interest. Acceptable characters are
@@ -81,7 +81,9 @@ Statements in probe lanugage are in the form:
     <bases>:   The length of probe sequence to return for this feature. Must be
                a digit or '*'.
 
- Any of "<feature>", "<number>", "<side>", or "<bases>" can be replaced with the
+    <sep>:     The separator. One of '/' or '->'. Determines the probing type.
+
+Any of "<feature>", "<number>", "<side>", or "<bases>" can be replaced with the
 glob character ("*"), to indicate that any value is acceptable. In the "<bases>"
 field, the interpretation is that the entire feature is desired.
 
@@ -130,6 +132,66 @@ case, eight different probes will be generated:
 where _3a_ and _3b_ are the two possible third exons of FOO and _BARa_ and
 _BARb_ are the two genes called 'BAR'.
 
+In many cases, most or all of the exon junctions in two alternative transcripts
+are redundant. `probe-generator` will not print more than one probe with
+identical genomic coordinates.
+
+## Probe Type
+
+Two types of probes are currently supported: _positional_ and _read-through_.
+
+Positional probes, indicated by the '/' separator, are created by appending
+the bases indicated on the left of the separator to the bases indicated on the
+right, regardless of the orientation of the genes. This is the most flexible
+way to specify a probe, but it may require the user to know the orientations
+of the events when specifying a probe.
+
+Read-through probes, indicated by the '->' separator, are used to specify a
+fusion such that transcription may continue from the end of the first gene to
+the start of the second gene, resulting in a fusion transcript. This is very
+useful for specifying probes for oncogenic fusion events, but it is less
+flexible than a positional representation, as read-through probes must be
+specified as joining the end of the first exon to the start of the second.
+
+Consider these two (simplified) probe statements:
+
+    ABC-3 /  DEF+3
+    ABC-3 -> DEF+3
+
+If the both features are on the plus strand, the two statements are equivalent:
+
+        ABC             DEF
+        |----->         +=====>
+        .......................
+        .......................
+
+
+        probe: -->+==>
+
+
+If both are on the minus strand, however, the statements result in different
+probes:
+
+        .......................
+        .......................
+        <-----|         <=====+
+        ABC             DEF
+
+
+        positional:    <--==+
+        read-through:  ==+<--
+
+
+Note that the read-through statement rearranges the probe so that the end of
+ABC is joined to the beginning of DEF.
+
+Read-through statements are normally specified so that the end of the first
+feature is fused to the beginning of the second. If some other arrangement is
+used, a warning message is printed.
+
+Future versions of probe-generator may remove the necessity of specifying sides
+for a read-through statement.
+
 ## Examples
 
 To specify a probe covering the last 20 bases of the first exon of the gene
@@ -146,6 +208,11 @@ Any fusion between exons of FOO and BAR with exactly 40 bases covered:
 
     "FOO#exon[*] *20 / BAR#exon[*] *20"
 
+A 50 base-pair 'read-through' fusion between the first exon of BAM and any exon
+of POW:
+
+    "BAM#exon[1] -25 -> POW#exon[*] +25"
+
 Any fusion between any two exons of SPAM and EGGS, with the entirety of both
 features covered:
 
@@ -158,8 +225,8 @@ A probe for a fusion event between the 100th base pair of chromosome 1 and the
 
 # Usage
 
-    probe-generator --statement STMT  --genome GENOME --annotation FILE...
-    probe-generator --coordinate COORD  --genome GENOME
+    probe-generator --statement STMT  --genome GENOME --annotation FILE... [-f]
+    probe-generator --coordinate COORD  --genome GENOME [-f]
 
     Options:
         -c COORD --coordinate=COORD     a file containing coordinate statements
@@ -167,6 +234,8 @@ A probe for a fusion event between the 100th base pair of chromosome 1 and the
         -g GENOME --genome=GENOME       the Ensembl reference genome
                                         (FASTA format)
         -a FILE --annotation=FILE       a genome annotation file in UCSC format
+        -f --force                      run even if the total system memory is
+                                        insufficient or cannot be determined
 
 
 Currently, the RefSeq Genes and UCSC Genes annotation files are supported. More
@@ -182,6 +251,41 @@ in the annotation file which were used, if applicable.
 
 Annotations can be downloaded from [the UCSC table browser][ucsc_tables]. Make
 sure to use the output format 'all fields from selected table'.
+
+To prevent memory errors (see below), `probe-generator` will raise a warning if
+it detects that the total system memory in the current environment is less than
+10Gb, or if the total sytem memory cannot be determined (the memory can only be
+determined on a Linux system at present).
+
+The `--force` flag can be used to override this warning in testing situations
+with a genome file, or if the user is pretty sure that enough memory is
+available. Runnning with `--force` set is STRONGLY discouraged for ordinary
+use, however.
+
+## Output
+
+Probes are printed to standard out in FASTA format. The contents of the headers
+of the probes depend on the type of statement used to specify the probes.
+
+If probes were specified using coordinate statements, the coordinate statement
+is printed in the header of each probe:
+
+    # 1:10-20/2:30-40 -->
+
+    > 1:10-20/2:30-40
+    AAAAAAAAAATTTTTTTTTT
+
+If probe statements are used, the header consists of the probe statement
+(expanded if necessary), the coordinates of the probe and the unique
+identifiers of the transcripts used in determining the location of the probe:
+
+    # FOO#exon[1] -10 -> BAR#exon[*] +10 -->
+
+    > FOO#exon[1] -10 -> BAR#exon[1] +10 1:100/2:200 N000001 N0000002
+    ACGTTACGTTGCGCGCGCGC
+    > FOO#exon[1] -10 -> BAR#exon[2] +10 1:100/2:250 N000001 N0000002
+    ACGTTACGTTATATATATAT
+    ... etc
 
 ## Performance
 

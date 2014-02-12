@@ -9,16 +9,17 @@ class AbstractProbeStatementTestCase(unittest.TestCase):
 
     """
     def setUp(self):
-        self.probe_statement = "ABC#exon[1] -20 / DEF#exon[3] +30"
+        self.probe_statement = "ABC#exon[1]-20 / DEF#exon[3]+30"
         self.probe_specification = {
-                    'gene1':    'ABC',
-                    'feature1': ('exon', 1),
-                    'side1':    'end',
-                    'bases1':   20,
-                    'gene2':    'DEF',
-                    'feature2': ('exon', 3),
-                    'side2':    'start',
-                    'bases2':   30,
+                    'gene1':     'ABC',
+                    'feature1':  ('exon', 1),
+                    'side1':     'end',
+                    'bases1':    20,
+                    'gene2':     'DEF',
+                    'feature2':  ('exon', 3),
+                    'side2':     'start',
+                    'bases2':    30,
+                    'separator': '/'
                 }
 
 
@@ -26,9 +27,6 @@ class TestProbeStatement(AbstractProbeStatementTestCase):
     """Test cases for probe language parsing functionality
 
     """
-    def setUp(self):
-        super(TestProbeStatement, self).setUp()
-
     def test_parse_basic_probe_statement(self):
         self.assertEqual(
                 statement.parse(self.probe_statement),
@@ -60,6 +58,16 @@ class TestProbeStatement(AbstractProbeStatementTestCase):
             statement.parse("abc123#exon[1] -1 / b.a/n_a-na#exon[2] -3")
         except statement.InvalidStatement:
             self.fail("Statement could not be parsed")
+
+    def test_parse_probe_statement_with_read_through_separator(self):
+        try:
+            probe_statement = statement.parse(
+                    "ABC#exon[1] -20 -> DEF#exon[3] +30")
+        except statement.InvalidStatement:
+            self.fail("Statement could not be parsed")
+        self.assertEqual(
+                probe_statement['separator'],
+                '->')
 
     # In the names of the following tests, elements of a statement are
     # 'globbable' if they can be replaced by the '*' character.
@@ -117,9 +125,6 @@ class TestExpand(AbstractProbeStatementTestCase):
     """Test case for the `probe_statement.expand` function.
 
     """
-    def setUp(self):
-        super(TestExpand, self).setUp()
-
     def test_expand_returns_one_statement_for_fully_realized_statement(self):
         self.assertEqual(
                 list(statement.expand(self.probe_specification)),
@@ -174,3 +179,13 @@ class TestExpand(AbstractProbeStatementTestCase):
             self.probe_specification['feature1'] = ('exon', '*')
             for _ in statement.expand(self.probe_specification):
                 pass
+
+
+class TestToString(AbstractProbeStatementTestCase):
+    """Test cases for printing probe statements.
+
+    """
+    def test_print_basic_probe_statement(self):
+        self.assertEqual(
+                statement.to_string(self.probe_specification),
+                self.probe_statement)

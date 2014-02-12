@@ -2,6 +2,7 @@
 
 """
 import itertools
+import sys
 
 from probe_generator import (reference,
                              coordinate_statement,
@@ -37,17 +38,19 @@ def combine_annotations(annotation_files):
     return rows
 
 
-def probe_name(statement, left_row, right_row):
+def probe_name(specification, coordinates, left_row, right_row):
     """Return a header for a FASTA-format probe.
 
-    Currently the header consists of the statment plus the unique 'name' of
-    each row.
+    Currently the header consists of the statment's string representation, the
+    coordinates of the breakpoint and the unique 'name' of each row.
 
-    `left_row` and `right_row` are rows from a UCSC gene table.
+    `specification` and `coordinates` are probe specification and coordinate
+    dictionaries.  `left_row` and `right_row` are rows from a UCSC gene table.
 
     """
-    return "{} {} {}".format(
-            statement.strip(),
+    return "{} {} {} {}".format(
+            probe_statement.to_string(specification),
+            coordinate_statement.breakpoint_string(coordinates),
             left_row['name'],
             right_row['name'])
 
@@ -72,8 +75,11 @@ def bases_from_coordinate(coordinate, ref_genome):
 
 
 def explode_statements(statements, annotation_files):
-    """Yield coordinate specifications, along with the associated probe name,
-    given an iterable of probe statements and a genome annotation.
+    """Yield expanded probe statements along with the associated rows.
+
+    Yields 3-tuples of dictionaries of the form:
+
+        (probe_specification, right_row, left_row)
 
     """
     for statement in statements:
@@ -88,9 +94,7 @@ def explode_statements(statements, annotation_files):
                     len(annotation.exons(left)),
                     len(annotation.exons(right)))
             for spec in specs:
-                coordinate = sequence.sequence_range(spec, left, right)
-                name = probe_name(statement, left, right)
-                yield coordinate, name
+                yield spec, left, right
 
 
 def from_coordinate(statements_file, genome_file):
@@ -115,8 +119,43 @@ def from_statements(statements_file, genome_file, annotation_files):
     combined_annotation = combine_annotations(annotation_files)
     with open(statements_file) as statements, open(genome_file) as genome:
         ref_genome = reference.reference_genome(genome)
-        coordinate_specs = explode_statements(
+        exploded_statements = explode_statements(
                 statements, combined_annotation)
-        for coordinate, name in coordinate_specs:
-            bases = bases_from_coordinate(coordinate, ref_genome)
+        for name, bases in get_sequences(exploded_statements, ref_genome):
             print_fasta(name, bases)
+
+
+def get_sequences(statements, genome):
+    """Given 3-tuples of coordinates specifications and associated rows, yield
+    the names and sequences of the probes.
+
+    `genome` is the reference genome from which to extract the probes.
+
+    Skips probes with redundant coordinates, printing a warning to stderr.
+
+    """
+    cached_coords = set()
+    for statement in statements:
+        spec, left_row, right_row = statement
+        coordinate = sequence.sequence_range(spec, left_row, right_row)
+        bases = bases_from_coordinate(coordinate, genome)
+        coord_hash = dict_hash(coordinate)
+        if not coord_hash in cached_coords:
+            cached_coords.add(coord_hash)
+            yield probe_name(spec, coordinate, left_row, right_row), bases
+        else:
+            print(
+                "{} {} {} appears to be redundant. Skipping...".format(
+                    probe_statement.to_string(spec),
+                    left_row['name'],
+                    right_row['name']),
+                file=sys.stderr)
+
+
+def dict_hash(dictionary):
+    """Return a unique dicitonary identifier.
+
+    Requires both the keys and values of the dictionary to be hashable.
+
+    """
+    return hash(tuple(sorted(dictionary.items())))

@@ -19,12 +19,23 @@ _PROBE_STATEMENT = r""" # The regex for one side of a probe statement
         \s*
 """
 
+_SEPARATOR = r"""
+    (\/     # Standard separator
+    |
+    ->)     # read-through separator
+"""
+
 _PROBE_STATEMENT_REGEX = re.compile(r"""
-        {0}
-        \/ # Separator for the two features
-        {0}
-        """.format(_PROBE_STATEMENT),
+        {statement}
+        {separator}
+        {statement}
+        """.format(statement=_PROBE_STATEMENT,
+                   separator=_SEPARATOR),
         re.VERBOSE | re.IGNORECASE)
+
+_PROBE_STATEMENT_SKELETON = (
+        "{gene1}#{feature1[0]}[{feature1[1]}]{side1}{bases1} {separator} "
+        "{gene2}#{feature2[0]}[{feature2[1]}]{side2}{bases2}")
 
 
 def parse(probe_statement):
@@ -74,6 +85,7 @@ def parse(probe_statement):
      feature_number_1,
      side_1,
      bases_1,
+     separator,
      gene_2,
      feature_2,
      feature_number_2,
@@ -85,14 +97,15 @@ def parse(probe_statement):
                                "currently only exons are supported".format(
                                    probe_statement))
     return {
-            'gene1':    gene_1,
-            'feature1': (feature_1, _maybe_int(feature_number_1)),
-            'side1' :   side_1.replace('+', 'start').replace('-', 'end'),
-            'bases1':   _maybe_int(bases_1),
-            'gene2':    gene_2,
-            'feature2': (feature_2, _maybe_int(feature_number_2)),
-            'side2' :   side_2.replace('+', 'start').replace('-', 'end'),
-            'bases2':   _maybe_int(bases_2),
+            'gene1':     gene_1,
+            'feature1':  (feature_1, _maybe_int(feature_number_1)),
+            'side1' :    side_1.replace('+', 'start').replace('-', 'end'),
+            'bases1':    _maybe_int(bases_1),
+            'gene2':     gene_2,
+            'feature2':  (feature_2, _maybe_int(feature_number_2)),
+            'side2' :    side_2.replace('+', 'start').replace('-', 'end'),
+            'bases2':    _maybe_int(bases_2),
+            'separator': separator,
             }
 
 
@@ -160,6 +173,19 @@ def _maybe_int(string):
         return int(string)
     except ValueError:
         return string
+
+
+
+def to_string(specification):
+    """Return a string representation of a probe specification.
+
+    """
+    side1 = '+' if specification['side1'] == 'start' else '-'
+    side2 = '+' if specification['side2'] == 'start' else '-'
+    return _PROBE_STATEMENT_SKELETON.format(
+            **dict(specification,
+                   side1=side1,
+                   side2=side2))
 
 
 class InvalidStatement(Exception):

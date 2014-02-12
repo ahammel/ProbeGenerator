@@ -102,7 +102,8 @@ class TestExons(unittest.TestCase):
         with self.assertRaisesRegex(annotation.FormattingError, message):
             annotation.exons({
                 'exonStarts': '1,banana,',
-                'exonEnds': '2,surprise,'
+                'exonEnds': '2,surprise,',
+                'strand': '-'
                 })
 
     def test_exons_raises_FormattingError_when_start_greater_than_end(self):
@@ -113,7 +114,15 @@ class TestExons(unittest.TestCase):
         with self.assertRaisesRegex(annotation.FormattingError, message):
             annotation.exons({
                 'exonStarts': '10,20,',
-                'exonEnds': '1,2,'})
+                'exonEnds': '1,2,',
+                'strand': '-'})
+
+    def test_exons_raises_FormattingError_when_row_missing_strand(self):
+        message = re.escape(
+                "key 'strand' not in fields: ['exonEnds', 'exonStarts']")
+        with self.assertRaisesRegex(annotation.FormattingError, message):
+            del self.row['strand']
+            annotation.exons(self.row)
 
 
 class TestAnnotationLookupGeneIntegration(TestLookupGene):
