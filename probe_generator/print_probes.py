@@ -48,7 +48,7 @@ def probe_name(specification, coordinates, left_row, right_row):
     dictionaries.  `left_row` and `right_row` are rows from a UCSC gene table.
 
     """
-    return "{} {} {} {}".format(
+    return "{}_{}_{}_{}".format(
             probe_statement.to_string(specification),
             coordinate_statement.breakpoint_string(coordinates),
             left_row['name'],
