@@ -1,3 +1,7 @@
+Mar 06, 2014	Alex Hammel		<ahammel@bcgsc.ca>
+	* Release version 0.2.1
+		* Allow unmapped contigs as chromosome names in coordinate statements
+
 Feb 12, 2014	Alex Hammel		<ahammel@bcgsc.ca>
 	* Release version 0.2
 		* Added read-through probe syntax ('->')
