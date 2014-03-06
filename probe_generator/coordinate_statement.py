@@ -5,7 +5,7 @@ import re
 
 _COORDINATE = r"""
     \s*
-    (\w+)       #chromosome
+    ([a-zA-Z0-9.]+)      #chromosome
     \s*:\s*
     (\d+)       #start
     \s*
