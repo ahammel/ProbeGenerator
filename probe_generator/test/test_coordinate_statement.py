@@ -43,3 +43,9 @@ class TestCoordinateStatementParse(unittest.TestCase):
         self.assertEqual(
                 statement.breakpoint_string(self.specification),
                 "1:100/2:200")
+
+    def test_statements_with_unmapped_contigs_parsed_correctly(self):
+        try:
+            statement.parse("GL0021.1:1-25 / GL001234.1:2+25")
+        except statement.InvalidFormat:
+            self.fail()
