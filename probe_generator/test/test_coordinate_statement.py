@@ -16,7 +16,8 @@ class TestCoordinateStatementParse(unittest.TestCase):
                   "chromosome2":  '2',
                   "start2":       200,
                   "end2":         219,
-                  "inversion":    False}
+                  "rc_side_1":    False,
+                  "rc_side_2":    False}
 
     def test_parse_simple_coordinate_statement(self):
          self.assertEqual(
@@ -33,11 +34,17 @@ class TestCoordinateStatementParse(unittest.TestCase):
         with self.assertRaisesRegex(statement.InvalidFormat, message):
             statement.parse('banana')
 
-    def test_parse_returns_an_inversion_when_operations_equal(self):
-        self.specification['inversion'] = True
-        self.assertEqual(
-                statement.parse("1:91+10/2:200+20"),
-                self.specification)
+    def test_side_1_is_reverese_complemented_when_first_side_is_plus(self):
+        self.assertTrue(statement.parse("1:100+10/2:200+20")['rc_side_1'])
+
+    def test_side_1_is_not_reverse_complemented_when_first_side_is_minus(self):
+        self.assertFalse(statement.parse("1:100-10/2:200+20")['rc_side_1'])
+
+    def test_side_2_is_not_reverse_complememnted_when_second_side_is_plus(self):
+        self.assertFalse(statement.parse("1:100-10/2:200+20")['rc_side_2'])
+
+    def test_side_2_is_reverse_complemented_when_second_side_is_minus(self):
+        self.assertTrue(statement.parse("1:100-10/2:200-20")['rc_side_2'])
 
     def test_breakpoint_string_returns_string_representation_of_statement(self):
         self.assertEqual(
