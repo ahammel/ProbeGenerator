@@ -34,7 +34,8 @@ _PROBE_STATEMENT_REGEX = re.compile(r"""
         re.VERBOSE | re.IGNORECASE)
 
 _PROBE_STATEMENT_SKELETON = (
-        "{gene1}#{feature1[0]}[{feature1[1]}]{side1}{bases1} {separator} "
+        "{gene1}#{feature1[0]}[{feature1[1]}]{side1}{bases1}"
+        "{separator}"
         "{gene2}#{feature2[0]}[{feature2[1]}]{side2}{bases2}")
 
 
