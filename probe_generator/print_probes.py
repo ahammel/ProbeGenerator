@@ -69,7 +69,9 @@ def bases_from_coordinate(coordinate, ref_genome):
             coordinate['chromosome2'],
             coordinate['start2'],
             coordinate['end2'])
-    if coordinate['inversion']:
+    if coordinate['rc_side_1']:
+        first_bases = reverse_complement(first_bases)
+    if coordinate['rc_side_2']:
         second_bases = reverse_complement(second_bases)
     return first_bases + second_bases
 

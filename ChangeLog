@@ -1,3 +1,9 @@
+Mar 10, 2014	Alex Hammel		<ahammel@bcgsc.ca>
+	* Release version 0.2.2
+		* Fixed issue with incorrect reverse-complementing behaviour in
+		coordinate statements.
+		* Removed spaces from probe names in output FASTA headers.
+
 Mar 06, 2014	Alex Hammel		<ahammel@bcgsc.ca>
 	* Release version 0.2.1
 		* Allow unmapped contigs as chromosome names in coordinate statements
