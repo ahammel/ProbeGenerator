@@ -6,7 +6,7 @@ if sys.version < '3.2':
     sys.exit(1)
 
 setup(name='ProbeGenerator',
-      version='0.2.1',
+      version='0.2.2',
       description='Automatic fusion-event probe maker',
       author='Alex Hammel',
       author_email='ahammel@bcgsc.ca',
