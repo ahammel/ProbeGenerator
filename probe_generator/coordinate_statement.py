@@ -79,7 +79,8 @@ def parse(statement):
             'chromosome2': chr_2,
             'start2':      start_2,
             'end2':        end_2,
-            'inversion':   operation_1 == operation_2}
+            'rc_side_1':   operation_1 == '+', # 'rc' == reverse complement
+            'rc_side_2':   operation_2 == '-'}
 
 
 def _parse_range(start, operation, bases):

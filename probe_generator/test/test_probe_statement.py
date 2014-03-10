@@ -188,4 +188,4 @@ class TestToString(AbstractProbeStatementTestCase):
     def test_print_basic_probe_statement(self):
         self.assertEqual(
                 statement.to_string(self.probe_specification),
-                self.probe_statement)
+                self.probe_statement.replace(' ', ''))

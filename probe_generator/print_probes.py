@@ -48,7 +48,7 @@ def probe_name(specification, coordinates, left_row, right_row):
     dictionaries.  `left_row` and `right_row` are rows from a UCSC gene table.
 
     """
-    return "{} {} {} {}".format(
+    return "{}_{}_{}_{}".format(
             probe_statement.to_string(specification),
             coordinate_statement.breakpoint_string(coordinates),
             left_row['name'],
@@ -69,7 +69,9 @@ def bases_from_coordinate(coordinate, ref_genome):
             coordinate['chromosome2'],
             coordinate['start2'],
             coordinate['end2'])
-    if coordinate['inversion']:
+    if coordinate['rc_side_1']:
+        first_bases = reverse_complement(first_bases)
+    if coordinate['rc_side_2']:
         second_bases = reverse_complement(second_bases)
     return first_bases + second_bases
 
