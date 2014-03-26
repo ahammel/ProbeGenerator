@@ -69,7 +69,7 @@ class TestSequenceRangePositional(AbstractSequenceRangeTestCase):
                 'exonEnds':   '62,300'   # numbers are reversed relative to '+'
                 }
 
-    def test_sequence_range_returns_incusive_ranges_and_rev_comp_flags(self):
+    def test_sequence_range_returns_inclusive_ranges_and_rev_comp_flags(self):
         """
         The sequence_range function returns a list of pairs of tuples
         specifying the range of base pairs to be extracted from the genome with
