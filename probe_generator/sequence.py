@@ -24,15 +24,7 @@ def sequence_range(specification, row_1, row_2):
     no globs except in the 'bases' field). `row_1` and `row_2` are rows from a
     UCSC annotation table.
 
-    Returns a dict in the format:
-
-        {'range_1': (chromosome1, start1, end1),
-         'range_2': (chromosome2, start2, end2),
-         'reverse': flag}
-
-    Where the chromosome, start, and end specify the genomic locations of the
-    probe sequence, and the `flag` is a boolean indicating whether or not the
-    second sequence should be reverse-complemented.
+    Returns a dict in the same format as a coordinate statement.
 
     Raises an `InterfaceError` if the `specification` or either of the `rows`
     are improperly formatted.
@@ -148,7 +140,7 @@ def _positional_sequence_range(specification, row_1, row_2):
      right_start,
      right_end) = _get_base_positions(specification, row_1, row_2)
 
-    reverse_complement_flag = _get_rev_comp_flag(
+    rc_left, rc_right = _get_rev_comp_flags(
             specification, row_1, row_2)
 
     return {'chromosome1': left_chromosome,
@@ -157,7 +149,8 @@ def _positional_sequence_range(specification, row_1, row_2):
             'chromosome2': right_chromosome,
             'start2':      right_start,
             'end2':        right_end,
-            'inversion':   reverse_complement_flag}
+            'rc_side_1':   rc_left,
+            'rc_side_2':   rc_right}
 
 
 def _get_chromosomes(*rows):
@@ -255,45 +248,25 @@ def _get_exon(positions, index):
                     length=len(positions)))
 
 
-def _get_rev_comp_flag(specification, row_1, row_2):
+def _get_rev_comp_flags(specification, row_1, row_2):
     """Determine whether the specification represents an inversion event.
 
     Take a probe specification and two lines from a UCSC genome annotation.
 
-    Returns True if the sequence from the second feature should be
-    reverse-complemented in the probe sequence, else False.
+    We reverse-complement the first set of base pairs if it's the start of an
+    exon on the plus strand, or the end of an exon on the minus strand. The
+    second set of base-pairs is rc'd if it's the start of an exon on the minus
+    strand or the end of an exon on the plus strand. If this rule is followed,
+    the intended breakpoint is always in the middle of the probe.
 
-    An inversion is indicated in one of two circumstances:
-
-        1. the two features are on the same strand and are fused at the same
-           end:
-
-
-              |---------->                |----------->
-            ..................................................
-            ..................................................
-                         ^                            ^
-
-        2. the two features are on opposite strands and fused at opposite ends:
-
-              |----------->
-            ..................................................
-            ..................................................
-                          ^              <-------------|
-                                                       ^
-
-    In either case, the two features must be inverted relative to one another
-    in order to bring the 5' and 3' ends of the feature together.
+    [Understand? Good, explain it to me. --Alex]
 
     """
     side1, side2 = specification['side1'], specification['side2']
     strand1, strand2 = row_1['strand'], row_2['strand']
-    if side1 == side2 and strand1 == strand2:
-        return True
-    elif side1 != side2 and strand1 != strand2:
-        return True
-    else:
-        return False
+    return ((side1, strand1) in (('start', '+'), ('end', '-')),
+            (side2, strand2) in (('start', '-'), ('end', '+')))
+
 
 
 class InterfaceError(Exception):

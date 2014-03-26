@@ -50,7 +50,7 @@ In either case, copy or link the script under `bin/probe-generator` to
 somewhere in your $PATH and test that everything worked:
 
     $ probe-generator --version
-    ProbeGenerator version 0.2.2
+    ProbeGenerator version 0.2.3
 
 
 # Probe language
