@@ -139,8 +139,11 @@ def get_sequences(statements, genome):
     cached_coords = set()
     for statement in statements:
         spec, left_row, right_row = statement
-        coordinate = sequence.sequence_range(spec, left_row, right_row)
-        bases = bases_from_coordinate(coordinate, genome)
+        try:
+            coordinate = sequence.sequence_range(spec, left_row, right_row)
+            bases = bases_from_coordinate(coordinate, genome)
+        except (sequence.NoFeatureError, reference.MissingChromosome) as error:
+            print("{}. Skipping...".format(error), file=sys.stderr)
         coord_hash = dict_hash(coordinate)
         if not coord_hash in cached_coords:
             cached_coords.add(coord_hash)
