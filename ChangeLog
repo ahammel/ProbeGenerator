@@ -1,3 +1,14 @@
+Mar 26, 2014	Alex Hammel		<ahammel@bcgsc.ca>
+	* Release version 0.2.3
+		* Fixed issue with incorrect reverse-complementing behaviour in probe
+		statements.
+		* Statements which ask for an exon which is not in the annotation for
+		a transcript (e.g., asking for exon 5 of a 4 exon transcript) now
+		results in a warning mesage printed to stderr rather than a crash.
+		* Annotations which specify chromosomes which are not in the reference
+		genome (ususally unmapped contigs) now result in a warning message
+		printed to stderr rather than a crash.
+
 Mar 10, 2014	Alex Hammel		<ahammel@bcgsc.ca>
 	* Release version 0.2.2
 		* Fixed issue with incorrect reverse-complementing behaviour in
@@ -15,5 +26,4 @@ Feb 12, 2014	Alex Hammel		<ahammel@bcgsc.ca>
 		* Suppressed printing of redundant probes
 
 Jan 24, 2014	Alex Hammel		<ahammel@bcgsc.ca>
-
 	* Release version 0.1
