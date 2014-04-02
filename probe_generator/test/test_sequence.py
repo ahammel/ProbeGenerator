@@ -83,11 +83,11 @@ class TestSequenceRangePositional(AbstractSequenceRangeTestCase):
         self.assertEqual(
                 range_spec,
                 {'chromosome1':  '1',
-                 'start1':       50,
-                  'end1':        99,
+                 'start1':       51,
+                  'end1':        100,
                  'chromosome2':  '2',
-                 'start2':       20,  # Feature is on '-' strand, so
-                  'end2':        39,  # start and end are reversed
+                 'start2':       21,  # Feature is on '-' strand, so
+                  'end2':        40,  # start and end are reversed
                  'rc_side_1':    True,
                  'rc_side_2':    False})
 
@@ -101,7 +101,7 @@ class TestSequenceRangePositional(AbstractSequenceRangeTestCase):
                 self.feature_2)
         self.assertEqual(
                 (range_spec['start1'], range_spec['end1']),
-                (50, 50))
+                (51, 51))
 
     def test_sequence_range_returns_entire_feature_when_bases_globbed(self):
         self.probe_specification['bases1'] = '*'
@@ -177,32 +177,32 @@ class TestSequenceRangesEndwise(AbstractSequenceRangeTestCase):
     def setUp(self):
         super().setUp()
         self.endwise_specification = {
-                'gene1': 'LEFT',
-                'feature1': ('exon', 1),
-                'side1': None, # must be set in test
-                'bases1': 50,
-                'gene2': 'RIGHT',
-                'feature2': ('exon', 1),
-                'side2': None,
-                'bases2': 50,
+                'gene1':     'LEFT',
+                'feature1':  ('exon', 1),
+                'side1':     None, # must be set in test
+                'bases1':    50,
+                'gene2':     'RIGHT',
+                'feature2':  ('exon', 1),
+                'side2':     None,
+                'bases2':    50,
                 'separator': '/',
                 }
         self.endwise_left = {
-                'gene': 'LEFT',
-                'strand': None, # set in test
-                'chrom': 'chr1',
+                'gene':       'LEFT',
+                'strand':     None, # set in test
+                'chrom':      'chr1',
                 'exonStarts': '100,',
-                'exonEnds':  '200,'
+                'exonEnds':   '200,'
                 }
         self.endwise_right = {
-                'gene': 'RIGHT',
-                'strand': None, # set in test
-                'chrom': 'chr2',
+                'gene':       'RIGHT',
+                'strand':     None, # set in test
+                'chrom':      'chr2',
                 'exonStarts': '300,',
-                'exonEnds':  '400,'
+                'exonEnds':   '400,'
                 }
 
-    def endwise_test(self, sides_and_strands, result):
+    def endwise(self, sides_and_strands, result):
         """Assert that the results are correct, given the sides and strands of
         the features.
 
@@ -232,115 +232,115 @@ class TestSequenceRangesEndwise(AbstractSequenceRangeTestCase):
                 the_result)
 
     def test_endwise_start_start_plus_plus(self):
-        self.endwise_test(
+        self.endwise(
                 ('start', 'start', '+', '+'),
-                {'start1': 100,       'end1': 149,
-                 'start2': 300,       'end2': 349,
+                {'start1': 101,       'end1': 150,
+                 'start2': 301,       'end2': 350,
                  'rc_side_1': True,   'rc_side_2': False})
 
     def test_endwise_start_start_plus_minus(self):
-        self.endwise_test(
+        self.endwise(
                 ('start', 'start', '+', '-'),
-                {'start1': 100,       'end1': 149,
+                {'start1': 101,       'end1': 150,
                  'start2': 351,       'end2': 400,
                  'rc_side_1': True,   'rc_side_2': True})
 
     def test_endwise_start_start_minus_plus(self):
-        self.endwise_test(
+        self.endwise(
                 ('start', 'start', '-', '+'),
                 {'start1': 151,      'end1': 200,
-                 'start2': 300,      'end2': 349,
+                 'start2': 301,      'end2': 350,
                  'rc_side_1': False,  'rc_side_2': False})
 
     def test_endwise_start_start_minus_minus(self):
-        self.endwise_test(
+        self.endwise(
                 ('start', 'start', '-', '-'),
                 {'start1': 151,      'end1': 200,
                  'start2': 351,      'end2': 400,
                  'rc_side_1': False, 'rc_side_2': True})
 
     def test_endwise_start_end_plus_plus(self):
-        self.endwise_test(
+        self.endwise(
                 ('start', 'end', '+', '+'),
-                {'start1': 100,      'end1': 149,
+                {'start1': 101,      'end1': 150,
                  'start2': 351,      'end2': 400,
                  'rc_side_1': True,  'rc_side_2': True})
 
     def test_endwise_start_end_plus_minus(self):
-        self.endwise_test(
+        self.endwise(
                 ('start', 'end', '+', '-'),
-                {'start1': 100,      'end1': 149,
-                 'start2': 300,      'end2': 349,
+                {'start1': 101,      'end1': 150,
+                 'start2': 301,      'end2': 350,
                  'rc_side_1': True,  'rc_side_2': False})
 
     def test_endwise_start_end_minus_plus(self):
-        self.endwise_test(
+        self.endwise(
                 ('start', 'end', '-', '+'),
                 {'start1': 151,      'end1': 200,
                  'start2': 351,      'end2': 400,
                  'rc_side_1': False, 'rc_side_2': True})
 
     def test_endwise_start_end_minus_minus(self):
-        self.endwise_test(
+        self.endwise(
                 ('start', 'end', '-', '-'),
                 {'start1': 151,      'end1': 200,
-                 'start2': 300,      'end2': 349,
+                 'start2': 301,      'end2': 350,
                  'rc_side_1': False, 'rc_side_2': False})
 
     def test_endwise_end_start_plus_plus(self):
-        self.endwise_test(
+        self.endwise(
                 ('end', 'start', '+', '+'),
                 {'start1': 151,      'end1': 200,
-                 'start2': 300,      'end2': 349,
+                 'start2': 301,      'end2': 350,
                  'rc_side_1': False, 'rc_side_2': False})
 
     def test_endwise_end_start_plus_minus(self):
-        self.endwise_test(
+        self.endwise(
                 ('end', 'start', '+', '-'),
                 {'start1': 151,      'end1': 200,
                  'start2': 351,      'end2': 400,
                  'rc_side_1': False, 'rc_side_2': True})
 
     def test_endwise_end_start_minus_plus(self):
-        self.endwise_test(
+        self.endwise(
                 ('end', 'start', '-', '+'),
-                {'start1': 100,      'end1': 149,
-                 'start2': 300,      'end2': 349,
+                {'start1': 101,      'end1': 150,
+                 'start2': 301,      'end2': 350,
                  'rc_side_1': True,  'rc_side_2': False})
 
     def test_endwise_end_start_minus_minus(self):
-        self.endwise_test(
+        self.endwise(
                 ('end', 'start', '-', '-'),
-                {'start1': 100,      'end1': 149,
+                {'start1': 101,      'end1': 150,
                  'start2': 351,      'end2': 400,
                  'rc_side_1': True,  'rc_side_2': True})
 
     def test_endwise_end_end_plus_plus(self):
-        self.endwise_test(
+        self.endwise(
                 ('end', 'end', '+', '+'),
                 {'start1': 151,      'end1': 200,
                  'start2': 351,      'end2': 400,
                  'rc_side_1': False, 'rc_side_2': True})
 
     def test_endwise_end_end_plus_minus(self):
-        self.endwise_test(
+        self.endwise(
                 ('end', 'end', '+', '-'),
                 {'start1': 151,      'end1': 200,
-                 'start2': 300,      'end2': 349,
+                 'start2': 301,      'end2': 350,
                  'rc_side_1': False, 'rc_side_2': False})
 
     def test_endwise_end_end_minus_plus(self):
-        self.endwise_test(
+        self.endwise(
                 ('end', 'end', '-', '+'),
-                {'start1': 100,      'end1': 149,
+                {'start1': 101,      'end1': 150,
                  'start2': 351,      'end2': 400,
                  'rc_side_1': True,  'rc_side_2': True})
 
     def test_endwise_end_end_minus_minus(self):
-        self.endwise_test(
+        self.endwise(
                 ('end', 'end', '-', '-'),
-                {'start1': 100,      'end1': 149,
-                 'start2': 300,      'end2': 349,
+                {'start1': 101,      'end1': 150,
+                 'start2': 301,      'end2': 350,
                  'rc_side_1': True,  'rc_side_2': False})
 
 
