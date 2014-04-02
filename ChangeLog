@@ -1,3 +1,7 @@
+Apr 02, 2014 	Alex Hammel		<ahammel@bcgsc.ca>
+	* Release version 0.2.4
+		* Fix off-by-one error in determining left bound of exons.
+
 Mar 26, 2014	Alex Hammel		<ahammel@bcgsc.ca>
 	* Release version 0.2.3
 		* Fixed issue with incorrect reverse-complementing behaviour in probe
