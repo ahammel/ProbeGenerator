@@ -212,26 +212,47 @@ def _get_base_pair_range(bases, start, end, side, strand):
     number of base-pairs required, the side from which the sub-range is to be
     extracted, and the strand of the feature.
 
-    In UCSC genome files, the starting base pairs of exons are given from left
-    to right across the '+' strand of the chromosome, regardless of the
-    orientation of the gene. The locations of the 'start' and the 'end' of an
-    exon are switched for a gene on the minus strand.
-
     """
-    if (side == 'start') == (strand == '+'): # <-- see below
-        return start, (start + bases - 1)
+    if is_leftmost_side(side, strand):
+        return start + 1, (start + bases)
     else:
         return (end - bases + 1), end
-    # The interpretation of the weird-looking conditional pointed out above is
-    # this: the _rightmost_ set of base pairs is the _start_ of a feature on
-    # the plus strand, or the _end_ of a feature on the minus strand:
-    #
-    #                 start |                end |
-    #                       --------------------->
-    #       + .....................................................
-    #       - .....................................................
-    #                       <---------------------
-    #                       ^ end                ^ start
+
+def is_leftmost_side(side, strand):
+    """Is the side of the exon we're asking for closest to base 1 of the
+    chromosome?
+
+    The _leftmost_ base pair of an exon (i.e., the one with the lowest index)
+    is the _start_ of an exon on the plus strand, on the _end_ of an exon on
+    the minus strand:
+
+                    start |                end |
+                          --------------------->
+          1 + ...................................................
+            - ...................................................
+                          <---------------------
+                          ^ end                ^ start
+
+    In UCSC genome files, the starting base pairs of exons are given from left
+    to right across the '+' strand of the chromosome, regardless of the
+    orientation of the gene. The locations of the start and the stop codons of an
+    exon are switched for a gene on the minus strand.
+
+    The coordinates of the exons are given in left-exclusive-right-inclusive
+    format---(n,m] in interval notation---meaning that for a gene on the plus
+    strand, the 'A' of the 'ATG' codon which starts the exon is actually one
+    base _after_ the exon starts value:
+
+    {exonStarts: 100,
+     exonEnds:   200,
+     strand:     +}:
+                          --------->
+                    100 101 102 103 ...
+                      N   A   T   G ...
+             non-exon }   { exon    ...
+
+    """
+    return (side == 'start') == (strand == '+')
 
 
 def _get_exon(positions, index):
