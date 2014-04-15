@@ -8,7 +8,8 @@ from probe_generator import (reference,
                              coordinate_statement,
                              annotation,
                              probe_statement,
-                             sequence)
+                             sequence,
+                             snp_statement)
 
 _COMPLEMENT = str.maketrans('acgtACGT', 'tgcaTGCA')
 
@@ -125,6 +126,20 @@ def from_statements(statements_file, genome_file, annotation_files):
                 statements, combined_annotation)
         for name, bases in get_sequences(exploded_statements, ref_genome):
             print_fasta(name, bases)
+
+
+def from_snps(snp_file, genome_file):
+    """Print probes in FASTA format given a reference genome file and a file
+    containing SNP probe statements.
+
+    """
+    # TODO: there should probably be only one function like this to print all
+    # kinds of probes
+    with open(snp_file) as snps, open(genome_file) as genome:
+        ref_genome = reference.reference_genome(genome)
+        for statement in snps:
+            probe = snp_statement.SnpProbe(statement.strip(), ref_genome)
+            print_fasta(probe, probe.sequence())
 
 
 def get_sequences(statements, genome):

@@ -1,14 +1,17 @@
 """Automatically generate probe sequences.
 
 Usage:
-    probe-generator --statement STMT  --genome GENOME --annotation FILE...  [-f]
-    probe-generator --coordinate COORD  --genome GENOME [-f]
+    probe-generator --exon FILE  --genome GENOME --annotation FILE...  [-f]
+    probe-generator --coordinate FILE  --genome GENOME [-f]
+    probe-generator --snp FILE --genome GENOME [-f]
 
 Options:
-    -c COORD --coordinate=COORD     a file containing coordinate statements
+    -c FILE --coordinate=FILE       a file containing coordinate statements
                                     e.g. "1:100-10/2:200+20"
-    -s STMT --statement=STMT        a file containing fusion statements
+    -e FILE --exon=FILE             a file containing exon fusion statements
                                     e.g. "FOO#exon[1]-10/BAR#exon[2]+20"
+    -s FILE --snp=FILE              a file containing SNP mutation statements
+                                    e.g. "1:100 c>t/50"
     -g GENOME --genome=GENOME       the Ensembl reference genome
                                     (FASTA format)
     -a FILE --annotation=FILE       a genome annotation file in UCSC format
@@ -52,9 +55,12 @@ def main():
             sys.exit(1)
     if args['--coordinate'] is not None:
         print_probes.from_coordinate(args['--coordinate'], args['--genome'])
-    else:
+    elif args['--exon'] is not None:
         print_probes.from_statements(
-                args['--statement'], args['--genome'], args['--annotation'])
+                args['--exon'], args['--genome'], args['--annotation'])
+    else:
+        print_probes.from_snps(
+                args['--snp'], args['--genome'])
 
 
 if __name__ == '__main__':
