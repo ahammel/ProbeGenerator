@@ -21,7 +21,7 @@ class TestSnpProbe(unittest.TestCase):
                 "acggacgt",
                 self.probe.sequence())
 
-    def test_snp_probe_reverse_complement_test(self):
+    def test_snp_negative_strand_mutation(self):
         rc_probe = snp_statement.SnpProbe("2:4 t>a /8", self.genome)
         self.assertEqual(
                 "aaatgggg",
