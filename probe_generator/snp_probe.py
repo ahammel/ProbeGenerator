@@ -1,7 +1,6 @@
 """Parse single-nucleotide polymorphism events from human-readable statements.
 
 """
-### TODO: make the rest of the *_statement modules look like this
 import re
 
 from probe_generator import reference, sequence
@@ -51,10 +50,7 @@ class SnpProbe(object):
     def sequence(self, genome):
         """Return the sequence of the probe.
 
-        The mutant base is placed at the centre of the probe. If the number of
-        bases in the probe is even, the location of the mutation in the probe
-        is detemined by integer division (i.e., the mutation will be at the
-        second base of a 4-base pair probe.
+        The mutant at the index (probe_length // 2).
 
         """
         start, end = _get_bases(self._spec)
