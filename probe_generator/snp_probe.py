@@ -4,9 +4,10 @@
 ### TODO: make the rest of the *_statement modules look like this
 import re
 
-from probe_generator import reference
+from probe_generator import reference, sequence
+from probe_generator.probe import InvalidStatement
 
-_SNP_REGEX = re.compile("""
+_SNP_REGEX = re.compile(r"""
         \s*
         ([a-z0-9.]+) # chromosome
         \s*
@@ -16,7 +17,7 @@ _SNP_REGEX = re.compile("""
         \s*
         ([acgt])     # reference base
         \s*
-        >            # separator
+        >            # arrow separator
         \s*
         ([acgt])     # mutant base
         \s*
@@ -27,17 +28,6 @@ _SNP_REGEX = re.compile("""
         """, re.VERBOSE | re.IGNORECASE)
 
 _SNP_STATEMENT_SKELETON = "{chromosome}:{index}_{reference}>{mutation}/{bases}"
-
-_COMPLEMENT = {
-        "A": "T",
-        "C": "G",
-        "G": "C",
-        "T": "A",
-        "a": "t",
-        "c": "g",
-        "g": "c",
-        "t": "a",
-        }
 
 
 class SnpProbe(object):
@@ -52,14 +42,13 @@ class SnpProbe(object):
     chromosome.
 
     """
-    def __init__(self, statement, genome):
-        self._spec = _parse(statement)
-        self._genome = genome
+    def __init__(self, specification):
+        self._spec = specification
 
     def __str__(self):
         return _SNP_STATEMENT_SKELETON.format(**self._spec)
 
-    def sequence(self):
+    def sequence(self, genome):
         """Return the sequence of the probe.
 
         The mutant base is placed at the centre of the probe. If the number of
@@ -70,18 +59,23 @@ class SnpProbe(object):
         """
         start, end = _get_bases(self._spec)
         raw_bases = reference.bases(
-                self._genome,
+                genome,
                 self._spec["chromosome"],
                 start,
                 end)
         return _mutate(raw_bases, self._spec)
+
+    @staticmethod
+    def from_statement(statement):
+        spec = _parse(statement)
+        return SnpProbe(spec)
 
 
 def _parse(statement):
     match = _SNP_REGEX.match(statement)
 
     if not match:
-        raise InvalidFormat(
+        raise InvalidStatement(
                 "could not parse snp statement {!r}".format(
                     statement))
 
@@ -110,13 +104,15 @@ def _mutate(bases, spec):
 
     """
     mutation_index = (spec["bases"] // 2) - 1
-    if bases[mutation_index].lower() == spec["reference"].lower():
+    genome_ref_base = bases[mutation_index].lower()
+    spec_ref_base = spec["reference"].lower()
+    if genome_ref_base == spec_ref_base:
         return (bases[:mutation_index] +
                 spec["mutation"]       +
                 bases[mutation_index+1:])
-    elif bases[mutation_index].lower() == _COMPLEMENT[spec["reference"]].lower():
-        return (bases[:mutation_index]        +
-                _COMPLEMENT[spec["mutation"]] +
+    elif genome_ref_base == sequence.complement(spec_ref_base):
+        return (bases[:mutation_index]                +
+                sequence.complement(spec["mutation"]) +
                 bases[mutation_index+1:])
     else:
         raise ReferenceError(
@@ -125,12 +121,6 @@ def _mutate(bases, spec):
                     bases[mutation_index],
                     spec["reference"],
                     spec["mutation"]))
-
-
-class InvalidFormat(Exception):
-    """Raised when a snp statement cannot be parsed.
-
-    """
 
 
 class ReferenceError(Exception):

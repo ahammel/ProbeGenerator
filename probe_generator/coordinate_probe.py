@@ -3,21 +3,24 @@
 """
 import re
 
+from probe_generator import reference
+from probe_generator.probe import InvalidStatement
+
 _COORDINATE = r"""
     \s*
-    ([a-zA-Z0-9.]+)      #chromosome
-    \s*:\s*
-    (\d+)       #start
+    ([a-zA-Z0-9.]+) # chromosome
+    \s*:\s*         # colon-separator
+    (\d+)           # start
     \s*
-    ([+-])
+    ([+-])          # side
     \s*
-    (\d+)       # range
+    (\d+)           # range
     \s*
 """
 
 _COORDINATE_STATEMENT_REGEX = re.compile(r"""
         {0}
-        \/
+        /
         {0}
         """.format(_COORDINATE), re.VERBOSE)
 
@@ -25,41 +28,56 @@ _COORDINATE_STATEMENT_SKELETON = ("{chromosome1}:{end1}/"
                                   "{chromosome2}:{start2}")
 
 
-def parse(statement):
-    """Return a coordinate specification from a statement.
-
-    Statements are in the form:
-
-        "<chr>:<start>(-|+)<range>/<chr>:<start>(-|+)<range>"
-
-    Where <chr> is a chromosome, <start> is the start of the probe, and <range>
-    is the number of flanking bases to include in the probe. '+' indicates that
-    the flanking bases should be *after* the starting base, and '-' indicates
-    that they should be *before*.
+class CoordinateProbe(object):
+    """A probe for a fusion event using the coordiantes for the breakpoints.
 
     Coordinate specifications are dictionaries in the format:
 
-        {'chromosome(1|2): str
-         'start(1|2):      int
-         'end(1|2):        int
+        {
+        'chromosome(1|2)': str
+        'start(1|2)':      int
+        'end(1|2)':        int
+        'rc_side_(1|2)':   bool
         }
 
     'start' and 'end' values in the specification are 1-based inclusive ranges.
 
-    Example:
+    """
+    def __init__(self, specification):
+        self._spec = specification
 
-        >>> parse("1:100-10/2:200+20")
-        {"chromosome1":  "1",
-         "start1":       91,
-         "end1":         100,
-         "chromosome2":  "2",
-         "start2":       200,
-         "end2":         219}
+    def __str__(self):
+        return _COORDINATE_STATEMENT_SKELETON.format(**self._spec)
+
+    def sequence(self, genome):
+        return reference.bases_from_coordinate(self._spec, genome)
+
+    @staticmethod
+    def from_statement(statement):
+        """Parse a coordinate probe from a string.
+
+        Statements are in the form:
+
+            "<chr>:<start>(-|+)<range>/<chr>:<start>(-|+)<range>"
+
+        Where <chr> is a chromosome, <start> is the start of the probe, and <range>
+        is the number of flanking bases to include in the probe. '+' indicates that
+        the flanking bases should be *after* (i.e., the indecies of the bases are
+        larger than the start) the starting base, and '-' indicates that they
+        should be *before*.
+
+        """
+        spec = _parse(statement)
+        return CoordinateProbe(spec)
+
+
+def _parse(statement):
+    """Return a coordinate specification from a statement.
 
     """
     match = _COORDINATE_STATEMENT_REGEX.match(statement)
     if not match:
-        raise InvalidFormat(
+        raise InvalidStatement(
                 "could not parse coordinate statement {!r}".format(
                     statement))
     (chr_1,
@@ -95,21 +113,3 @@ def _parse_range(start, operation, bases):
     else:
         assert False, ("Operation not in '[+-]'.\n"
                        "That's bad. Contact the maintainer.")
-
-
-def breakpoint_string(specification):
-    """Return a string representation of the breakpoint of a coordinate
-    specification.
-
-    Returns the chromosome and index of the two bases touching one another in
-    the middle of the probe.
-
-
-    """
-    return _COORDINATE_STATEMENT_SKELETON.format(**specification)
-
-
-class InvalidFormat(Exception):
-    """Raised when a coordinate statement cannot be parsed.
-
-    """

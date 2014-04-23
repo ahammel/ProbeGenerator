@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from probe_generator import reference, coordinate_statement
+from probe_generator import reference
 from probe_generator.test.test_constants import VALIDATION_DATA_DIR
 
 MOCK_GENOME_FILE = [ # input is any iter of strings
@@ -101,34 +101,6 @@ class TestReferenceGenomeBasesIntegration(TestReferenceBases):
     """
     def setUp(self):
         self.ref_genome = reference.reference_genome(iter(MOCK_GENOME_FILE))
-
-
-class TestBasesCoordinateStatementIntegration(unittest.TestCase):
-    """Test cases for the integration of the interface between the
-    `coordinate_statement.parse` and `reference.bases`.
-
-    """
-    def setUp(self):
-        self.statement = "1:16-8/X:1+6"
-        self.spec = coordinate_statement.parse(self.statement)
-
-    def test_bases_extracted_correctly_downstream_of_reference_base(self):
-        self.assertEqual(
-                reference.bases(
-                    MOCK_REFERENCE_GENOME,
-                    self.spec['chromosome1'],
-                    self.spec['start1'],
-                    self.spec['end1']),
-                "GGGGTTTT")
-
-    def test_bases_extracted_correctly_upstream_of_reference_base(self):
-        self.assertEqual(
-                reference.bases(
-                    MOCK_REFERENCE_GENOME,
-                    self.spec['chromosome2'],
-                    self.spec['start2'],
-                    self.spec['end2']),
-                "aaaacc")
 
 
 @unittest.skipIf(not os.path.exists(PRODUCTION_GENOME_FILE),

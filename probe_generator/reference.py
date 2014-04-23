@@ -1,6 +1,7 @@
 """Parse and extract base pair sequences from an Ensembl reference genome.
 
 """
+from probe_generator import sequence
 
 
 def bases(ref_genome, chromosome, start, end):
@@ -17,7 +18,7 @@ def bases(ref_genome, chromosome, start, end):
 
     """
     try:
-        sequence = ref_genome[chromosome][start-1:end]
+        base_pairs = ref_genome[chromosome][start-1:end]
     except KeyError:
         raise MissingChromosome(
                 "no such chromosome: {!r}".format(
@@ -31,12 +32,33 @@ def bases(ref_genome, chromosome, start, end):
         raise InvalidRange("unsupported values for `start` and `end`: "
                            "({}, {}). `start` must be  <= `end`".format(
                                start, end))
-    if end-start+1 != len(sequence):
+    if end-start+1 != len(base_pairs):
         raise NonContainedRange(
                 "range [{0}:{1}] outside the "
                 "range of chromosome {2!r}".format(
                     start, end, chromosome))
-    return sequence
+    return base_pairs
+
+
+def bases_from_coordinate(coordinate, ref_genome):
+    """Given a set of coordinates and a genome, return a probe sequence.
+
+    """
+    first_bases = bases(
+            ref_genome,
+            coordinate['chromosome1'],
+            coordinate['start1'],
+            coordinate['end1'])
+    second_bases = bases(
+            ref_genome,
+            coordinate['chromosome2'],
+            coordinate['start2'],
+            coordinate['end2'])
+    if coordinate['rc_side_1']:
+        first_bases = sequence.reverse_complement(first_bases)
+    if coordinate['rc_side_2']:
+        second_bases = sequence.reverse_complement(second_bases)
+    return first_bases + second_bases
 
 
 def reference_genome(genome):

@@ -1,24 +1,14 @@
 """Automatically generate probe sequences.
 
 Usage:
-    probe-generator --exon FILE  --genome GENOME --annotation FILE...  [-f]
-    probe-generator --coordinate FILE  --genome GENOME [-f]
-    probe-generator --snp FILE --genome GENOME [-f]
+    probe-generator --statements FILE --genome FILE [--annotation FILE...] [-f]
 
 Options:
-    -c FILE --coordinate=FILE       a file containing coordinate statements
-                                    e.g. "1:100-10/2:200+20"
-    -e FILE --exon=FILE             a file containing exon fusion statements
-                                    e.g. "FOO#exon[1]-10/BAR#exon[2]+20"
-    -s FILE --snp=FILE              a file containing SNP mutation statements
-                                    e.g. "1:100 c>t/50"
-    -g GENOME --genome=GENOME       the Ensembl reference genome
-                                    (FASTA format)
+    -s FILE --statements=FILE       a file containing probe statements
+    -g FILE --genome=FILE           the reference genome (FASTA format)
     -a FILE --annotation=FILE       a genome annotation file in UCSC format
     -f --force                      run even if the total system memory is
                                     insufficient or cannot be determined
-
-Please note that using --force is *strongly* discouraged.
 
 """
 import sys
@@ -53,14 +43,8 @@ def main():
                   "See README.md for details".format(error),
                   file=sys.stderr)
             sys.exit(1)
-    if args['--coordinate'] is not None:
-        print_probes.from_coordinate(args['--coordinate'], args['--genome'])
-    elif args['--exon'] is not None:
-        print_probes.from_statements(
-                args['--exon'], args['--genome'], args['--annotation'])
-    else:
-        print_probes.from_snps(
-                args['--snp'], args['--genome'])
+    print_probes.print_probes(
+            args['--statements'], args['--genome'], *args['--annotation'])
 
 
 if __name__ == '__main__':

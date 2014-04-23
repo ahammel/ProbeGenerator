@@ -1,15 +1,12 @@
 import unittest
 
-from probe_generator import snp_statement
+from probe_generator.test.test_constants import GENOME
+from probe_generator.snp_probe import SnpProbe
 
 
 class TestSnpProbe(unittest.TestCase):
     def setUp(self):
-        self.genome = {
-                "1": "acgtacgt",
-                "2": "aaaagggg",
-                }
-        self.probe = snp_statement.SnpProbe("1:4 t>g /8", self.genome)
+        self.probe = SnpProbe.from_statement("1:4 t>g /8")
 
     def test_snp_probe_string(self):
         self.assertEqual(
@@ -19,16 +16,16 @@ class TestSnpProbe(unittest.TestCase):
     def test_snp_probe_sequence_simple_test(self):
         self.assertEqual(
                 "acggacgt",
-                self.probe.sequence())
+                self.probe.sequence(GENOME))
 
     def test_snp_probe_reverse_complement_test(self):
-        rc_probe = snp_statement.SnpProbe("2:4 t>a /8", self.genome)
+        rc_probe = SnpProbe.from_statement("2:4 t>a /8")
         self.assertEqual(
                 "aaatgggg",
-                rc_probe.sequence())
+                rc_probe.sequence(GENOME))
 
     def test_snp_probe_is_case_insensitive(self):
-        upper_probe = snp_statement.SnpProbe("1:4 T>G /8", self.genome)
+        upper_probe = SnpProbe.from_statement("1:4 T>G /8")
         self.assertEqual(
                 "acgGacgt",
-                upper_probe.sequence())
+                upper_probe.sequence(GENOME))

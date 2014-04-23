@@ -4,23 +4,25 @@
 import re
 import itertools
 
+from probe_generator import reference, annotation, exon_coordinate
+from probe_generator.probe import InvalidStatement
 
-_PROBE_STATEMENT = r""" # The regex for one side of a probe statement
-        \s*             # non-significant whitespace
-        ([a-z0-9_./-]+) # gene name
-        \s*\#\s*        # hash-separator
-        ([a-z]+|\*)     # feature name
-        \s*\[\s*        # bracket-delimiter
-        (\d+|\*)        # the number of the feature
+_PROBE_STATEMENT = r"""    # The regex for one side of a probe statement
+        \s*                # non-significant whitespace
+        ([a-zA-Z0-9_./-]+) # gene name
+        \s*\#\s*           # hash-separator
+        ([a-zA-Z]+|\*)     # feature name
+        \s*\[\s*           # bracket-delimiter
+        (\d+|\*)           # the number of the feature
         \s*\]\s*
-        ([-+\*])        # first feature side
+        ([\*+-])           # feature side
         \s*
-        (\d+|\*)        # number of bases
+        (\d+|\*)           # number of bases
         \s*
 """
 
 _SEPARATOR = r"""
-    (\/     # Standard separator
+    (\/     # standard separator
     |
     ->)     # read-through separator
 """
@@ -29,18 +31,56 @@ _PROBE_STATEMENT_REGEX = re.compile(r"""
         {statement}
         {separator}
         {statement}
-        """.format(statement=_PROBE_STATEMENT,
-                   separator=_SEPARATOR),
-        re.VERBOSE | re.IGNORECASE)
+        """.format(statement = _PROBE_STATEMENT,
+                   separator = _SEPARATOR),
+        re.VERBOSE)
 
 _PROBE_STATEMENT_SKELETON = (
         "{gene1}#{feature1[0]}[{feature1[1]}]{side1}{bases1}"
         "{separator}"
-        "{gene2}#{feature2[0]}[{feature2[1]}]{side2}{bases2}")
+        "{gene2}#{feature2[0]}[{feature2[1]}]{side2}{bases2}"
+        "_{chromosome1}:{end1}/{chromosome2}:{start2}"
+        "_{transcript1}_{transcript2}")
 
 
-def parse(probe_statement):
-    """Return a probe specification given a statement in probe language.
+class ExonProbe(object):
+    """Probe for a mutation event specified as a fusion of two exons.
+
+    """
+    def __init__(self, specification):
+        self._spec = specification
+
+    def __str__(self):
+        side1 = '+' if self._spec['side1'] == 'start' else '-'
+        side2 = '+' if self._spec['side2'] == 'start' else '-'
+        return _PROBE_STATEMENT_SKELETON.format(
+                **dict(self._spec,
+                       side1=side1,
+                       side2=side2))
+
+    def sequence(self, genome):
+        return reference.bases_from_coordinate(self._spec, genome)
+
+    @staticmethod
+    def explode(statement, genome_annotation=list()):
+        """Given an exon probe statement and a genome annotation return all
+        possible, unique, unambiguous probes which fit the statement.
+
+        If two or more possible probes have identical coordinates, only the first is returned.
+
+        """
+        cached_specifications = set()
+        partial_spec = _parse(statement)
+        for spec in _expand(partial_spec, genome_annotation):
+            spec_hash = _coord_hash(spec)
+            if not spec_hash in cached_specifications:
+                cached_specifications.add(spec_hash)
+                yield ExonProbe(spec)
+
+
+def _parse(probe_statement):
+    """Return a parital exon probe specification given a statement in probe
+    language.
 
     Parses the `probe_statement` string, returning a dictionary specifying the
     location and breakpoints of the fusion event specified. The returned
@@ -62,18 +102,6 @@ def parse(probe_statement):
     }
 
     See the README for the probe language specification.
-
-    Example:
-
-        >>> parse("FOO#exon[1]+20/BAR#exon[*]-30")
-        {'gene1':    'FOO',
-         'feature1': ('exon', 1),
-         'side1':    'start',
-         'bases1':   20,
-         'gene2':    'BAR',
-         'feature2': ('exon', '*'),
-         'bases2':   30,
-         'side2':    'end'}
 
     """
     match = _PROBE_STATEMENT_REGEX.match(probe_statement)
@@ -98,19 +126,36 @@ def parse(probe_statement):
                                "currently only exons are supported".format(
                                    probe_statement))
     return {
-            'gene1':     gene_1,
-            'feature1':  (feature_1, _maybe_int(feature_number_1)),
-            'side1' :    side_1.replace('+', 'start').replace('-', 'end'),
-            'bases1':    _maybe_int(bases_1),
-            'gene2':     gene_2,
-            'feature2':  (feature_2, _maybe_int(feature_number_2)),
-            'side2' :    side_2.replace('+', 'start').replace('-', 'end'),
-            'bases2':    _maybe_int(bases_2),
-            'separator': separator,
+            'gene1':       gene_1,
+            'feature1':    (feature_1, _maybe_int(feature_number_1)),
+            'side1' :      side_1.replace('+', 'start').replace('-', 'end'),
+            'bases1':      _maybe_int(bases_1),
+            'gene2':       gene_2,
+            'feature2':    (feature_2, _maybe_int(feature_number_2)),
+            'side2' :      side_2.replace('+', 'start').replace('-', 'end'),
+            'bases2':      _maybe_int(bases_2),
+            'separator':   separator,
             }
 
 
-def expand(specification, left_features=None, right_features=None):
+def _expand(specification, genome_annotation):
+    """@todo: Docstring for _expand.
+
+    """
+    left_rows = annotation.lookup_gene(
+            specification['gene1'], genome_annotation)
+    right_rows = annotation.lookup_gene(
+            specification['gene2'], genome_annotation)
+    for left, right in itertools.product(left_rows, right_rows):
+        unglobbed_specs = _expand_globs(
+                specification,
+                len(annotation.exons(left)),
+                len(annotation.exons(right)))
+        for unglobbed_spec in unglobbed_specs:
+            yield _expand_partial_spec(unglobbed_spec, left, right)
+
+
+def _expand_globs(specification, left_features=None, right_features=None):
     """Yield fully-realized probe statements.
 
     Given a probe_statement with globs, iterate through all the possible
@@ -166,6 +211,18 @@ def expand(specification, left_features=None, right_features=None):
         yield specification
 
 
+def _expand_partial_spec(specification, row_1, row_2):
+    """Given a partial specification with no globs, add the unique transcript
+    identifiers and the coordinates of the probe to the specification.
+
+    """
+    coordinate = exon_coordinate.sequence_range(specification, row_1, row_2)
+    return dict(specification,
+                transcript1=row_1['name'],
+                transcript2=row_2['name'],
+                **coordinate)
+
+
 def _maybe_int(string):
     """Try to parse the `string` to an `int`. Return the string if this fails.
 
@@ -176,22 +233,13 @@ def _maybe_int(string):
         return string
 
 
-def to_string(specification):
-    """Return a string representation of a probe specification.
+def _coord_hash(spec):
+    """Return a unique specification identifier.
 
     """
-    side1 = '+' if specification['side1'] == 'start' else '-'
-    side2 = '+' if specification['side2'] == 'start' else '-'
-    return _PROBE_STATEMENT_SKELETON.format(
-            **dict(specification,
-                   side1=side1,
-                   side2=side2))
-
-
-class InvalidStatement(Exception):
-    """Raised when a probe statement is poorly formatted.
-
-    """
+    return hash(tuple([
+        spec['chromosome1'], spec['start1'], spec['end1'],
+        spec['chromosome2'], spec['start2'], spec['end2']]))
 
 
 class ExpandError(Exception):
