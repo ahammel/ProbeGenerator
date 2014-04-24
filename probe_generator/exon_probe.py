@@ -15,14 +15,14 @@ _PROBE_STATEMENT = r"""    # The regex for one side of a probe statement
         \s*\[\s*           # bracket-delimiter
         (\d+|\*)           # the number of the feature
         \s*\]\s*
-        ([\*+-])           # feature side
+        ([*+-])            # feature side
         \s*
         (\d+|\*)           # number of bases
         \s*
 """
 
 _SEPARATOR = r"""
-    (\/     # standard separator
+    (/      # standard separator
     |
     ->)     # read-through separator
 """
