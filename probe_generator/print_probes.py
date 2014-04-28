@@ -1,11 +1,13 @@
 """Find the sequences of probes and print them in FASTA format.
 
 """
+import sys
+
 from probe_generator import reference, annotation
 from probe_generator.coordinate_probe import CoordinateProbe
 from probe_generator.snp_probe import SnpProbe
 from probe_generator.exon_probe import ExonProbe
-from probe_generator.probe import InvalidStatement
+from probe_generator.probe import InvalidStatement, NonFatalError
 
 
 def print_probes(statement_file, genome_file, *annotation_files):
@@ -31,7 +33,10 @@ def print_probes(statement_file, genome_file, *annotation_files):
             #   probes =<< [SnpProbe.from_statement(statement)]
             #   probes =<< ExonProbe.explode(statement, annotations)
             for probe in probes:
-                print_fasta(probe, probe.sequence(ref_genome))
+                try:
+                    print_fasta(probe, probe.sequence(ref_genome))
+                except NonFatalError as error:
+                    print(error, file=sys.stderr)
 
 
 def print_fasta(head, bases):
@@ -50,3 +55,4 @@ def _combine_annotations(annotation_files):
         with open(annotation_file) as handle:
             rows.extend(annotation.parse_ucsc_file(handle))
     return rows
+
