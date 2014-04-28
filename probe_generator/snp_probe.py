@@ -4,27 +4,27 @@
 import re
 
 from probe_generator import reference, sequence
-from probe_generator.probe import InvalidStatement
+from probe_generator.probe import InvalidStatement, NonFatalError
 
 _SNP_REGEX = re.compile(r"""
         \s*
-        ([a-z0-9.]+) # chromosome
+        ([a-zA-Z0-9.]+) # chromosome
         \s*
-        :            # colon separator
+        :               # colon separator
         \s*
-        (\d+)        # base pair index
+        (\d+)           # base pair index
         \s*
-        ([acgt])     # reference base
+        ([acgtACGT])    # reference base
         \s*
-        >            # arrow separator
+        >               # arrow separator
         \s*
-        ([acgt])     # mutant base
+        ([acgtACGT])    # mutant base
         \s*
-        /            # solidus separator
+        /               # solidus separator
         \s*
-        (\d+)        # bases
+        (\d+)           # bases
         \s*
-        """, re.VERBOSE | re.IGNORECASE)
+        """, re.VERBOSE)
 
 _SNP_STATEMENT_SKELETON = "{chromosome}:{index}_{reference}>{mutation}/{bases}"
 
@@ -59,12 +59,40 @@ class SnpProbe(object):
                 self._spec["chromosome"],
                 start,
                 end)
-        return _mutate(raw_bases, self._spec)
+        return self._mutate(raw_bases)
 
     @staticmethod
     def from_statement(statement):
         spec = _parse(statement)
         return SnpProbe(spec)
+
+    def _mutate(self, bases):
+        """Return the base pair sequence with the reference base of the spec
+        replaced with the mutation base.
+
+        Automatically reverse-complements the sequence if necessary.
+
+        """
+        mutation_index = (self._spec["bases"] // 2) - 1
+        genome_ref_base = bases[mutation_index].lower()
+        spec_ref_base = self._spec["reference"].lower()
+        if genome_ref_base == spec_ref_base:
+            return (bases[:mutation_index] +
+                    self._spec["mutation"] +
+                    bases[mutation_index+1:])
+        elif genome_ref_base == sequence.complement(spec_ref_base):
+            return (bases[:mutation_index]                      +
+                    sequence.complement(self._spec["mutation"]) +
+                    bases[mutation_index+1:])
+        else:
+            raise ReferenceMismatch(
+                    "In probe {!s}: "
+                    "Reference base {!r} does not match requested mutation "
+                    "'{}>{}'".format(
+                        self,
+                        bases[mutation_index],
+                        self._spec["reference"],
+                        self._spec["mutation"]))
 
 
 def _parse(statement):
@@ -92,34 +120,7 @@ def _get_bases(spec):
     return (index - buffer + 1), (index + buffer)
 
 
-def _mutate(bases, spec):
-    """Return the base pair sequence with the reference base of the spec
-    replaced with the mutation base.
-
-    Automatically reverse-complements the sequence if necessary.
-
-    """
-    mutation_index = (spec["bases"] // 2) - 1
-    genome_ref_base = bases[mutation_index].lower()
-    spec_ref_base = spec["reference"].lower()
-    if genome_ref_base == spec_ref_base:
-        return (bases[:mutation_index] +
-                spec["mutation"]       +
-                bases[mutation_index+1:])
-    elif genome_ref_base == sequence.complement(spec_ref_base):
-        return (bases[:mutation_index]                +
-                sequence.complement(spec["mutation"]) +
-                bases[mutation_index+1:])
-    else:
-        raise ReferenceError(
-                "Reference base {!r} does not match requested mutation "
-                "'{}>{}'".format(
-                    bases[mutation_index],
-                    spec["reference"],
-                    spec["mutation"]))
-
-
-class ReferenceError(Exception):
+class ReferenceMismatch(NonFatalError):
     """Raised when the reference base of the genome does not match the
     reference base of the spec.
 
