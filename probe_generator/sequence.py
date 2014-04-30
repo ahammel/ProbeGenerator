@@ -1,4 +1,4 @@
-"""Nucleotide seqeunce manipulation library for ProbeGenerator.
+"""Nucleotide sequence manipulation library for ProbeGenerator.
 
 Provides complement() and reverse_complemement() functions.
 

@@ -1,7 +1,6 @@
 """Parse single-nucleotide polymorphism events from human-readable statements.
 
 """
-### TODO: make the rest of the *_statement modules look like this
 import re
 
 from probe_generator import reference, sequence
@@ -88,7 +87,7 @@ def _parse(statement):
 
 
 def _get_bases(spec):
-    """Return the start and end indecies from a SNP probe spec.
+    """Return the start and end indices from a SNP probe spec.
 
     """
     bases, index = spec["bases"], spec["index"]
@@ -101,6 +100,9 @@ def _mutate(bases, spec):
     replaced with the mutation base.
 
     Automatically reverse-complements the sequence if necessary.
+
+    Raises a ReferenceError if the reference base of the probe does
+    not match the reference genome.
 
     """
     mutation_index = (spec["bases"] // 2) - 1

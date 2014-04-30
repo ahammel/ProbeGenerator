@@ -214,8 +214,8 @@ class TestSequenceRangesEndwise(AbstractSequenceRangeTestCase):
         `endwise_left` and `endwise_right`, which are then passed to
         `sequence_ranges`.
 
-        The return values is compared to `result`, which has the chromosomes
-        specified in the test for ease of typing.
+        The return values are compared to `result`, which has the
+        chromosomes specified in the test for ease of typing.
 
         """
         left_side, right_side, left_strand, right_strand = sides_and_strands
