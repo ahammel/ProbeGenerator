@@ -51,15 +51,15 @@ class TestCoordinateStatementParse(unittest.TestCase):
                 CoordinateProbe.from_statement(
                     "1:100-10/2:200+20")._spec['rc_side_1'])
 
-    def test_side_2_is_not_reverse_complememnted_when_second_side_is_plus(self):
-        self.assertFalse(
-                CoordinateProbe.from_statement(
-                    "1:100-10/2:200+20")._spec['rc_side_2'])
-
     def test_side_2_is_reverse_complemented_when_second_side_is_minus(self):
         self.assertTrue(
                 CoordinateProbe.from_statement(
                     "1:100-10/2:200-20")._spec['rc_side_2'])
+
+    def test_side_2_is_not_reverse_complemented_when_second_side_is_plus(self):
+        self.assertFalse(
+                CoordinateProbe.from_statement(
+                    "1:100-10/2:200+20")._spec['rc_side_2'])
 
     def test_statements_with_unmapped_contigs_parsed_correctly(self):
         try:

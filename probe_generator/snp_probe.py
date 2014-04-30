@@ -112,12 +112,42 @@ def _parse(statement):
 
 
 def _get_bases(spec):
-    """Return the start and end indecies from a SNP probe spec.
+    """Return the start and end indices from a SNP probe spec.
 
     """
     bases, index = spec["bases"], spec["index"]
     buffer = bases // 2
     return (index - buffer + 1), (index + buffer)
+
+
+def _mutate(bases, spec):
+    """Return the base pair sequence with the reference base of the spec
+    replaced with the mutation base.
+
+    Automatically reverse-complements the sequence if necessary.
+
+    Raises a ReferenceError if the reference base of the probe does
+    not match the reference genome.
+
+    """
+    mutation_index = (spec["bases"] // 2) - 1
+    genome_ref_base = bases[mutation_index].lower()
+    spec_ref_base = spec["reference"].lower()
+    if genome_ref_base == spec_ref_base:
+        return (bases[:mutation_index] +
+                spec["mutation"]       +
+                bases[mutation_index+1:])
+    elif genome_ref_base == sequence.complement(spec_ref_base):
+        return (bases[:mutation_index]                +
+                sequence.complement(spec["mutation"]) +
+                bases[mutation_index+1:])
+    else:
+        raise ReferenceError(
+                "Reference base {!r} does not match requested mutation "
+                "'{}>{}'".format(
+                    bases[mutation_index],
+                    spec["reference"],
+                    spec["mutation"]))
 
 
 class ReferenceMismatch(NonFatalError):
