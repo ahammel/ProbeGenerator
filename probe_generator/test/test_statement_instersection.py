@@ -29,7 +29,7 @@ class TestRegexIntersection(unittest.TestCase):
         self.assertEqual(
                 self.coord_fsm & self.snp_fsm,
                 lego.charclass())
-        # lego.charclass() == the empty set of strings
+        # lego.charclass() == the empty finite state machine
 
     def test_exon_fsm_does_not_overlap_snp_fsm(self):
         self.assertEqual(
