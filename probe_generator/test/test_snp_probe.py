@@ -12,6 +12,11 @@ class TestSnpProbe(unittest.TestCase):
         self.assertEqual(
                 "1:4_t>g/8",
                 str(self.probe))
+        
+    def test_snp_probe_string_with_comments(self):
+        self.assertEqual(
+            "1:4_t>g/8--comment",
+            str(SnpProbe.from_statement("1:4 t>g /8 --comment")))
 
     def test_snp_probe_sequence_simple_test(self):
         self.assertEqual(

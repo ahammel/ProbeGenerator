@@ -24,9 +24,11 @@ _SNP_REGEX = re.compile(r"""
         \s*
         (\d+)           # bases
         \s*
+        (--.*|\s*)      # comment
         """, re.VERBOSE)
 
-_SNP_STATEMENT_SKELETON = "{chromosome}:{index}_{reference}>{mutation}/{bases}"
+_SNP_STATEMENT_SKELETON = ("{chromosome}:{index}_"
+                           "{reference}>{mutation}/{bases}{comment}")
 
 
 class SnpProbe(object):
@@ -103,12 +105,13 @@ def _parse(statement):
                 "could not parse snp statement {!r}".format(
                     statement))
 
-    chromosome, index, reference, mutation, bases = match.groups()
+    chromosome, index, reference, mutation, bases, comment = match.groups()
     return {"chromosome": chromosome,
             "index":      int(index),
             "reference":  reference,
             "mutation":   mutation,
-            "bases":      int(bases)}
+            "bases":      int(bases),
+            "comment":    comment}
 
 
 def _get_bases(spec):

@@ -15,19 +15,25 @@ class TestCoordinateStatementParse(unittest.TestCase):
         self.probe = CoordinateProbe.from_statement(self.statement)
         self.specification = {
                   "chromosome1": '1',
-                  "start1":       91,
-                  "end1":         100,
+                  "start1":       3,
+                  "end1":         4,
                   "chromosome2":  '2',
-                  "start2":       200,
-                  "end2":         219,
+                  "start2":       3,
+                  "end2":         5,
                   "rc_side_1":    False,
                   "rc_side_2":    False,
+                  "comment":      ""
                   }
 
     def test_get_simple_probe_sequence(self):
-         self.assertEqual(
-                 self.probe.sequence(GENOME),
-                 "gtaag")
+        self.assertEqual(
+            "gtaag",
+            self.probe.sequence(GENOME))
+    
+    def test_print_simple_probe(self):
+        self.assertEqual(
+            "1:4/2:3",
+            str(self.probe))
 
     def test_parse_is_whitespace_insensitive(self):
         whitspace_probe = CoordinateProbe.from_statement(
@@ -35,6 +41,19 @@ class TestCoordinateStatementParse(unittest.TestCase):
         self.assertEqual(
                 whitspace_probe.sequence(GENOME),
                 "gtaag")
+        
+    def test_parse_probe_with_comments(self):
+        self.specification["comment"] = "-- I'm a comment!"
+        self.assertEqual(
+            CoordinateProbe.from_statement(
+                self.statement + " -- I'm a comment!")._spec,
+            self.specification)
+        
+    def test_print_probe_with_comments(self):
+        self.probe._spec["comment"] = "-- I'm a comment!"
+        self.assertEqual(
+            "1:4/2:3-- I'm a comment!",
+            str(self.probe))
 
     def test_parse_raises_InvalidFormat_on_nonsense_statement(self):
         message = "could not parse coordinate statement 'banana'"
