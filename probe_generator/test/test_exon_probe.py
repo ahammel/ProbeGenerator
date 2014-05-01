@@ -78,7 +78,7 @@ class TestExonStatementParsing(AbstractExonStatementTestCase):
         except InvalidStatement:
             self.fail("Statement could not be parsed")
 
-    def test_parsing_a_non_exon_features_raises_not_supported_message(self):
+    def test_parsing_a_non_exon_feature_raises_not_supported_message(self):
         message = re.escape(
                    "could not parse 'FOO#intron[1]+1/BAR#*[2]-1': "
                    "currently only exons are supported")
@@ -92,20 +92,20 @@ class TestExplode(AbstractExonStatementTestCase):
     """Test case for the `ExonProbe` function.
 
     """
-    def test_expand_returns_one_statement_for_fully_realized_statement(self):
+    def test_explode_returns_one_statement_for_fully_realized_statement(self):
         self.assertEqual(
                 len(list(
                     ExonProbe.explode(self.probe_statement, self.annotation))),
                 1)
 
-    def test_expand_one_side(self):
+    def test_expand_glob_one_side(self):
         statement = "ABC#exon[1]*2 / DEF#exon[3]+3"
         self.assertCountEqual(
                 [probe._spec['side1']
                  for probe in ExonProbe.explode(statement, self.annotation)],
                 ['start', 'end'])
 
-    def test_expand_both_sides(self):
+    def test_expand_glob_both_sides(self):
         statement = "ABC#exon[1]*2 / DEF#exon[3]*3"
         self.assertCountEqual(
                 [(probe._spec['side1'], probe._spec['side2'])
@@ -113,7 +113,7 @@ class TestExplode(AbstractExonStatementTestCase):
                 [('start', 'start'), ('start', 'end'),
                  ('end', 'start'),   ('end', 'end')])
 
-    def test_expand_exon_numbers(self):
+    def test_expand_glob_exon_numbers(self):
         statement = "ABC#exon[*]+2 / DEF#exon[*]-3"
         self.assertCountEqual(
                 [(probe._spec['feature1'], probe._spec['feature2'])

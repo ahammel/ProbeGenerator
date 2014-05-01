@@ -112,7 +112,7 @@ def _parse(statement):
 
 
 def _get_bases(spec):
-    """Return the start and end indecies from a SNP probe spec.
+    """Return the start and end indices from a SNP probe spec.
 
     """
     bases, index = spec["bases"], spec["index"]

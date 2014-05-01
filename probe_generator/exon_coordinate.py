@@ -35,10 +35,14 @@ def sequence_range(specification, row_1, row_2):
     """
     if specification.get('separator') == '/':
         return _positional_sequence_range(
-                specification, row_1, row_2)
+                specification,
+                row_1,
+                row_2)
     elif specification.get('separator') == '->':
         return _read_through_sequence_range(
-                specification, row_1, row_2)
+                specification,
+                row_1,
+                row_2)
     else:
         raise InterfaceError
 
@@ -93,6 +97,8 @@ def _flip_specification(specification):
     """Return the specification with all of the fields ending in '1' replaced
     with the corresponding field ending in '2' and vice-versa.
 
+    Raises an InterfaceError if the specification has unexpected keys.
+
     """
     try:
         return dict(
@@ -110,12 +116,14 @@ def _flip_specification(specification):
 
 
 def _check_read_through_spec(specification):
-    """Raises a warning message if the sides of the specification don't make
-    sense.
+    """Prins a warning message to standard error if the sides of the
+    specification don't make sense.
 
     This is only an issue for probes specified using the read-through syntax.
     In fact, I may make it illegal to specify sides at all for read-through
     statements in a future version.
+    
+    Raises an InterfaceError if the specification has unexpected keys.
 
     """
     try:
@@ -140,9 +148,8 @@ def _positional_sequence_range(specification, row_1, row_2):
      right_start,
      right_end) = _get_base_positions(specification, row_1, row_2)
 
-    rc_left, rc_right = _get_rev_comp_flags(
-            specification, row_1, row_2)
-
+    rc_left, rc_right = _get_rev_comp_flags(specification, row_1, row_2)
+    
     return {'chromosome1': left_chromosome,
             'start1':      left_start,
             'end1':        left_end,
@@ -163,6 +170,8 @@ def _get_chromosomes(*rows):
 
 def _get_base_positions(specification, row_1, row_2):
     """Return a 4-tuple of the start and end positions of row_1 and row_2.
+    
+    Raises an InterfaceError when the specification has unexpected keys.
 
     """
     try:
@@ -180,9 +189,14 @@ def _get_base_positions(specification, row_1, row_2):
     except KeyError as error:
         raise InterfaceError(str(error))
     start_1, end_1 = _get_base_position_per_row(
-            first_feature, first_bases, first_side, row_1)
+            first_feature,
+            first_bases,
+            first_side, row_1)
     start_2, end_2 = _get_base_position_per_row(
-            second_feature, second_bases, second_side, row_2)
+            second_feature,
+            second_bases,
+            second_side,
+            row_2)
     return start_1, end_1, start_2, end_2
 
 
@@ -190,16 +204,18 @@ def _get_base_position_per_row(feature, bases, side, row):
     """Return the start and end positions of a probe, given a feature, the
     side of the feature, the number of bases required (may be a glob) and the
     related row of a UCSC gene annotation table.
+    
+    Raises an InterfaceError if the row has no 'strand' key.
 
     """
-    _, which_exon = feature
+    _, exon_number = feature
     try:
         strand = row['strand']
     except KeyError as error:
         raise InterfaceError(str(error))
     exon_positions = annotation.exons(row)
 
-    exon_start, exon_end = _get_exon(exon_positions, which_exon)
+    exon_start, exon_end = _get_exon(exon_positions, exon_number)
 
     if bases == '*':
         return exon_start, exon_end
@@ -258,6 +274,9 @@ def _is_leftmost_side(side, strand):
 
 def _get_exon(positions, index):
     """Return the exon at the (1-based) `index` in the `positions` list.
+    
+    Raises a NoFeatureError if the `positions` variable has fewer
+    elements than the `index`.
 
     """
     try:

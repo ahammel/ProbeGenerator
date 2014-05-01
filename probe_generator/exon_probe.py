@@ -80,7 +80,7 @@ class ExonProbe(object):
 
 
 def _parse(probe_statement):
-    """Return a parital exon probe specification given a statement in probe
+    """Return a partial exon probe specification given a statement in probe
     language.
 
     Parses the `probe_statement` string, returning a dictionary specifying the
@@ -103,6 +103,9 @@ def _parse(probe_statement):
     }
 
     See the README for the probe language specification.
+
+    Raises InvalidStatement if the probe_statement cannot be parsed,
+    or if a feature aside from an exon is requested.
 
     """
     match = _PROBE_STATEMENT_REGEX.match(probe_statement)
@@ -140,7 +143,11 @@ def _parse(probe_statement):
 
 
 def _expand(specification, genome_annotation):
-    """@todo: Docstring for _expand.
+    """Populate the specification using the values looked up in the
+    genome annotation.
+
+    If expanding the specification asks for a feature which is not in
+    the annotation, a warning message is printed to standard errors.
 
     If expanding the specification asks for a feature which is not in
     the annotation, a warning message is printed to standard errors.
@@ -180,6 +187,9 @@ def _expand_globs(specification, left_features=None, right_features=None):
 
     WARNING: globbing feature types is not supported. In fact, exons are the
     only feature that are supported.
+
+    Raises an ExpandError if the number of features is unspecified
+    when the feature number is globbed.
 
     """
     fields = [] # Globbed fields

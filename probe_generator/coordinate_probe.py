@@ -29,7 +29,7 @@ _COORDINATE_STATEMENT_SKELETON = ("{chromosome1}:{end1}/"
 
 
 class CoordinateProbe(object):
-    """A probe for a fusion event using the coordiantes for the breakpoints.
+    """A probe for a fusion event using the coordinates for the breakpoints.
 
     Coordinate specifications are dictionaries in the format:
 
@@ -62,7 +62,7 @@ class CoordinateProbe(object):
 
         Where <chr> is a chromosome, <start> is the start of the probe, and <range>
         is the number of flanking bases to include in the probe. '+' indicates that
-        the flanking bases should be *after* (i.e., the indecies of the bases are
+        the flanking bases should be *after* (i.e., the indices of the bases are
         larger than the start) the starting base, and '-' indicates that they
         should be *before*.
 
@@ -102,8 +102,8 @@ def _parse(statement):
 
 
 def _parse_range(start, operation, bases):
-    """Return the bases of the specification, given the start and bases as
-    strings and the operation.
+    """Given the start, bases, and operation as strings, return the
+    bases of the specification.
 
     """
     if operation == '+':
