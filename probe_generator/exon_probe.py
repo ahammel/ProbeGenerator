@@ -150,7 +150,7 @@ def _expand(specification, genome_annotation):
     the annotation, a warning message is printed to standard errors.
 
     If expanding the specification asks for a feature which is not in
-    the annotation, a warning message is printed to standard errors.
+    the annotation, a warning message is printed to standard error.
 
     """
     left_rows = annotation.lookup_gene(
