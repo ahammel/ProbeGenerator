@@ -1,8 +1,9 @@
 """Implementation of the probe language specification.
 
 """
-import re
 import itertools
+import re
+import sys
 
 from probe_generator import reference, annotation, exon_coordinate
 from probe_generator.probe import InvalidStatement
@@ -102,7 +103,7 @@ def _parse(probe_statement):
     }
 
     See the README for the probe language specification.
-    
+
     Raises InvalidStatement if the probe_statement cannot be parsed,
     or if a feature aside from an exon is requested.
 
@@ -145,6 +146,9 @@ def _expand(specification, genome_annotation):
     """Populate the specification using the values looked up in the
     genome annotation.
 
+    If expanding the specification asks for a feature which is not in
+    the annotation, a warning message is printed to standard errors.
+
     """
     left_rows = annotation.lookup_gene(
             specification['gene1'], genome_annotation)
@@ -156,7 +160,10 @@ def _expand(specification, genome_annotation):
                 len(annotation.exons(left)),
                 len(annotation.exons(right)))
         for unglobbed_spec in unglobbed_specs:
-            yield _expand_partial_spec(unglobbed_spec, left, right)
+            try:
+                yield _expand_partial_spec(unglobbed_spec, left, right)
+            except exon_coordinate.NoFeatureError as error:
+                print("Warning: {!s}".format(error), file=sys.stderr)
 
 
 def _expand_globs(specification, left_features=None, right_features=None):
@@ -177,7 +184,7 @@ def _expand_globs(specification, left_features=None, right_features=None):
 
     WARNING: globbing feature types is not supported. In fact, exons are the
     only feature that are supported.
-    
+
     Raises an ExpandError if the number of features is unspecified
     when the feature number is globbed.
 
