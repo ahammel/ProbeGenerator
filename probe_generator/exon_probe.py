@@ -1,8 +1,9 @@
 """Implementation of the probe language specification.
 
 """
-import re
 import itertools
+import re
+import sys
 
 from probe_generator import reference, annotation, exon_coordinate
 from probe_generator.probe import InvalidStatement
@@ -141,6 +142,9 @@ def _parse(probe_statement):
 def _expand(specification, genome_annotation):
     """@todo: Docstring for _expand.
 
+    If expanding the specification asks for a feature which is not in
+    the annotation, a warning message is printed to standard errors.
+
     """
     left_rows = annotation.lookup_gene(
             specification['gene1'], genome_annotation)
@@ -152,7 +156,10 @@ def _expand(specification, genome_annotation):
                 len(annotation.exons(left)),
                 len(annotation.exons(right)))
         for unglobbed_spec in unglobbed_specs:
-            yield _expand_partial_spec(unglobbed_spec, left, right)
+            try:
+                yield _expand_partial_spec(unglobbed_spec, left, right)
+            except exon_coordinate.NoFeatureError as error:
+                print("Warning: {!s}".format(error), file=sys.stderr)
 
 
 def _expand_globs(specification, left_features=None, right_features=None):
