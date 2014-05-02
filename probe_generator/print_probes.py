@@ -17,21 +17,17 @@ def print_probes(statement_file, genome_file, *annotation_files):
     """
     with open(statement_file) as statements, open(genome_file) as genome:
         ref_genome = reference.reference_genome(genome)
+        # See the 'monad' branch for a planned refactoring of this
+        # try/excpet tree --- AJH
         for statement in statements:
             try:
                 probes = [CoordinateProbe.from_statement(statement)]
             except InvalidStatement:
                 try:
-                    probes = [SnpProbe.from_statement(statement)]
+                    probes = SnpProbe.explode(statement)
                 except InvalidStatement:
                     annotations = _combine_annotations(annotation_files)
                     probes = ExonProbe.explode(statement, annotations)
-            # TODO: would be nice to cook up a monad for the above hideousness.
-            #
-            # E.g.:
-            #   probes =<< [CoordinateProbe.from_statement(statement)]
-            #   probes =<< [SnpProbe.from_statement(statement)]
-            #   probes =<< ExonProbe.explode(statement, annotations)
             for probe in probes:
                 try:
                     print_fasta(probe, probe.sequence(ref_genome))

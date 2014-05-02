@@ -14,11 +14,11 @@ _SNP_REGEX = re.compile(r"""
         \s*
         (\d+)           # base pair index
         \s*
-        ([acgtACGT])    # reference base
+        ([acgtACGT*])   # reference base
         \s*
         >               # arrow separator
         \s*
-        ([acgtACGT])    # mutant base
+        ([acgtACGT*])   # mutant base
         \s*
         /               # solidus separator
         \s*
@@ -64,9 +64,10 @@ class SnpProbe(object):
         return self._mutate(raw_bases)
 
     @staticmethod
-    def from_statement(statement):
-        spec = _parse(statement)
-        return SnpProbe(spec)
+    def explode(statement):
+        partial_spec = _parse(statement)
+        specs = _expand(partial_spec)
+        return [SnpProbe(spec) for spec in specs]
 
     def _mutate(self, bases):
         """Return the base pair sequence with the reference base of the spec
@@ -112,6 +113,24 @@ def _parse(statement):
             "mutation":   mutation,
             "bases":      int(bases),
             "comment":    comment}
+
+
+def _expand(partial_spec):
+    """Given a possibly globbed SNP probe specification, fill in all
+    possible combinations of reference and mutation bases.
+
+    """
+    spec_reference = partial_spec['reference']
+    spec_mutation = partial_spec['mutation']
+    ref_bases = 'ACGT' if spec_reference == '*' else spec_reference
+    mutant_bases = 'ACGT' if spec_mutation == '*' else spec_mutation
+
+    for ref_base in ref_bases:
+        for mutant_base in mutant_bases:
+            if ref_base.upper() != mutant_base.upper():
+                yield dict(partial_spec,
+                           reference=ref_base,
+                           mutation=mutant_base)
 
 
 def _get_bases(spec):
