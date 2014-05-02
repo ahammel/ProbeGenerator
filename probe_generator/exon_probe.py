@@ -67,7 +67,8 @@ class ExonProbe(object):
         """Given an exon probe statement and a genome annotation return all
         possible, unique, unambiguous probes which fit the statement.
 
-        If two or more possible probes have identical coordinates, only the first is returned.
+        If two or more possible probes have identical coordinates,
+        only the first is returned.
 
         """
         cached_specifications = set()
@@ -147,7 +148,7 @@ def _expand(specification, genome_annotation):
     genome annotation.
 
     If expanding the specification asks for a feature which is not in
-    the annotation, a warning message is printed to standard errors.
+    the annotation, a warning message is printed to standard error.
 
     If expanding the specification asks for a feature which is not in
     the annotation, a warning message is printed to standard errors.
