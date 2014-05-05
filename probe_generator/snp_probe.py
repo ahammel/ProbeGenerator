@@ -122,7 +122,18 @@ def _expand(partial_spec):
     """
     spec_reference = partial_spec['reference']
     spec_mutation = partial_spec['mutation']
-    ref_bases = 'ACGT' if spec_reference == '*' else spec_reference
+    if spec_reference == spec_mutation == '*':
+        ref_bases    = "AC"
+        # When both the reference and the mutant bases are globbed,
+        # it's we only need one purine and one pyrimidine in the
+        # reference in order to specify all six possible
+        # mutations. The automatic reverse-complementing behaviour
+        # takes care of T and G.
+    elif spec_reference == '*':
+        ref_bases = "ACGT"
+    else:
+        ref_bases = spec_reference
+
     mutant_bases = 'ACGT' if spec_mutation == '*' else spec_mutation
 
     for ref_base in ref_bases:
