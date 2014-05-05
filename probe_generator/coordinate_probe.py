@@ -22,10 +22,12 @@ _COORDINATE_STATEMENT_REGEX = re.compile(r"""
         {0}
         /
         {0}
+        (--.*|\s*)       # comment
         """.format(_COORDINATE), re.VERBOSE)
 
 _COORDINATE_STATEMENT_SKELETON = ("{chromosome1}:{end1}/"
-                                  "{chromosome2}:{start2}")
+                                  "{chromosome2}:{start2}"
+                                  "{comment}")
 
 
 class CoordinateProbe(object):
@@ -87,7 +89,8 @@ def _parse(statement):
      chr_2,
      start_2,
      operation_2,
-     range_2) = match.groups()
+     range_2,
+     comment) = match.groups()
 
     start_1, end_1 = _parse_range(start_1, operation_1, range_1)
     start_2, end_2 = _parse_range(start_2, operation_2, range_2)
@@ -98,7 +101,8 @@ def _parse(statement):
             'start2':      start_2,
             'end2':        end_2,
             'rc_side_1':   operation_1 == '+', # 'rc' == reverse complement
-            'rc_side_2':   operation_2 == '-'}
+            'rc_side_2':   operation_2 == '-',
+            'comment':     comment}
 
 
 def _parse_range(start, operation, bases):

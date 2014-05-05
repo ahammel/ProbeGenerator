@@ -32,6 +32,7 @@ _PROBE_STATEMENT_REGEX = re.compile(r"""
         {statement}
         {separator}
         {statement}
+        (--.*|\s*)   # comment
         """.format(statement = _PROBE_STATEMENT,
                    separator = _SEPARATOR),
         re.VERBOSE)
@@ -41,7 +42,8 @@ _PROBE_STATEMENT_SKELETON = (
         "{separator}"
         "{gene2}#{feature2[0]}[{feature2[1]}]{side2}{bases2}"
         "_{chromosome1}:{end1}/{chromosome2}:{start2}"
-        "_{transcript1}_{transcript2}")
+        "_{transcript1}_{transcript2}"
+        "{comment}")
 
 
 class ExonProbe(object):
@@ -124,7 +126,8 @@ def _parse(probe_statement):
      feature_2,
      feature_number_2,
      side_2,
-     bases_2) = match.groups()
+     bases_2,
+     comment) = match.groups()
     feature_1, feature_2 = feature_1.lower(), feature_2.lower()
     if not feature_1 == feature_2 == 'exon':
         raise InvalidStatement("could not parse {!r}: "
@@ -140,6 +143,7 @@ def _parse(probe_statement):
             'side2' :      side_2.replace('+', 'start').replace('-', 'end'),
             'bases2':      _maybe_int(bases_2),
             'separator':   separator,
+            'comment':     comment,
             }
 
 
@@ -151,7 +155,7 @@ def _expand(specification, genome_annotation):
     the annotation, a warning message is printed to standard error.
 
     If expanding the specification asks for a feature which is not in
-    the annotation, a warning message is printed to standard errors.
+    the annotation, a warning message is printed to standard error.
 
     """
     left_rows = annotation.lookup_gene(
