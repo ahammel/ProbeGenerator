@@ -65,6 +65,10 @@ class SnpProbe(object):
 
     @staticmethod
     def explode(statement):
+        """Yield probe statements with globbed reference and mutation
+        bases filled in.
+
+        """
         partial_spec = _parse(statement)
         specs = _expand(partial_spec)
         return [SnpProbe(spec) for spec in specs]
@@ -99,6 +103,9 @@ class SnpProbe(object):
 
 
 def _parse(statement):
+    """Return a partial SNP probe specification given a probe statement.
+
+    """
     match = _SNP_REGEX.match(statement)
 
     if not match:
@@ -106,10 +113,10 @@ def _parse(statement):
                 "could not parse snp statement {!r}".format(
                     statement))
 
-    chromosome, index, reference, mutation, bases, comment = match.groups()
+    chromosome, index, reference_base, mutation, bases, comment = match.groups()
     return {"chromosome": chromosome,
             "index":      int(index),
-            "reference":  reference,
+            "reference":  reference_base,
             "mutation":   mutation,
             "bases":      int(bases),
             "comment":    comment}
@@ -123,7 +130,7 @@ def _expand(partial_spec):
     spec_reference = partial_spec['reference']
     spec_mutation = partial_spec['mutation']
     if spec_reference == spec_mutation == '*':
-        ref_bases    = "AC"
+        ref_bases = "AC"
         # When both the reference and the mutant bases are globbed,
         # it's we only need one purine and one pyrimidine in the
         # reference in order to specify all six possible

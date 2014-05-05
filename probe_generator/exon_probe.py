@@ -33,8 +33,8 @@ _PROBE_STATEMENT_REGEX = re.compile(r"""
         {separator}
         {statement}
         (--.*|\s*)   # comment
-        """.format(statement = _PROBE_STATEMENT,
-                   separator = _SEPARATOR),
+        """.format(statement=_PROBE_STATEMENT,
+                   separator=_SEPARATOR),
         re.VERBOSE)
 
 _PROBE_STATEMENT_SKELETON = (
@@ -62,10 +62,13 @@ class ExonProbe(object):
                        side2=side2))
 
     def sequence(self, genome):
+        """Return the sequence of the probe, given a genome reference.
+
+        """
         return reference.bases_from_coordinate(self._spec, genome)
 
     @staticmethod
-    def explode(statement, genome_annotation=list()):
+    def explode(statement, genome_annotation=None):
         """Given an exon probe statement and a genome annotation return all
         possible, unique, unambiguous probes which fit the statement.
 
@@ -73,6 +76,8 @@ class ExonProbe(object):
         only the first is returned.
 
         """
+        if genome_annotation is None:
+            genome_annotation = []
         cached_specifications = set()
         partial_spec = _parse(statement)
         for spec in _expand(partial_spec, genome_annotation):

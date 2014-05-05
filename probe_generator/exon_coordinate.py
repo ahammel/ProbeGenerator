@@ -122,7 +122,7 @@ def _check_read_through_spec(specification):
     This is only an issue for probes specified using the read-through syntax.
     In fact, I may make it illegal to specify sides at all for read-through
     statements in a future version.
-    
+
     Raises an InterfaceError if the specification has unexpected keys.
 
     """
@@ -149,7 +149,7 @@ def _positional_sequence_range(specification, row_1, row_2):
      right_end) = _get_base_positions(specification, row_1, row_2)
 
     rc_left, rc_right = _get_rev_comp_flags(specification, row_1, row_2)
-    
+
     return {'chromosome1': left_chromosome,
             'start1':      left_start,
             'end1':        left_end,
@@ -170,7 +170,7 @@ def _get_chromosomes(*rows):
 
 def _get_base_positions(specification, row_1, row_2):
     """Return a 4-tuple of the start and end positions of row_1 and row_2.
-    
+
     Raises an InterfaceError when the specification has unexpected keys.
 
     """
@@ -204,7 +204,7 @@ def _get_base_position_per_row(feature, bases, side, row):
     """Return the start and end positions of a probe, given a feature, the
     side of the feature, the number of bases required (may be a glob) and the
     related row of a UCSC gene annotation table.
-    
+
     Raises an InterfaceError if the row has no 'strand' key.
 
     """
@@ -252,8 +252,8 @@ def _is_leftmost_side(side, strand):
 
     In UCSC genome files, the starting base pairs of exons are given from left
     to right across the '+' strand of the chromosome, regardless of the
-    orientation of the gene. The locations of the start and the stop codons of an
-    exon are switched for a gene on the minus strand.
+    orientation of the gene. The locations of the start and the stop
+    codons of an exon are switched for a gene on the minus strand.
 
     The coordinates of the exons are given in left-exclusive-right-inclusive
     format---(n,m] in interval notation---meaning that for a gene on the plus
@@ -274,7 +274,7 @@ def _is_leftmost_side(side, strand):
 
 def _get_exon(positions, index):
     """Return the exon at the (1-based) `index` in the `positions` list.
-    
+
     Raises a NoFeatureError if the `positions` variable has fewer
     elements than the `index`.
 
