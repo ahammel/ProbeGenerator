@@ -1,8 +1,9 @@
-probe-generator: make short sequences to probe for fusion events
+probe-generator: find the genomic sequences of mutations
 
 `probe-generator` is a tool to make short sequences of base pairs representing
-fusion events. These probes can be used to screen high-throughput sequencing
-libraries for evidence of the events represented by the probe.
+fusion and SNP mutations. These probes can be used to screen high-throughput
+sequencing libraries for evidence of the events represented by the probe.
+
 
 # Installation
 
@@ -10,7 +11,7 @@ libraries for evidence of the events represented by the probe.
 v0.6.1 or later.
 
 If you have root permissions, installation is as easy as using `pip` or
-`easy_install` to install docopt and the runnning the `setup.py` script:
+`easy_install` to install docopt and the running the `setup.py` script:
 
     $ easy_install docopt
     Searching for docopt
@@ -28,18 +29,18 @@ Installing in your home folder without root permissions is only slightly more
 complicated. This requires making a local directory for python packages and
 installing everything there:
 
-    $ mdkir -p $HOME/lib
-    $ export PYTHONPATH=$PYTHONPATH:$HOME/lib
-    $ export PYTHONPATH=$PYTHONPATH:$HOME/lib/lib/python3.2/site-packages
-    # ^ Add these two lines to $HOME/.bashrc as well
+    $ mdkir -p $HOME/usr
+    $ echo 'export PYTHONPATH=$PYTHONPATH:$HOME/usr' >> ~/.bashrc
+    $ echo 'export PYTHONPATH=$PYTHONPATH:$HOME/usr/lib/python3.2/site-packages' >> ~/.bashrc
+    $ source ~/.bashrc
     $ echo "[easy_install]" >> ~/.pydistutils.cfg
-    $ echo "install_dir = $HOME/lib" >> ~/.pydistutils.cfg
+    $ echo "install_dir = $HOME/usr" >> ~/.pydistutils.cfg
     $ easy_install docopt
     Searching for docopt
     Best match: docopt 0.6.1
     Processing docopt-0.6.1-py2.6.egg
     [...]
-    $ python3 setup.py install --prefix $HOME/lib
+    $ python3 setup.py install --prefix $HOME/usr
     running install
     running build
     running build_py
@@ -50,27 +51,31 @@ In either case, copy or link the script under `bin/probe-generator` to
 somewhere in your $PATH and test that everything worked:
 
     $ probe-generator --version
-    ProbeGenerator version 0.2.4
+    ProbeGenerator version 0.3
 
 
-# Probe language
+# Probe statements
 
-The input to `probe-generator` consists of statements in *probe language*.
-Probe language is used to specify the genomic location of the fusion which will
-be detected by the probe.
+The input to `probe-generator` consists of statements in *probe statements*.
+Probe statements are brief descriptions of the genomic locations of
+mutations.
 
-Statements in probe lanugage are in the form:
+`probe-generator` currently supports three different types of probe
+statements. _Exon statements_ and _coordinate statements_ specify fusion
+events, while _SNP statements_ specify single nucleotide polymorphisms.
 
-    "<gene>#<feature>[<number>] <side><bases> <sep> <gene>#<feature>[<number>] <side><bases>"
+Some elements of probes can be replaced with the glob character ('*'),
+indicating that any value is acceptable.
+
+## Exon statements
+
+Exon statements are in the form:
+
+    "<gene>#exon[<number>] <side><bases> <sep> <gene>#exon[<number>] <side><bases>"
 
 
     <gene>:    the name of the gene of interest. Acceptable characters are
-               alphanumerics plus '_-/.'. Case is not significant.
-
-    <feature>: the name of the feature of interest ('exon', 'intron', etc.).
-               Case is not significant.
-               *CURRENTLY ONLY EXONS ARE SUPPORTED* so this field must be given
-               the value 'exon'.
+               letters, numbers, and '_-/.'. Case is not significant.
 
     <number>:  the cardinality of the feature of interest (1 for the first exon,
                etc.). Must be a digit or '*'.
@@ -81,29 +86,19 @@ Statements in probe lanugage are in the form:
     <bases>:   The length of probe sequence to return for this feature. Must be
                a digit or '*'.
 
-    <sep>:     The separator. One of '/' or '->'. Determines the probing type.
+    <sep>:     The separator. One of '/' or '->'. Determines the probing strategy.
 
 Any of "<feature>", "<number>", "<side>", or "<bases>" can be replaced with the
-glob character ("*"), to indicate that any value is acceptable. In the "<bases>"
-field, the interpretation is that the entire feature is desired.
+glob character ("*"). In the "<bases>" field, the interpretation is that the
+sequence of the entire exon will be included in the probe.
 
-Whitespace is not significant.
+White-space between the elements of the statement is ignored.
 
-*EXONS ARE CURRENTLY THE ONLY FEATURE WHICH IS SUPPORTED*
+### Ambiguity
 
-The exact genomic location of the breakpoints of the fusion event can also be
-specified directly using the coordinate-statement format:
-
-    "chr:breakpoint(+|-)bases/chr:breakpoint(+|-)bases"
-
-No globbing is allowed in coordinate statements. Whitespace is ignored.
-
-## Ambiguity
-
-Probe statements—unlike coordinate statements—do not necessarily specify a
-unique location in the genome. When a probe statement could refer to any of
-several genomic locations, `probe-generator` returns probes for every possible
-location.
+Exon statements do not necessarily specify a unique location in the
+genome. When a probe statement could refer to any of nucleotide sequences,
+`probe-generator` returns all of them.
 
 A probe statement can be ambiguous for three reasons:
 
@@ -136,9 +131,17 @@ In many cases, most or all of the exon junctions in two alternative transcripts
 are redundant. `probe-generator` will not print more than one probe with
 identical genomic coordinates.
 
-## Probe Type
+### Probing strategy
 
-Two types of probes are currently supported: _positional_ and _read-through_.
+In determining the sequence generated by a fusion between two exons, there is
+the problem of determining which strand the exons lie on, and whether either
+exon was reverse-complemented relative to its canonical representation when the
+fusion occurred. `probe-generator` automatically reverse-complements exons to
+generate the correct probe sequence to the greatest degree possible using a
+user-specified _probing strategy_.
+
+The two probing strategies currently supported are _positional_ and
+_read-through_.
 
 Positional probes, indicated by the '/' separator, are created by appending
 the bases indicated on the left of the separator to the bases indicated on the
@@ -189,10 +192,7 @@ Read-through statements are normally specified so that the end of the first
 feature is fused to the beginning of the second. If some other arrangement is
 used, a warning message is printed.
 
-Future versions of probe-generator may remove the necessity of specifying sides
-for a read-through statement.
-
-## Examples
+### Examples
 
 To specify a probe covering the last 20 bases of the first exon of the gene
 ABC and the first 30 bases of the third exon of DEF, you would pass the
@@ -218,72 +218,154 @@ features covered:
 
     "SPAM#exon[*] ** / EGGS#exon[*] **"
 
+## Coordinate statements
+
+The exact genomic location of the breakpoints of the fusion event can also be
+specified directly using the coordinate-statement format:
+
+    "chromosome:breakpoint(+|-)bases/chromosome:breakpoint(+|-)bases"
+
+No globbing is allowed in coordinate statements. Any white-space between elements
+of the statement is ignored.
+
+Note that, unlike exon statements, a coordinate statement always corresponds to
+exactly one probe sequence.
+
+### Examples
+
 A probe for a fusion event between the 100th base pair of chromosome 1 and the
-200th base pair of chromsome Y, with 25 bases on either side:
+200th base pair of chromosome Y, with 25 bases on either side:
 
     "1:100-25/Y:200+25"
 
+
+## SNP statements
+
+An SNP statement, as the name suggests, specifies a probe for a
+single-nucleotide polymorphism event. The syntax is as follows:
+
+    "chromosome: coordinate reference > mutation / bases"
+
+The "reference > mutation" element specifies the polymorphism
+(e.g. "A>C"). Either the reference or the mutation base can be globbed. If the
+reference and the mutation base are identical, no probe sequence is produced.
+
+The length of the probe sequence is determined by 'bases'. The mutant base is
+in the centre of the probe (or as near as possible when the number of bases is
+even).
+
+### Dealing with strand
+
+In databases such as [COSMIC][cosmic_link], the SNP mutations are usually
+described relative to the reading frame of the gene. An A>G mutation in a SNP
+catalogue may be a T>C mutation relative to the plus strand of the reference
+genome.
+
+When the reference base in the probe statement is the reverse complement of the
+reference base, the entire probe sequence is reverse-complemented and the
+mutation specified in the statement is applied. If the base in the reference
+genome is neither the specified reference base nor its reverse complement
+(e.g.: an 'A>T' mutation is specified and the reference base is 'C'), no probe
+sequence is generated and a warning message is printed.
+
+### Globbing
+
+If the reference base is globbed, probe sequences will be generated for both
+the base at that location in the genome and its reverse-complement.
+
+If a glob character is supplied for the mutation base, all three possible SNPs
+at that genomic location will are generated. Globbing reference as well as the
+mutation base results in the same probe sequence, but there is no check to see
+whether the base at the genomic reference matches the specified reference.
+
+### Examples
+
+An A>C mutation at the 100th base of the X chromosome with 25 bases either
+side of it:
+
+     "X:100 A>C /51"
+
+
+Probes for both the A>C event specified above and a T>C event on the opposite
+strand:
+
+     "X:100 *>C /51"
+
+A ten base pair probe for any mutation at the 1000th base pair of chromosome 3:
+
+     "3:1000 *>* /10"
+
+## Comments
+
+Any probe statement can be followed by a comment. Comments have no effect,
+except that they are printed in the head of the probe. This is used to attach
+additional information to the probe.
+
+Comments start with two hyphens ('--') and continue to the end of the line.
+
+E.g:
+
+     "X:100 A>C /51                    -- SNP found in patient XYZ"
+     "FOO#exon[1]-25 -> BAR#exon[3]+25 -- confers resistance to madeupifam"
+     "2:119726736+25/2:121555044+25    -- GLI2/MARCO fusion"
+
 # Usage
 
-    probe-generator --statement STMT  --genome GENOME --annotation FILE... [-f]
-    probe-generator --coordinate COORD  --genome GENOME [-f]
+        probe-generator --statements FILE --genome FILE [--annotation FILE...] [-f]
 
     Options:
-        -c COORD --coordinate=COORD     a file containing coordinate statements
-        -s STMT --statement=STMT        a file containing fusion statements
-        -g GENOME --genome=GENOME       the Ensembl reference genome
-                                        (FASTA format)
+        -s FILE --statements=FILE       a file containing probe statements
+        -g FILE --genome=FILE           the reference genome (FASTA format)
         -a FILE --annotation=FILE       a genome annotation file in UCSC format
         -f --force                      run even if the total system memory is
                                         insufficient or cannot be determined
 
+The 'statements' file can contain any of the flavours of probe statements
+described above, or a mixture.
 
-Currently, the RefSeq Genes and UCSC Genes annotation files are supported. More
-than one annotation file can be specified for a single run:
+## Genome annotations
+
+When using exon probe statements, `probe-generator` requires a UCSC genome
+annotation in order to determine the boundaries of the exons. Currently, the
+RefSeq Genes and UCSC Genes annotation files are supported. More than one
+annotation file can be specified for a single run:
 
     $ probe-generator -s statements.txt -g genome.fa \
                       -a refseq_genes.txt            \
                       -a ucsc_genes.txt
-
-The resulting probes are printed to stdout in FASTA format. The titles of the
-probes are the probe statements, followed by the unique identifiers of the rows
-in the annotation file which were used, if applicable.
 
 Annotations can be downloaded from [the UCSC table browser][ucsc_tables]. Make
 sure to use the output format 'all fields from selected table'.
 
 To prevent memory errors (see below), `probe-generator` will raise a warning if
 it detects that the total system memory in the current environment is less than
-10Gb, or if the total sytem memory cannot be determined (the memory can only be
-determined on a Linux system at present).
+10Gb, or if the total system memory cannot be determined (the memory can only
+be determined on a Linux system at present).
 
 The `--force` flag can be used to override this warning in testing situations
-with a genome file, or if the user is pretty sure that enough memory is
-available. Runnning with `--force` set is STRONGLY discouraged for ordinary
+with a small genome file, or if the user is pretty sure that enough memory is
+available. Running with `--force` set is STRONGLY discouraged for ordinary
 use, however.
 
 ## Output
 
 Probes are printed to standard out in FASTA format. The contents of the headers
-of the probes depend on the type of statement used to specify the probes.
+of the probes depend on the type of statement used to specify the probes. In
+general, the header contains the probe statement (stripped of white-space if
+necessary) followed by the comment if any.
 
-If probes were specified using coordinate statements, the coordinate statement
-is printed in the header of each probe:
+Note that white-space is stripped only from the probe statement, not the
+comments.
 
-    # 1:10-20/2:30-40 -->
-
-    > 1:10-20/2:30-40
-    AAAAAAAAAATTTTTTTTTT
-
-If probe statements are used, the header consists of the probe statement
+If exon statements are used, the header consists of the probe statement
 (expanded if necessary), the coordinates of the probe and the unique
 identifiers of the transcripts used in determining the location of the probe:
 
     # FOO#exon[1] -10 -> BAR#exon[*] +10 -->
 
-    > FOO#exon[1] -10 -> BAR#exon[1] +10 1:100/2:200 N000001 N0000002
+    >FOO#exon[1]-10->BAR#exon[1]_+10_1:100/2:200_N000001_N0000002
     ACGTTACGTTGCGCGCGCGC
-    > FOO#exon[1] -10 -> BAR#exon[2] +10 1:100/2:250 N000001 N0000002
+    >FOO#exon[1]-10->BAR#exon[2]+10_1:100/2:250_N000001_N0000002
     ACGTTACGTTATATATATAT
     ... etc
 
@@ -298,4 +380,5 @@ As a rule of thumb, the peak memory usage will be about 5 times the size of the
 sum of the text input (annotations and genome) on disk.
 
 
+[cosmic_link]: http://cancer.sanger.ac.uk/cancergenome/projects/cosmic/
 [ucsc_tables]: http://genome.ucsc.edu/cgi-bin/hgTables
