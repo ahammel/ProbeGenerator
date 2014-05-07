@@ -74,9 +74,12 @@ def _read_through_sequence_range(specification, row_1, row_2):
 
 
             FOO-/BAR+
-                    <----====|
+                    <----|====
             FOO->BAR
                     ====|<----
+
+    One of the sides will be reverse-complemented if necessary.
+
     """
     _check_read_through_spec(specification)
     if row_1.get('strand') == '+':
