@@ -1,4 +1,4 @@
-probe-generator: find the genomic sequences of mutations
+probe-generator: make short sequences to probe for mutation events
 
 `probe-generator` is a tool to make short sequences of base pairs representing
 fusion and SNP mutations. These probes can be used to screen high-throughput
@@ -29,7 +29,7 @@ Installing in your home folder without root permissions is only slightly more
 complicated. This requires making a local directory for python packages and
 installing everything there:
 
-    $ mdkir -p $HOME/usr
+    $ mkdir -p $HOME/usr
     $ echo 'export PYTHONPATH=$PYTHONPATH:$HOME/usr' >> ~/.bashrc
     $ echo 'export PYTHONPATH=$PYTHONPATH:$HOME/usr/lib/python3.2/site-packages' >> ~/.bashrc
     $ source ~/.bashrc
@@ -56,9 +56,9 @@ somewhere in your $PATH and test that everything worked:
 
 # Probe statements
 
-The input to `probe-generator` consists of statements in *probe statements*.
-Probe statements are brief descriptions of the genomic locations of
-mutations.
+The input to `probe-generator` consists short strings called *probe
+statements*.  Probe statements are brief descriptions of the genomic locations
+of mutations.
 
 `probe-generator` currently supports three different types of probe
 statements. _Exon statements_ and _coordinate statements_ specify fusion
@@ -97,14 +97,14 @@ White-space between the elements of the statement is ignored.
 ### Ambiguity
 
 Exon statements do not necessarily specify a unique location in the
-genome. When a probe statement could refer to any of nucleotide sequences,
-`probe-generator` returns all of them.
+genome. When a probe statement could refer to any of a number of sequences of
+nucletoides, `probe-generator` returns all of them.
 
 A probe statement can be ambiguous for three reasons:
 
-    1. Globbing
-    2. Alternative transcripts
-    3. Non-unique gene names
+1. Globbing
+2. Alternative transcripts
+3. Non-unique gene names
 
 Consider the following probe statement:
 
@@ -140,7 +140,7 @@ fusion occurred. `probe-generator` automatically reverse-complements exons to
 generate the correct probe sequence to the greatest degree possible using a
 user-specified _probing strategy_.
 
-The two probing strategies currently supported are _positional_ and
+There are two probing strategies for exon probes: _positional_ and
 _read-through_.
 
 Positional probes, indicated by the '/' separator, are created by appending
@@ -238,7 +238,6 @@ A probe for a fusion event between the 100th base pair of chromosome 1 and the
 
     "1:100-25/Y:200+25"
 
-
 ## SNP statements
 
 An SNP statement, as the name suggests, specifies a probe for a
@@ -246,8 +245,8 @@ single-nucleotide polymorphism event. The syntax is as follows:
 
     "chromosome: coordinate reference > mutation / bases"
 
-The "reference > mutation" element specifies the polymorphism
-(e.g. "A>C"). Either the reference or the mutation base can be globbed. If the
+The "reference > mutation" element specifies the polymorphism (e.g. "A>C"). The
+reference, the mutation, or both can be replaced by a '*' character. If the
 reference and the mutation base are identical, no probe sequence is produced.
 
 The length of the probe sequence is determined by 'bases'. The mutant base is
@@ -274,9 +273,9 @@ If the reference base is globbed, probe sequences will be generated for both
 the base at that location in the genome and its reverse-complement.
 
 If a glob character is supplied for the mutation base, all three possible SNPs
-at that genomic location will are generated. Globbing reference as well as the
-mutation base results in the same probe sequence, but there is no check to see
-whether the base at the genomic reference matches the specified reference.
+at that genomic location are generated. Globbing the reference as well as the
+mutation base results in the three probes, but there is no check to see whether
+the base at the genomic reference matches the specified reference.
 
 ### Examples
 
@@ -308,6 +307,11 @@ E.g:
      "X:100 A>C /51                    -- SNP found in patient XYZ"
      "FOO#exon[1]-25 -> BAR#exon[3]+25 -- confers resistance to madeupifam"
      "2:119726736+25/2:121555044+25    -- GLI2/MARCO fusion"
+
+
+Note that comments are not modified by `probe-generator` in any way. In
+particular, unlike the probe statements themselves, white-space is not
+stripped.
 
 # Usage
 
@@ -343,9 +347,9 @@ it detects that the total system memory in the current environment is less than
 be determined on a Linux system at present).
 
 The `--force` flag can be used to override this warning in testing situations
-with a small genome file, or if the user is pretty sure that enough memory is
-available. Running with `--force` set is STRONGLY discouraged for ordinary
-use, however.
+with a small genome reference file, or if the user is pretty sure that enough
+memory is available. Running with `--force` set is STRONGLY discouraged for
+ordinary use, however.
 
 ## Output
 
