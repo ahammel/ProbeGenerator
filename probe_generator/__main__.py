@@ -17,7 +17,7 @@ from docopt import docopt
 
 from probe_generator import print_probes, check_memory
 
-VERSION = '0.2.4'
+VERSION = '0.3'
 
 REQUIRED_SYSTEM_MEMORY = 10485760 # 10Gb in Kb
 
