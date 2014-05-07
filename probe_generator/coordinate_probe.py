@@ -52,6 +52,9 @@ class CoordinateProbe(object):
         return _COORDINATE_STATEMENT_SKELETON.format(**self._spec)
 
     def sequence(self, genome):
+        """Return the sequence of the probe given the reference genome.
+
+        """
         return reference.bases_from_coordinate(self._spec, genome)
 
     @staticmethod
@@ -62,11 +65,12 @@ class CoordinateProbe(object):
 
             "<chr>:<start>(-|+)<range>/<chr>:<start>(-|+)<range>"
 
-        Where <chr> is a chromosome, <start> is the start of the probe, and <range>
-        is the number of flanking bases to include in the probe. '+' indicates that
-        the flanking bases should be *after* (i.e., the indices of the bases are
-        larger than the start) the starting base, and '-' indicates that they
-        should be *before*.
+        Where <chr> is a chromosome, <start> is the start of the
+        probe, and <range> is the number of flanking bases to include
+        in the probe. '+' indicates that the flanking bases should be
+        *after* (i.e., the indices of the bases are larger than the
+        start) the starting base, and '-' indicates that they should
+        be *before*.
 
         """
         spec = _parse(statement)

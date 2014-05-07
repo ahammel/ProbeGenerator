@@ -1,3 +1,8 @@
+May 07, 2014	Alex Hammel		<ahammel@bcgsc.ca>
+	* Release version 0.3
+		* Added SNP probes.
+		* Added comments.
+
 Apr 02, 2014 	Alex Hammel		<ahammel@bcgsc.ca>
 	* Release version 0.2.4
 		* Fix off-by-one error in determining left bound of exons.
