@@ -9,3 +9,8 @@ VALIDATION_DATA_DIR = os.path.join(
         "scratch",
         "validations",
         "test_probe_generator")
+
+GENOME =  {
+        "1": "acgtacgt",
+        "2": "aaaagggg",
+        }

@@ -1,21 +1,14 @@
 """Automatically generate probe sequences.
 
 Usage:
-    probe-generator --statement STMT  --genome GENOME --annotation FILE...  [-f]
-    probe-generator --coordinate COORD  --genome GENOME [-f]
+    probe-generator --statements FILE --genome FILE [--annotation FILE...] [-f]
 
 Options:
-    -c COORD --coordinate=COORD     a file containing coordinate statements
-                                    e.g. "1:100-10/2:200+20"
-    -s STMT --statement=STMT        a file containing fusion statements
-                                    e.g. "FOO#exon[1]-10/BAR#exon[2]+20"
-    -g GENOME --genome=GENOME       the Ensembl reference genome
-                                    (FASTA format)
+    -s FILE --statements=FILE       a file containing probe statements
+    -g FILE --genome=FILE           the reference genome (FASTA format)
     -a FILE --annotation=FILE       a genome annotation file in UCSC format
     -f --force                      run even if the total system memory is
                                     insufficient or cannot be determined
-
-Please note that using --force is *strongly* discouraged.
 
 """
 import sys
@@ -24,7 +17,7 @@ from docopt import docopt
 
 from probe_generator import print_probes, check_memory
 
-VERSION = '0.2.4'
+VERSION = '0.3'
 
 REQUIRED_SYSTEM_MEMORY = 10485760 # 10Gb in Kb
 
@@ -50,11 +43,8 @@ def main():
                   "See README.md for details".format(error),
                   file=sys.stderr)
             sys.exit(1)
-    if args['--coordinate'] is not None:
-        print_probes.from_coordinate(args['--coordinate'], args['--genome'])
-    else:
-        print_probes.from_statements(
-                args['--statement'], args['--genome'], args['--annotation'])
+    print_probes.print_probes(
+            args['--statements'], args['--genome'], *args['--annotation'])
 
 
 if __name__ == '__main__':
