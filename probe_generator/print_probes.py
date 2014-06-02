@@ -16,6 +16,48 @@ NO_PROBES_WARNING = (
     "See `probe-generator --help")
 
 
+class Nothing(object):
+    """Represents a failed computation.
+
+    """
+
+
+class TryChain(object):
+    """Apply a series of functions to a value, keeping only the first one that
+    fails to throw a user-specified exception.
+
+    E.g:
+
+        >>> c = TryChain(ZeroDivisionError)
+        >>> c.bind(lambda : 1 / '3')
+        # Only ZeroDivisionError is caught. TypeError is thrown as normal.
+        >>> c.bind(lambda : 1 / 0)
+        >>> c.bind(lambda : 4 / 2)
+        >>> c.bind(lambda : 5 / 3)
+        >>> c.value
+        2.0
+
+    """
+    def __init__(self, exception):
+        self._exception = exception
+        self.error = Nothing
+        self.value = Nothing
+
+    def bind(self, function):
+        """If the value of the chain is Nothing, call the (nullary) function
+        and apply it to the value.
+
+        If the function call raises an exception, store the value of that
+        exception in error property.
+
+        """
+        if self.value is Nothing:
+            try:
+                self.value = function()
+            except self._exception as error:
+                self.error = error
+
+
 def print_probes(statement_file, genome_file, *annotation_files):
     """Print probes in FASTA format given a reference genome file and a file
     containing SNP probe statements.
@@ -23,21 +65,20 @@ def print_probes(statement_file, genome_file, *annotation_files):
     """
     with open(statement_file) as statements, open(genome_file) as genome:
         ref_genome = reference.reference_genome(genome)
-        # See the 'monad' branch for a planned refactoring of this
-        # try/excpet tree --- AJH
+        annotations = _combine_annotations(annotation_files)
         for statement in statements:
-            try:
-                probes = [CoordinateProbe.from_statement(statement)]
-            except InvalidStatement:
-                try:
-                    probes = SnpProbe.explode(statement)
-                except InvalidStatement:
-                    annotations = _combine_annotations(annotation_files)
-                    probes = ExonProbe.explode(statement, annotations)
+            chain = TryChain(InvalidStatement)
+            chain.bind(lambda : [CoordinateProbe.from_statement(statement)])
+            chain.bind(lambda : [SnpProbe.from_statement(statement)])
+            chain.bind(lambda : ExonProbe.explode(statement, annotations))
+
+            if chain.value is Nothing:
+                raise chain.error
+
+            probes = chain.value
 
             if not probes:
                 print(NO_PROBES_WARNING.format(statement), file=sys.stderr)
-
             for probe in probes:
                 try:
                     print_fasta(probe, probe.sequence(ref_genome))
