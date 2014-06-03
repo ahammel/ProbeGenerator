@@ -1,8 +1,9 @@
 """Test whether it's possible for a string to match more than one statement
 regular expression.
 
+Run this suite with nose.
+
 """
-import unittest
 import re
 import itertools
 
@@ -15,22 +16,6 @@ PROBE_MODULES = (
     probe_generator.snp_probe,
     probe_generator.exon_probe,
     )
-
-
-class TestRegexIntersection(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.fsa_list = [
-            lego.parse(deverbosify(module._STATEMENT_REGEX.pattern))
-            for module in PROBE_MODULES]
-
-    def assert_non_overlapping(self, fsa1, fsa2):
-        self.assertEqual(fsa1 & fsa2,
-                         lego.charclass()) # <- empty FSA
-
-    def test_statement_regex_mutual_exclusivity(self):
-        for fsa1, fsa2 in itertools.combinations(self.fsa_list, 2):
-            self.assert_non_overlapping(fsa1, fsa2)
 
 
 def deverbosify(regex):
@@ -51,3 +36,18 @@ def deverbosify(regex):
         unescaped_line = re.sub(r'\\#', '#', escaped_line)
         sub_strings.append(unescaped_line)
     return ''.join(sub_strings)
+
+
+def assert_non_overlapping(fsa1, fsa2):
+    """Assert that the intersection of two lego finite state automata is the
+    empty FSA.
+
+    """
+    assert fsa1 & fsa2 == lego.charclass() # <- empty FSA
+
+
+def test_statement_regex_mutual_exclusivity():
+    fsa_list = [lego.parse(deverbosify(module._STATEMENT_REGEX.pattern))
+                for module in PROBE_MODULES]
+    for fsa1, fsa2 in itertools.combinations(fsa_list, 2):
+        yield assert_non_overlapping, fsa1, fsa2
