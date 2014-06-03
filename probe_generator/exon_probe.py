@@ -28,7 +28,7 @@ _SEPARATOR = r"""
     ->)     # read-through separator
 """
 
-_PROBE_STATEMENT_REGEX = re.compile(r"""
+_STATEMENT_REGEX = re.compile(r"""
         {statement}
         {separator}
         {statement}
@@ -37,7 +37,7 @@ _PROBE_STATEMENT_REGEX = re.compile(r"""
                    separator=_SEPARATOR),
         re.VERBOSE)
 
-_PROBE_STATEMENT_SKELETON = (
+_STATEMENT_SKELETON = (
         "{gene1}#{feature1[0]}[{feature1[1]}]{side1}{bases1}"
         "{separator}"
         "{gene2}#{feature2[0]}[{feature2[1]}]{side2}{bases2}"
@@ -56,7 +56,7 @@ class ExonProbe(object):
     def __str__(self):
         side1 = '+' if self._spec['side1'] == 'start' else '-'
         side2 = '+' if self._spec['side2'] == 'start' else '-'
-        return _PROBE_STATEMENT_SKELETON.format(
+        return _STATEMENT_SKELETON.format(
                 **dict(self._spec,
                        side1=side1,
                        side2=side2))
@@ -116,7 +116,7 @@ def _parse(probe_statement):
     or if a feature aside from an exon is requested.
 
     """
-    match = _PROBE_STATEMENT_REGEX.match(probe_statement)
+    match = _STATEMENT_REGEX.match(probe_statement)
     if not match:
         raise InvalidStatement(
                 "Cannot parse probe statement: {!r}".format(

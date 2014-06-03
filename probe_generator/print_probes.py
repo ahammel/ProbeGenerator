@@ -102,4 +102,3 @@ def _combine_annotations(annotation_files):
         with open(annotation_file) as handle:
             rows.extend(annotation.parse_ucsc_file(handle))
     return rows
-

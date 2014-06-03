@@ -6,7 +6,7 @@ import re
 from probe_generator import reference, sequence
 from probe_generator.probe import InvalidStatement, NonFatalError
 
-_SNP_REGEX = re.compile(r"""
+_STATEMENT_REGEX = re.compile(r"""
         \s*
         ([a-zA-Z0-9.]+) # chromosome
         \s*
@@ -27,7 +27,7 @@ _SNP_REGEX = re.compile(r"""
         (--.*|\s*)      # comment
         """, re.VERBOSE)
 
-_SNP_STATEMENT_SKELETON = ("{chromosome}:{index}_"
+_STATEMENT_SKELETON = ("{chromosome}:{index}_"
                            "{reference}>{mutation}/{bases}{comment}")
 
 
@@ -47,7 +47,7 @@ class SnpProbe(object):
         self._spec = specification
 
     def __str__(self):
-        return _SNP_STATEMENT_SKELETON.format(**self._spec)
+        return _STATEMENT_SKELETON.format(**self._spec)
 
     def sequence(self, genome):
         """Return the sequence of the probe.
@@ -106,7 +106,7 @@ def _parse(statement):
     """Return a partial SNP probe specification given a probe statement.
 
     """
-    match = _SNP_REGEX.match(statement)
+    match = _STATEMENT_REGEX.match(statement)
 
     if not match:
         raise InvalidStatement(

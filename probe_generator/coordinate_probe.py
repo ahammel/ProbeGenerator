@@ -18,14 +18,14 @@ _COORDINATE = r"""
     \s*
 """
 
-_COORDINATE_STATEMENT_REGEX = re.compile(r"""
+_STATEMENT_REGEX = re.compile(r"""
         {0}
         /
         {0}
         (--.*|\s*)       # comment
         """.format(_COORDINATE), re.VERBOSE)
 
-_COORDINATE_STATEMENT_SKELETON = ("{chromosome1}:{end1}/"
+_STATEMENT_SKELETON = ("{chromosome1}:{end1}/"
                                   "{chromosome2}:{start2}"
                                   "{comment}")
 
@@ -49,7 +49,7 @@ class CoordinateProbe(object):
         self._spec = specification
 
     def __str__(self):
-        return _COORDINATE_STATEMENT_SKELETON.format(**self._spec)
+        return _STATEMENT_SKELETON.format(**self._spec)
 
     def sequence(self, genome):
         """Return the sequence of the probe given the reference genome.
@@ -81,7 +81,7 @@ def _parse(statement):
     """Return a coordinate specification from a statement.
 
     """
-    match = _COORDINATE_STATEMENT_REGEX.match(statement)
+    match = _STATEMENT_REGEX.match(statement)
     if not match:
         raise InvalidStatement(
                 "could not parse coordinate statement {!r}".format(
