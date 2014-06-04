@@ -3,6 +3,7 @@ import re
 
 from probe_generator.exon_probe import ExonProbe
 from probe_generator.probe import InvalidStatement
+from probe_generator.test.test_constants import ANNOTATION
 
 
 class AbstractExonStatementTestCase(unittest.TestCase):
@@ -34,19 +35,6 @@ class AbstractExonStatementTestCase(unittest.TestCase):
                     'rc_side_1':   False,
                     'rc_side_2':   False,
                 }
-        self.annotation = [
-                {'name':       'FOO',
-                 'proteinID':  'ABC',
-                 'exonStarts': '1,3,',
-                 'exonEnds':   '2,4,',
-                 'strand':     '+',
-                 'chrom':      '1'},
-                {'name':       'BAR',
-                 'proteinID':  'DEF',
-                 'exonStarts': '7,9,11,',
-                 'exonEnds':   '8,10,12,',
-                 'strand':     '+',
-                 'chrom':      '2'}]
 
 
 
@@ -100,47 +88,47 @@ class TestExplode(AbstractExonStatementTestCase):
 
     """
     def test_explode_fully_realized_statement(self):
-        probe, = ExonProbe.explode(self.probe_statement, self.annotation)
+        probe, = ExonProbe.explode(self.probe_statement, ANNOTATION)
         self.assertEqual(
             probe._spec,
             self.probe_specification)
-        
+
     def test_explode_fully_realized_statement_with_comment(self):
         probe, = ExonProbe.explode(
             self.probe_statement + " -- bladow, comments!",
-            self.annotation)
+            ANNOTATION)
         self.probe_specification["comment"] = "-- bladow, comments!"
         self.assertEqual(
             probe._spec,
             self.probe_specification)
 
     def test_string_fully_realized_statement(self):
-        probe, = ExonProbe.explode(self.probe_statement, self.annotation)
+        probe, = ExonProbe.explode(self.probe_statement, ANNOTATION)
         self.assertEqual(
             "ABC#exon[1]-2/DEF#exon[3]+3_1:2/2:12_FOO_BAR",
             str(probe))
-        
+
     def test_string_fully_realized_statement_with_comment(self):
         probe, = ExonProbe.explode(
             self.probe_statement + " -- bladow, comments!",
-            self.annotation)
+            ANNOTATION)
         self.probe_specification["comment"] = " bladow, comments!"
         self.assertEqual(
             "ABC#exon[1]-2/DEF#exon[3]+3_1:2/2:12_FOO_BAR-- bladow, comments!",
             str(probe))
-        
+
     def test_expand_glob_one_side(self):
         statement = "ABC#exon[1]*2 / DEF#exon[3]+3"
         self.assertCountEqual(
                 [probe._spec['side1']
-                 for probe in ExonProbe.explode(statement, self.annotation)],
+                 for probe in ExonProbe.explode(statement, ANNOTATION)],
                 ['start', 'end'])
 
     def test_expand_glob_both_sides(self):
         statement = "ABC#exon[1]*2 / DEF#exon[3]*3"
         self.assertCountEqual(
                 [(probe._spec['side1'], probe._spec['side2'])
-                 for probe in ExonProbe.explode(statement, self.annotation)],
+                 for probe in ExonProbe.explode(statement, ANNOTATION)],
                 [('start', 'start'), ('start', 'end'),
                  ('end', 'start'),   ('end', 'end')])
 
@@ -148,7 +136,7 @@ class TestExplode(AbstractExonStatementTestCase):
         statement = "ABC#exon[*]+2 / DEF#exon[*]-3"
         self.assertCountEqual(
                 [(probe._spec['feature1'], probe._spec['feature2'])
-                  for probe in ExonProbe.explode(statement, self.annotation)],
+                  for probe in ExonProbe.explode(statement, ANNOTATION)],
                  [(('exon', 1), ('exon', 1)),
                   (('exon', 1), ('exon', 2)),
                   (('exon', 1), ('exon', 3)),

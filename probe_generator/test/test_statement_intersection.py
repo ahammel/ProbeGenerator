@@ -9,12 +9,15 @@ import itertools
 
 from greenery import lego
 
+import probe_generator.gene_snp_probe # TODO: get rid of this
 import probe_generator
 
 PROBE_MODULES = (
     probe_generator.coordinate_probe,
     probe_generator.snp_probe,
     probe_generator.exon_probe,
+    probe_generator.amino_acid_probe,
+    probe_generator.gene_snp_probe,
     )
 
 
@@ -43,8 +46,8 @@ def assert_non_overlapping(fsa1, fsa2):
     empty FSA.
 
     """
-    assert fsa1 & fsa2 == lego.charclass() # <- empty FSA
-
+    assert fsa1 & fsa2 == lego.charclass(), ("Overlapping regex: "
+                                             "{}".format(fsa1 & fsa2))
 
 def test_statement_regex_mutual_exclusivity():
     fsa_list = [lego.parse(deverbosify(module._STATEMENT_REGEX.pattern))
