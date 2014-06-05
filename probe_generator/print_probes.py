@@ -12,9 +12,9 @@ from probe_generator.exon_probe import ExonProbe
 from probe_generator.probe import InvalidStatement, NonFatalError
 
 NO_PROBES_WARNING = (
-    "WARNING: no probes could be generated for statement {}\n\n"
-    "This is usually beacuse exon probes are in use and no genome annotation"
-    "file was provided\n\n"
+    "WARNING: no probes could be generated for statement {}\n"
+    "This is usually beacuse exon or gene snp probes are in use and no genome"
+    "annotation file was provided\n\n"
     "See `probe-generator --help")
 
 
@@ -71,22 +71,23 @@ def print_probes(statement_file, genome_file, *annotation_files):
         for statement in statements:
             chain = TryChain(InvalidStatement)
             chain.bind(lambda: [CoordinateProbe.from_statement(statement)])
-            chain.bind(lambda: [SnpProbe.from_statement(statement)])
-            chain.bind(lambda: GeneSnpProbe.explode(statement))
+            chain.bind(lambda: SnpProbe.explode(statement))
+            chain.bind(lambda: GeneSnpProbe.explode(statement, annotations))
             chain.bind(lambda: ExonProbe.explode(statement, annotations))
 
             if chain.value is Nothing:
                 raise chain.error
-
             probes = chain.value
 
-            if not probes:
-                print(NO_PROBES_WARNING.format(statement), file=sys.stderr)
+            probe = sentinel = object()
             for probe in probes:
                 try:
                     print_fasta(probe, probe.sequence(ref_genome))
                 except NonFatalError as error:
                     print(error, file=sys.stderr)
+
+            if probe is sentinel: # i.e., the generator was empty
+                print(NO_PROBES_WARNING.format(statement), file=sys.stderr)
 
 
 def print_fasta(head, bases):

@@ -4,9 +4,9 @@ from probe_generator.gene_snp_probe import GeneSnpProbe
 from probe_generator.test.test_constants import ANNOTATION, GENOME
 
 class TestGeneSnpProbe(unittest.TestCase):
-    def setUp(self, ):
+    def setUp(self):
         self.probe, = GeneSnpProbe.explode(
-            "ABC: c.4t>g /8",
+            "ABC: c.2g>t /4",
             ANNOTATION)
 
         self.other_probe, = GeneSnpProbe.explode(
@@ -16,24 +16,24 @@ class TestGeneSnpProbe(unittest.TestCase):
     def test_gene_snp_probe_spec(self):
         self.assertEqual(
             {"gene":        "ABC",
-             "base":        4,
-             "reference":   't',
-             "mutation":    'g',
-             "bases":       8,
+             "base":        2,
+             "reference":   'g',
+             "mutation":    't',
+             "bases":       4,
              "transcript":  "FOO",
              "chromosome":  "1",
-             "index":       4,
+             "index":       3,
              "comment":     ""},
             self.probe._spec)
 
     def test_gene_snp_probe_string(self):
         self.assertEqual(
-            "ABC:c.4t>g/8_FOO_1:4",
+            "ABC:c.2g>t/4_FOO_1:3",
             str(self.probe))
 
     def test_gene_snp_probe_sequence(self):
         self.assertEqual(
-            "acggacgt", # Same as sequence for SNP probe test.
+            "ctta",
             self.probe.sequence(GENOME))
 
     def test_cross_exon_minus_stand_probe(self):
@@ -45,6 +45,6 @@ class TestGeneSnpProbe(unittest.TestCase):
              "bases":       50,
              "transcript":  "BAZ",
              "chromosome":  "3",
-             "index":       15,
+             "index":       12,
              "comment":     "-- 2nd exon / - strand"},
             self.other_probe._spec)

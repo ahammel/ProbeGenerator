@@ -4,6 +4,7 @@ sequence.
 """
 import re
 import itertools
+import sys
 
 from probe_generator import annotation, probe
 from probe_generator.snp_probe import SnpProbe
@@ -71,18 +72,24 @@ class GeneSnpProbe(object):
         partial_spec = _parse(statement)
         transcripts = annotation.lookup_gene(
             partial_spec["gene"], genome_annotation)
+        cached_coordinates = set()
         for transcript in transcripts:
             try:
                 index = _relative_index(partial_spec["base"], transcript)
             except OutOfRange as error:
-                raise OutOfRange(
-                    "{} in statement:\n'{}'".format(error, statement))
-            spec = dict(partial_spec,
-                        chromosome=transcript["chrom"],
-                        transcript=transcript["name"],
-                        index=index
-                        )
-            yield GeneSnpProbe(spec)
+                print("{} in statement: {!r}".format(error, statement),
+                      file=sys.stderr)
+            else:
+                chromosome = transcript["chrom"].lstrip("chr")
+                transcript = transcript["name"]
+                spec = dict(partial_spec,
+                            chromosome=chromosome,
+                            transcript=transcript,
+                            index=index)
+                if not (chromosome, index) in cached_coordinates:
+                    cached_coordinates.add((chromosome, index))
+                    yield GeneSnpProbe(spec)
+
 
 def _parse(statement):
     """Return a partial GeneSnpProbe specification given a probe statement.
@@ -116,7 +123,7 @@ def _relative_index(index, transcript):
     """
     strand = transcript["strand"]
     indices = (_base_indices(pair, strand)
-               for pair in annotation.exons(transcript))
+               for pair in annotation.coding_exons(transcript))
     base_coorinates = itertools.chain(*indices)
     try:
         base_index = next(itertools.islice(
@@ -125,7 +132,7 @@ def _relative_index(index, transcript):
                 index))
     except StopIteration:
         raise OutOfRange(
-            "\nBase {} is outside the range of transcript '{}'".format(
+            "Base {} is outside the range of transcript '{}'".format(
                 index, transcript["name"]))
     return base_index
 
@@ -139,9 +146,9 @@ def _base_indices(exon_range, strand):
 
     p, q = exon_range
     if strand == "+":
-        return range(p, q+1)
+        return range(p, q)
     else:
-        return reversed(range(p, q+1))
+        return reversed(range(p+1, q+1))
 
 
 class OutOfRange(probe.NonFatalError):

@@ -94,6 +94,9 @@ def exons(row):
     valid UCSC gene table.
 
     """
+    # TODO: At some point we should think about how much of this exception code
+    # we really want to support to confirm that the UCSC tables are in the
+    # right format. It's starting to irritate me.
     try:
         exon_starts = row['exonStarts'].split(',')
         exon_ends = row['exonEnds'].split(',')
@@ -118,6 +121,38 @@ def exons(row):
                         "fields: {!r} and {!r}. exonEnds values must be "
                         "strictly greater than exonStarts".format(
                             row['exonStarts'], row['exonEnds']))
+            positions.append((start, end))
+    if strand == '-':
+        positions.reverse()
+    return positions
+
+
+def coding_exons(row):
+    """As in `exons`, but with the UTRs trimmed out.
+
+    """
+    try:
+        cds_start = int(row['cdsStart'])
+        cds_end = int(row['cdsEnd'])
+        strand = row['strand']
+    except KeyError as error:
+        raise FormattingError(
+                "key {!s} not in fields: {!r}".format(
+                    error, list(row.keys())))
+    exon_positions = exons(row)
+    positions = []
+
+    if strand == '-':
+        exon_positions.reverse()
+    for start, end in exon_positions:
+        if end < cds_start:
+            pass
+        elif start <= cds_start <= end:
+            positions.append((cds_start, end))
+        elif start <= cds_end <= end:
+            positions.append((start, cds_end))
+            break
+        else:
             positions.append((start, end))
     if strand == '-':
         positions.reverse()
