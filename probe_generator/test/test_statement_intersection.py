@@ -9,7 +9,6 @@ import itertools
 
 from greenery import lego
 
-import probe_generator.gene_snp_probe # TODO: get rid of this
 import probe_generator
 
 PROBE_MODULES = (
