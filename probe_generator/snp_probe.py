@@ -28,7 +28,7 @@ _STATEMENT_REGEX = re.compile(r"""
         """, re.VERBOSE)
 
 _STATEMENT_SKELETON = ("{chromosome}:{index}_"
-                           "{reference}>{mutation}/{bases}{comment}")
+                       "{reference}>{mutation}/{bases}{comment}")
 
 
 class SnpProbe(object):

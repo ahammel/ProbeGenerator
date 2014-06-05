@@ -26,8 +26,8 @@ _STATEMENT_REGEX = re.compile(r"""
         """.format(_COORDINATE), re.VERBOSE)
 
 _STATEMENT_SKELETON = ("{chromosome1}:{end1}/"
-                                  "{chromosome2}:{start2}"
-                                  "{comment}")
+                       "{chromosome2}:{start2}"
+                       "{comment}")
 
 
 class CoordinateProbe(object):
