@@ -87,7 +87,7 @@ class GeneSnpProbe(object):
 def _parse(statement):
     """Return a partial GeneSnpProbe specification given a probe statement.
 
-    Raises an InvalidStatement excpetion when fed an invalid gene snp
+    Raises an InvalidStatement exception when fed an invalid gene snp
     statement.
 
     """
@@ -117,11 +117,11 @@ def _relative_index(index, transcript):
     strand = transcript["strand"]
     indices = (_base_indices(pair, strand)
                for pair in annotation.exons(transcript))
-    base_coorinates = itertools.chain(*indices)
+    base_coordinates = itertools.chain(*indices)
     try:
         base_index = next(itertools.islice(
-                base_coorinates,
-                index-1, # Convert between zero- and one-indexing
+                base_coordinates,
+                index-1, # Convert from 1-based indexing to 0-based
                 index))
     except StopIteration:
         raise OutOfRange(
