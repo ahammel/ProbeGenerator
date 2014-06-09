@@ -3,12 +3,15 @@
 """
 import sys
 
+# Utilities
 from probe_generator import reference, annotation
+# Probe classes
 from probe_generator.coordinate_probe import CoordinateProbe
-from probe_generator.snp_probe import SnpProbe
-from probe_generator.gene_snp_probe import GeneSnpProbe
-from probe_generator.exon_probe import ExonProbe
-
+from probe_generator.snp_probe        import SnpProbe
+from probe_generator.gene_snp_probe   import GeneSnpProbe
+from probe_generator.amino_acid_probe import AminoAcidProbe
+from probe_generator.exon_probe       import ExonProbe
+# Exceptions
 from probe_generator.probe import InvalidStatement, NonFatalError
 
 NO_PROBES_WARNING = (
@@ -16,6 +19,9 @@ NO_PROBES_WARNING = (
     "This is usually beacuse exon or gene snp probes are in use and no genome"
     "annotation file was provided\n\n"
     "See `probe-generator --help")
+
+INVALID_STATEMENT_WARNING = (
+    "WARNING: the statement {!r} could not be parsed")
 
 
 class Nothing(object):
@@ -70,13 +76,20 @@ def print_probes(statement_file, genome_file, *annotation_files):
         annotations = _combine_annotations(annotation_files)
         for statement in statements:
             chain = TryChain(InvalidStatement)
-            chain.bind(lambda: [CoordinateProbe.from_statement(statement)])
-            chain.bind(lambda: SnpProbe.explode(statement))
-            chain.bind(lambda: GeneSnpProbe.explode(statement, annotations))
-            chain.bind(lambda: ExonProbe.explode(statement, annotations))
+            chain.bind(
+                lambda: [CoordinateProbe.from_statement(statement)])
+            chain.bind(
+                lambda: list(SnpProbe.explode(statement)))
+            chain.bind(
+                lambda: list(GeneSnpProbe.explode(statement, annotations)))
+            chain.bind(
+                lambda: list(AminoAcidProbe.explode(statement, annotations)))
+            chain.bind(
+                lambda: list(ExonProbe.explode(statement, annotations)))
 
             if chain.value is Nothing:
-                raise chain.error
+                print(INVALID_STATEMENT_WARNING.format(statement),
+                      file=sys.stderr)
             probes = chain.value
 
             probe = sentinel = object()

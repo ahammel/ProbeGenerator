@@ -13,6 +13,7 @@ VALIDATION_DATA_DIR = os.path.join(
 GENOME =  {
         "1": "acgtacgt",
         "2": "aaaagggg",
+        "3": "ggggggggcccgggccccggggggggggggg",
         }
 
 ANNOTATION = [

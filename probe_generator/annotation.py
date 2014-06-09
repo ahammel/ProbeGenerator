@@ -30,6 +30,9 @@ To add support for a new table:
 
 """
 import csv
+import itertools
+
+from probe_generator import probe
 
 _GENE_NAME_FIELDS = (
         # the names of the fields which might contain the name of a gene in any
@@ -159,7 +162,71 @@ def coding_exons(row):
     return positions
 
 
+def nucleotide_index(index, transcript):
+    """Given a base pair index and a row of a UCSC gene table, return the
+    genomic coordinate of the base pair at that index in the transcript.
+
+    """
+    strand = transcript["strand"]
+    indices = (_base_indices(pair, strand) for pair in coding_exons(transcript))
+    base_coordinates = itertools.chain(*indices)
+    try:
+        base_index = next(itertools.islice(
+                base_coordinates,
+                index-1, # Convert from 1-based indexing to 0-based
+                index))
+    except StopIteration:
+        raise OutOfRange(
+            "Base {} is outside the range of transcript '{}'".format(
+                index, transcript["name"]))
+    return base_index
+
+
+def codon_index(index, transcript):
+    """Given a codon index and a row of a UCSC gene table, return the genomic
+    coordinate of the first base pair of that codon.
+
+    """
+    return nucleotide_index(
+        (index * 3) - 2, transcript)
+
+
+def _base_indices(exon_range, strand):
+    """Given an exon range (int, int) the strand of the exon ("+" or "-"),
+    return a generator of the genomic coordinates of the bases in the exon.
+
+    """
+    assert strand in "+-"
+
+    p, q = exon_range
+    if strand == "+":
+        return range(p, q)
+    else:
+        return reversed(range(p+1, q+1))
+
+
+def get_bases(bases, index):
+    """Given the number of bases and an index, return the start and end indices
+    of the probe.
+
+    """
+    buff = bases // 2
+    if bases % 2 == 0:
+        # There's no centre item in a sequence with an even number of
+        # elements. The special case makes it off by one in a predicatable
+        # manner.
+        return (index - buff + 1), (index + buff)
+    else:
+        return (index - buff), (index + buff)
+
+
 class FormattingError(Exception):
     """Raised when a UCSC file is improperly formatted.
+
+    """
+
+
+class OutOfRange(probe.NonFatalError):
+    """Raised when a base index outside the range of a transcript is specified.
 
     """

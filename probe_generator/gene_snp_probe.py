@@ -3,7 +3,6 @@ sequence.
 
 """
 import re
-import itertools
 import sys
 
 from probe_generator import annotation, probe
@@ -52,7 +51,7 @@ class GeneSnpProbe(object):
         return _STATEMENT_SKELETON.format(**self._spec)
 
     def sequence(self, genome):
-        """Return the probe sequence given a genome annotation.
+        """Return the probe sequence given a genome sequence.
 
         """
         snp_probe = SnpProbe(self._spec)
@@ -75,8 +74,9 @@ class GeneSnpProbe(object):
         cached_coordinates = set()
         for transcript in transcripts:
             try:
-                index = _relative_index(partial_spec["base"], transcript)
-            except OutOfRange as error:
+                index = annotation.nucleotide_index(
+                    partial_spec["base"], transcript)
+            except annotation.OutOfRange as error:
                 print("{} in statement: {!r}".format(error, statement),
                       file=sys.stderr)
             else:
@@ -114,44 +114,3 @@ def _parse(statement):
             "mutation": mutation,
             "bases": int(bases),
             "comment": comment}
-
-
-def _relative_index(index, transcript):
-    """Given a base pair index and a row of a UCSC gene table, return the
-    genomic coordinate of the base pair at that index in the transcript.
-
-    """
-    strand = transcript["strand"]
-    indices = (_base_indices(pair, strand)
-               for pair in annotation.coding_exons(transcript))
-    base_coordinates = itertools.chain(*indices)
-    try:
-        base_index = next(itertools.islice(
-                base_coordinates,
-                index-1, # Convert from 1-based indexing to 0-based
-                index))
-    except StopIteration:
-        raise OutOfRange(
-            "Base {} is outside the range of transcript '{}'".format(
-                index, transcript["name"]))
-    return base_index
-
-
-def _base_indices(exon_range, strand):
-    """Given an exon range (int, int) the strand of the exon ("+" or "-"),
-    return a generator of the genomic coordinates of the bases in the exon.
-
-    """
-    assert strand in "+-"
-
-    p, q = exon_range
-    if strand == "+":
-        return range(p, q)
-    else:
-        return reversed(range(p+1, q+1))
-
-
-class OutOfRange(probe.NonFatalError):
-    """Raised when a base index outside the range of a transcript is specified.
-
-    """

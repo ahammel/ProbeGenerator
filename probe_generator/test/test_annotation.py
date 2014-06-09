@@ -5,7 +5,7 @@ import re
 import mock
 
 from probe_generator import annotation
-from probe_generator.test.test_constants import VALIDATION_DATA_DIR
+from probe_generator.test.test_constants import VALIDATION_DATA_DIR, ANNOTATION
 
 MOCK_ANNOTATION_FILE = [ # input is any iterable of strings
         # UCSC annotation files have a header in this format:
@@ -177,3 +177,31 @@ class TestAnnotationValidation(unittest.TestCase):
     def test_ucsc_gene_table(self):
         with open(MOCK_UCSC_GENES_FILE) as handle:
             self.assert_mock_gene_in_file(handle)
+
+
+class TestAnnotationIndexFunctions(unittest.TestCase):
+    """Test cases for the annotation.nucleotide_index and codon_index
+    functions.
+
+    """
+    def test_nucleotide_index(self):
+        transcript1, transcript2, transcript3 = ANNOTATION
+        self.assertEqual(
+            annotation.nucleotide_index(1, transcript1), 1)
+        self.assertEqual(
+            annotation.nucleotide_index(2, transcript2), 9)
+        self.assertEqual(
+            annotation.nucleotide_index(7, transcript3), 12)
+
+    def test_codon_index(self):
+        transcript1, transcript2, transcript3 = ANNOTATION
+        self.assertEqual(
+            annotation.codon_index(1, transcript1), 1)
+        self.assertEqual(
+            annotation.codon_index(1, transcript2), 7)
+        self.assertEqual(
+            annotation.codon_index(1, transcript3), 23)
+        self.assertEqual(
+            annotation.codon_index(2, transcript3), 15)
+        self.assertEqual(
+            annotation.codon_index(3, transcript3), 12)

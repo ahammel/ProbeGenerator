@@ -3,7 +3,7 @@
 """
 import re
 
-from probe_generator import reference, sequence
+from probe_generator import reference, sequence, annotation
 from probe_generator.probe import InvalidStatement, NonFatalError
 
 _STATEMENT_REGEX = re.compile(r"""
@@ -55,7 +55,9 @@ class SnpProbe(object):
         The mutant at the index (probe_length // 2).
 
         """
-        start, end = _get_bases(self._spec)
+        start, end = annotation.get_bases(
+            self._spec['bases'],
+            self._spec['index'])
         raw_bases = reference.bases(
                 genome,
                 self._spec["chromosome"],
@@ -110,7 +112,7 @@ def _parse(statement):
 
     if not match:
         raise InvalidStatement(
-                "could not parse snp statement {!r}".format(
+            "could not parse snp statement {!r}".format(
                     statement))
 
     chromosome, index, reference_base, mutation, bases, comment = match.groups()
@@ -149,15 +151,6 @@ def _expand(partial_spec):
                 yield dict(partial_spec,
                            reference=ref_base,
                            mutation=mutant_base)
-
-
-def _get_bases(spec):
-    """Return the start and end indices from a SNP probe spec.
-
-    """
-    bases, index = spec["bases"], spec["index"]
-    buffer = bases // 2
-    return (index - buffer + 1), (index + buffer)
 
 
 class ReferenceMismatch(NonFatalError):
