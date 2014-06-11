@@ -10,7 +10,13 @@ class TestAminoAcidProbe(unittest.TestCase):
     def test_amino_acid_probe_sequence(self):
         self.assertEqual(
             self.probe.sequence(GENOME),
-            "ccCATcccc")
+            "cccCATccc")
+
+    def test_amino_acid_probe_sequence_even_number_of_bases(self):
+        even_probe, = AminoAcidProbe.explode("GHI: P2M /8", ANNOTATION)
+        self.assertEqual(
+            even_probe.sequence(GENOME),
+            "ccCATccc")
 
     def test_amino_acid_probe_string(self):
         self.assertEqual(str(self.probe), "GHI:P2M(ATG)/9_BAZ_3:15")

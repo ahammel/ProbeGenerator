@@ -187,21 +187,19 @@ class TestAnnotationIndexFunctions(unittest.TestCase):
     def test_nucleotide_index(self):
         transcript1, transcript2, transcript3 = ANNOTATION
         self.assertEqual(
-            annotation.nucleotide_index(1, transcript1), 1)
+            annotation.nucleotide_index(0, transcript1), 1)
         self.assertEqual(
-            annotation.nucleotide_index(2, transcript2), 9)
-        self.assertEqual(
-            annotation.nucleotide_index(7, transcript3), 12)
+            annotation.nucleotide_index(1, transcript2), 9)
+        transcript_3_indices = [22, 21, 20, 14, 13, 12, 11, 10]
+        for base_pair, index in zip(transcript_3_indices, range(10)):
+            self.assertEqual(
+                annotation.nucleotide_index(index, transcript3), base_pair)
 
     def test_codon_index(self):
         transcript1, transcript2, transcript3 = ANNOTATION
         self.assertEqual(
-            annotation.codon_index(1, transcript1), 1)
+            annotation.codon_index(1, transcript3), 21)
         self.assertEqual(
-            annotation.codon_index(1, transcript2), 7)
+            annotation.codon_index(2, transcript3), 13)
         self.assertEqual(
-            annotation.codon_index(1, transcript3), 23)
-        self.assertEqual(
-            annotation.codon_index(2, transcript3), 15)
-        self.assertEqual(
-            annotation.codon_index(3, transcript3), 12)
+            annotation.codon_index(3, transcript3), 10)

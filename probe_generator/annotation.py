@@ -173,8 +173,8 @@ def nucleotide_index(index, transcript):
     try:
         base_index = next(itertools.islice(
                 base_coordinates,
-                index-1, # Convert from 1-based indexing to 0-based
-                index))
+                index,
+                None))
     except StopIteration:
         raise OutOfRange(
             "Base {} is outside the range of transcript '{}'".format(
@@ -184,7 +184,7 @@ def nucleotide_index(index, transcript):
 
 def codon_index(index, transcript):
     """Given a codon index and a row of a UCSC gene table, return the genomic
-    coordinate of the first base pair of that codon.
+    coordinate of the second base pair of that codon.
 
     """
     return nucleotide_index(
@@ -202,7 +202,7 @@ def _base_indices(exon_range, strand):
     if strand == "+":
         return range(p, q)
     else:
-        return reversed(range(p+1, q+1))
+        return reversed(range(p, q))
 
 
 def get_bases(bases, index):

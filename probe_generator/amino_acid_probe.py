@@ -73,11 +73,6 @@ class AminoAcidProbe(object):
             index = self._spec["index"] + 1
         else:
             index = self._spec["index"] - 1
-        # The index must be adjusted so that the codon starts in the centre of
-        # the probe.
-        #
-        # TODO: It would probably be better to have the second base of the
-        # codon cetnred in the probe when possible.
         start, end = annotation.get_bases(
             self._spec['bases'],
             index)
@@ -91,12 +86,18 @@ class AminoAcidProbe(object):
     def _mutate(self, bases):
         codon_index = (self._spec["bases"] // 2)
         spec_codons = _DNA_CODON_TABLE[self._spec["reference"]]
+        if self._spec["bases"] % 2 == 0:
+            # p and q are the positions of the start and end of the codon
+            # relative to the codon_index
+            p, q = 2, 1
+        else:
+            p, q = 1, 2
         if self._spec['strand'] == '+':
-            reference_codon = bases[codon_index-2:codon_index+1].upper()
+            reference_codon = bases[codon_index-p:codon_index+q].upper()
             mutation_bases = self._spec["mutation_bases"]
         else:
             reference_codon = reverse_complement(
-                bases[codon_index-2:codon_index+1].upper())
+                bases[codon_index-p:codon_index+q].upper())
             mutation_bases = reverse_complement(
                 self._spec["mutation_bases"])
         if reference_codon not in spec_codons:
@@ -106,9 +107,9 @@ class AminoAcidProbe(object):
                     reference_codon,
                     self._spec["reference"],
                     self))
-        return (bases[:codon_index-2] +
+        return (bases[:codon_index-p] +
                 mutation_bases        +
-                bases[codon_index+1:])
+                bases[codon_index+q:])
 
     @staticmethod
     def explode(statement, genome_annotation=None):
@@ -128,7 +129,10 @@ class AminoAcidProbe(object):
         coordinate_cache = set()
         for transcript in transcripts:
             try:
-                index = annotation.codon_index(partial_spec['codon'], transcript)
+                if transcript["strand"] == "-":
+                    index = annotation.codon_index(partial_spec['codon'], transcript) + 2
+                else:
+                    index = annotation.codon_index(partial_spec['codon'], transcript)
             except annotation.OutOfRange as error:
                 print("{} in statement: {!r}".format(error, statement),
                       file=sys.stderr)

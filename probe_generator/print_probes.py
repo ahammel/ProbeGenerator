@@ -15,10 +15,7 @@ from probe_generator.exon_probe       import ExonProbe
 from probe_generator.probe import InvalidStatement, NonFatalError
 
 NO_PROBES_WARNING = (
-    "WARNING: no probes could be generated for statement {}\n"
-    "This is usually beacuse exon or gene snp probes are in use and no genome"
-    "annotation file was provided\n\n"
-    "See `probe-generator --help")
+    "WARNING: no probes could be generated for statement {!r}")
 
 INVALID_STATEMENT_WARNING = (
     "WARNING: the statement {!r} could not be parsed")
@@ -65,6 +62,13 @@ class TryChain(object):
             except self._exception as error:
                 self.error = error
 
+    def bind_all(self, *functions):
+        """Apply `bind` to all the arguments in order.
+
+        """
+        for function in functions:
+            self.bind(function)
+
 
 def print_probes(statement_file, genome_file, *annotation_files):
     """Print probes in FASTA format given a reference genome file and a file
@@ -76,15 +80,11 @@ def print_probes(statement_file, genome_file, *annotation_files):
         annotations = _combine_annotations(annotation_files)
         for statement in statements:
             chain = TryChain(InvalidStatement)
-            chain.bind(
-                lambda: [CoordinateProbe.from_statement(statement)])
-            chain.bind(
-                lambda: list(SnpProbe.explode(statement)))
-            chain.bind(
-                lambda: list(GeneSnpProbe.explode(statement, annotations)))
-            chain.bind(
-                lambda: list(AminoAcidProbe.explode(statement, annotations)))
-            chain.bind(
+            chain.bind_all(
+                lambda: [CoordinateProbe.from_statement(statement)],
+                lambda: list(SnpProbe.explode(statement)),
+                lambda: list(GeneSnpProbe.explode(statement, annotations)),
+                lambda: list(AminoAcidProbe.explode(statement, annotations)),
                 lambda: list(ExonProbe.explode(statement, annotations)))
 
             if chain.value is Nothing:
@@ -92,14 +92,18 @@ def print_probes(statement_file, genome_file, *annotation_files):
                       file=sys.stderr)
             probes = chain.value
 
-            probe = sentinel = object()
+            one_probe_printed = False
             for probe in probes:
                 try:
                     print_fasta(probe, probe.sequence(ref_genome))
                 except NonFatalError as error:
-                    print(error, file=sys.stderr)
+                    print(
+                        "In probe: {}: {}".format(probe, error),
+                        file=sys.stderr)
+                else:
+                    one_probe_printed = True
 
-            if probe is sentinel: # i.e., the generator was empty
+            if not one_probe_printed: # i.e., the generator was empty
                 print(NO_PROBES_WARNING.format(statement), file=sys.stderr)
 
 

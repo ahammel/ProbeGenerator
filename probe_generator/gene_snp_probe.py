@@ -73,21 +73,25 @@ class GeneSnpProbe(object):
             partial_spec["gene"], genome_annotation)
         cached_coordinates = set()
         for transcript in transcripts:
+            if transcript["strand"] == '-':
+                base = partial_spec["base"] - 2
+            else:
+                base = partial_spec["base"]
             try:
                 index = annotation.nucleotide_index(
-                    partial_spec["base"], transcript)
+                    base, transcript)
             except annotation.OutOfRange as error:
                 print("{} in statement: {!r}".format(error, statement),
                       file=sys.stderr)
             else:
                 chromosome = transcript["chrom"].lstrip("chr")
-                transcript = transcript["name"]
-                spec = dict(partial_spec,
-                            chromosome=chromosome,
-                            transcript=transcript,
-                            index=index)
                 if not (chromosome, index) in cached_coordinates:
+                    transcript = transcript["name"]
                     cached_coordinates.add((chromosome, index))
+                    spec = dict(partial_spec,
+                                chromosome=chromosome,
+                                transcript=transcript,
+                                index=index)
                     yield GeneSnpProbe(spec)
 
 

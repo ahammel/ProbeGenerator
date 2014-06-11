@@ -6,17 +6,17 @@ from probe_generator.test.test_constants import ANNOTATION, GENOME
 class TestGeneSnpProbe(unittest.TestCase):
     def setUp(self):
         self.probe, = GeneSnpProbe.explode(
-            "ABC: c.2g>t /4",
+            "ABC: c.1g>t /4",
             ANNOTATION)
 
         self.other_probe, = GeneSnpProbe.explode(
-            "GHI: c.7A>C /50 -- 2nd exon / - strand",
+            "GHI: c.6A>C /50 -- 2nd exon / - strand",
             ANNOTATION)
 
     def test_gene_snp_probe_spec(self):
         self.assertEqual(
             {"gene":        "ABC",
-             "base":        2,
+             "base":        1,
              "reference":   'g',
              "mutation":    't',
              "bases":       4,
@@ -28,7 +28,7 @@ class TestGeneSnpProbe(unittest.TestCase):
 
     def test_gene_snp_probe_string(self):
         self.assertEqual(
-            "ABC:c.2g>t/4_FOO_1:3",
+            "ABC:c.1g>t/4_FOO_1:3",
             str(self.probe))
 
     def test_gene_snp_probe_sequence(self):
@@ -39,12 +39,12 @@ class TestGeneSnpProbe(unittest.TestCase):
     def test_cross_exon_minus_stand_probe(self):
         self.assertEqual(
             {"gene":        "GHI",
-             "base":        7,
+             "base":        6,
              "reference":   'A',
              "mutation":    'C',
              "bases":       50,
              "transcript":  "BAZ",
              "chromosome":  "3",
-             "index":       12,
+             "index":       13,
              "comment":     "-- 2nd exon / - strand"},
             self.other_probe._spec)

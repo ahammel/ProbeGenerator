@@ -52,7 +52,7 @@ class SnpProbe(object):
     def sequence(self, genome):
         """Return the sequence of the probe.
 
-        The mutant at the index (probe_length // 2).
+        The mutation is at the index (probe_length // 2).
 
         """
         start, end = annotation.get_bases(
@@ -95,10 +95,8 @@ class SnpProbe(object):
                     bases[mutation_index+1:])
         else:
             raise ReferenceMismatch(
-                    "In probe {!s}: "
                     "Reference base {!r} does not match requested mutation "
                     "'{}>{}'".format(
-                        self,
                         bases[mutation_index],
                         self._spec["reference"],
                         self._spec["mutation"]))
