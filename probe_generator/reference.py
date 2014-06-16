@@ -1,7 +1,7 @@
 """Parse and extract base pair sequences from an Ensembl reference genome.
 
 """
-from probe_generator import sequence
+from probe_generator import sequence, probe
 
 
 def bases(ref_genome, chromosome, start, end):
@@ -93,7 +93,7 @@ def reference_genome(genome):
             in genome_map.items()}
 
 
-class MissingChromosome(Exception):
+class MissingChromosome(probe.NonFatalError):
     """Raised when a chromosome is not present in the reference genome.
 
     """
