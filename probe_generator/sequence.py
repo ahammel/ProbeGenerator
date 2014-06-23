@@ -14,14 +14,14 @@ class SequenceRange(namedtuple("SequenceRange",
                                 "start",
                                 "end",
                                 "reverse_complement",
-                                "mutant"])):
+                                "mutation"])):
     """Data object for specifying a range of base pairs to be extracted from
     the genome.
 
     The 'start' and 'end' fields are 0-indexed, left-inclusive, right-exclusive
     (like slices in Python).
 
-    The optional 'mutant' flag is used to mark a range which will be replaced
+    The optional 'mutation' flag is used to mark a range which will be replaced
     with a different sequence by a Probe object.
 
     """
@@ -32,13 +32,13 @@ class SequenceRange(namedtuple("SequenceRange",
 
     def __new__(self, chromosome, start, end, *,
                 # Keyword only arguments:
-                reverse_complement=False, mutant=False):
+                reverse_complement=False, mutation=False):
         return super().__new__(self,
                                chromosome,
                                start,
                                end,
                                reverse_complement,
-                               mutant)
+                               mutation)
 
 
 def complement(string):

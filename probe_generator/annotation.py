@@ -205,21 +205,6 @@ def _base_indices(exon_range, strand):
         return reversed(range(p, q))
 
 
-def get_bases(bases, index):
-    """Given the number of bases and an index, return the start and end indices
-    of the probe.
-
-    """
-    buff = bases // 2
-    if bases % 2 == 0:
-        # There's no centre item in a sequence with an even number of
-        # elements. The special case makes it off by one in a predicatable
-        # manner.
-        return (index - buff + 1), (index + buff)
-    else:
-        return (index - buff), (index + buff)
-
-
 class FormattingError(Exception):
     """Raised when a UCSC file is improperly formatted.
 

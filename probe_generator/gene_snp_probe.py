@@ -5,8 +5,10 @@ sequence.
 import re
 import sys
 
-from probe_generator import annotation, probe
+from probe_generator import annotation
 from probe_generator.snp_probe import SnpProbe
+from probe_generator.probe import AbstractProbe, InvalidStatement
+from probe_generator.sequence import reverse_complement
 
 _STATEMENT_REGEX = re.compile("""
         \s*                # whitespace
@@ -30,32 +32,17 @@ _STATEMENT_REGEX = re.compile("""
         (--.*|\s*)         # comment
         """, re.VERBOSE)
 
-_STATEMENT_SKELETON = ("{gene}:c.{base}{reference}>{mutation}/{bases}_"
-                       "{transcript}_{chromosome}:{index}{comment}")
 
-
-class GeneSnpProbe(object):
+class GeneSnpProbe(AbstractProbe):
     """Probe for a single nucleotide mutation event at a base pair specified
     relative to the start of a transcript.
 
     """
-    # TODO: This class is somewhat tightly-coupled to the SnpProbe class. If I
-    # need to change to format of the spec dictionary for some reason, I will
-    # probably have to change both classes. If this starts to become a problem
-    # we can use an intermediate ProbeSpecification class.
+    _STATEMENT_SKELETON = ("{gene}:c.{base}{reference}>{mutation}/{bases}_"
+                           "{transcript}_{chromosome}:{index}{comment}")
 
-    def __init__(self, specification):
-        self._spec = specification
-
-    def __str__(self):
-        return _STATEMENT_SKELETON.format(**self._spec)
-
-    def sequence(self, genome):
-        """Return the probe sequence given a genome sequence.
-
-        """
-        snp_probe = SnpProbe(self._spec)
-        return snp_probe.sequence(genome)
+    def get_ranges(self):
+        return SnpProbe.get_ranges(self)
 
     @staticmethod
     def explode(statement, genome_annotation=None):
@@ -75,6 +62,8 @@ class GeneSnpProbe(object):
         for transcript in transcripts:
             if transcript["strand"] == '-':
                 base = partial_spec["base"] - 2
+                partial_spec["mutation"] = reverse_complement(
+                    partial_spec["mutation"])
             else:
                 base = partial_spec["base"]
             try:
@@ -105,7 +94,7 @@ def _parse(statement):
     match = _STATEMENT_REGEX.match(statement)
 
     if not match:
-        raise probe.InvalidStatement
+        raise InvalidStatement
     (gene,
      base,
      reference,

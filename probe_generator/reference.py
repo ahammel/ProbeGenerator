@@ -1,8 +1,8 @@
 """Parse and extract base pair sequences from an Ensembl reference genome.
 
 """
-from probe_generator import sequence, probe
-
+from probe_generator import sequence
+from probe_generator.exceptions import NonFatalError
 
 def bases(sequence_range, genome):
     """Return the bases from a SequenceRange object.
@@ -76,12 +76,6 @@ def _raw_bases(chromosome, start, end, genome):
 
 
 
-class MissingChromosome(probe.NonFatalError):
-    """Raised when a chromosome is not present in the reference genome.
-
-    """
-
-
 class NonContainedRange(Exception):
     """Raised when the range of base pairs which is to be sliced from a
     chromosome includes base pairs outside the chromosome.
@@ -91,5 +85,11 @@ class NonContainedRange(Exception):
 
 class InvalidGenomeFile(Exception):
     """Raised when a a genome_file cannot be parsed.
+
+    """
+
+
+class MissingChromosome(NonFatalError):
+    """Raised when a chromosome is not present in the reference genome.
 
     """

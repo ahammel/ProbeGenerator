@@ -9,3 +9,4 @@ __pycache__/
 .svn
 build
 TAGS
+.coverage
