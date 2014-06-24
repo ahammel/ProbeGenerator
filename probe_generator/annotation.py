@@ -166,6 +166,8 @@ def nucleotide_index(index, transcript):
     """Given a base pair index and a row of a UCSC gene table, return the
     genomic coordinate of the base pair at that index in the transcript.
 
+    'transcript' is a row from a UCSC genome annotation table.
+
     """
     strand = transcript["strand"]
     indices = (_base_indices(pair, strand) for pair in coding_exons(transcript))
