@@ -47,7 +47,7 @@ class ExonProbe(AbstractProbe):
             "{gene1}#exon[{exon1}]{side1}{bases1}"
             "{separator}"
             "{gene2}#exon[{exon2}]{side2}{bases2}"
-            "_{chromosome1}:{end1}/{chromosome2}:{start2}"
+            "_{breakpoint1}/{breakpoint2}"
             "_{transcript1}_{transcript2}"
             "{comment}")
 
@@ -86,7 +86,10 @@ class ExonProbe(AbstractProbe):
             spec_hash = _coord_hash(spec)
             if not spec_hash in cached_specifications:
                 cached_specifications.add(spec_hash)
-                yield ExonProbe(spec)
+                breakpoint1, breakpoint2 = _get_breakpoints(spec)
+                yield ExonProbe(dict(spec,
+                                     breakpoint1=breakpoint1,
+                                     breakpoint2=breakpoint2))
 
 
 def _parse(probe_statement):
@@ -242,6 +245,8 @@ def _expand_partial_spec(specification, row_1, row_2):
     return dict(specification,
                 transcript1=row_1['name'],
                 transcript2=row_2['name'],
+                strand1=row_1['strand'],
+                strand2=row_2['strand'],
                 **coordinate)
 
 
@@ -262,6 +267,28 @@ def _coord_hash(spec):
     return hash(tuple([
         spec['chromosome1'], spec['start1'], spec['end1'], spec['side1'],
         spec['chromosome2'], spec['start2'], spec['end2'], spec['side2']]))
+
+
+def _get_breakpoints(spec):
+    """Return the breakpoint strings ("chromosome:index") of a probe given a
+    specification.
+
+    """
+    chromosome1, chromosome2 = spec['chromosome1'], spec['chromosome2']
+    if spec['strand1'] == '+':
+        index1 = spec['end1'] if spec['side1'] == '-' else spec['start1'] - 1
+    else:
+        index1 = spec['start1'] if spec['side1'] == '-' else spec['start1'] + 1
+    if spec['strand2'] == '+':
+        index2 = spec['end2'] if spec['side2'] == '-' else spec['start2'] - 1
+    else:
+        index2 = spec['start2'] if spec['side2'] == '-' else spec['start2'] + 1
+    if spec['separator'] == '->' and spec['strand1'] == '-':
+        return ("{}:{}".format(chromosome2, index2),
+                "{}:{}".format(chromosome1, index1))
+    else:
+        return ("{}:{}".format(chromosome1, index1),
+                "{}:{}".format(chromosome2, index2))
 
 
 class ExpandError(Exception):

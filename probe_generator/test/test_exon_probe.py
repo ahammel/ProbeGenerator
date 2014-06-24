@@ -11,7 +11,7 @@ class AbstractExonStatementTestCase(unittest.TestCase):
     """
     def setUp(self):
         self.probe_statement = "ABC#exon[1]-2 / DEF#exon[3]+3"
-        self.probe_string = "ABC#exon[1]-2/DEF#exon[3]+3_1:2/2:11_FOO_BAR"
+        self.probe_string = "ABC#exon[1]-2/DEF#exon[3]+3_1:2/2:10_FOO_BAR"
 
 
 class TestExonStatementParsing(AbstractExonStatementTestCase):
@@ -97,7 +97,7 @@ class TestExplode(AbstractExonStatementTestCase):
                   (2, 1), (2, 2), (2, 3)])
 
 
-class TestSequence(AbstractExonStatementTestCase):
+class TestSequence(unittest.TestCase):
     """Test cases for the sequence functionality of exon probes.
 
     """
@@ -132,3 +132,51 @@ class TestSequence(AbstractExonStatementTestCase):
 
     def test_arrow_GHI_first(self):
         self.assert_sequence("GHI#exon[2]-2 -> ABC#exon[1]+2", "cgcc")
+
+
+class TestBreakpoints(unittest.TestCase):
+    """Test cases for the breakpoints of exon probes.
+
+    """
+    def assert_string(self, statement, string):
+        """Assert that the Probe.__str__ method returns the 'string'.
+
+        """
+        try:
+            probe, = ExonProbe.explode(statement, ANNOTATION)
+        except ValueError as error:
+            self.fail("More than one probe created: {}".format(error))
+        else:
+            self.assertEqual(
+                str(probe),
+                string)
+
+    def test_solidus_plus_plus(self):
+        self.assert_string(
+            "JKL#exon[1]+2 / GHI#exon[2]+2",
+            "JKL#exon[1]+2/GHI#exon[2]+2_4:99/3:14_QUX_BAZ")
+
+    def test_solidus_minus_plus(self):
+        self.assert_string(
+            "JKL#exon[1]-2 / GHI#exon[2]+2",
+            "JKL#exon[1]-2/GHI#exon[2]+2_4:150/3:14_QUX_BAZ")
+
+    def test_solidus_plus_minus(self):
+        self.assert_string(
+            "JKL#exon[1]+2 / GHI#exon[2]-2",
+            "JKL#exon[1]+2/GHI#exon[2]-2_4:99/3:10_QUX_BAZ")
+
+    def test_solidus_minus_minus(self):
+        self.assert_string(
+            "JKL#exon[1]-2 / GHI#exon[2]-2",
+            "JKL#exon[1]-2/GHI#exon[2]-2_4:150/3:10_QUX_BAZ")
+
+    def test_arrow_JKL_first(self):
+        self.assert_string(
+            "JKL#exon[1]-2 -> GHI#exon[2]+2",
+            "JKL#exon[1]-2->GHI#exon[2]+2_4:150/3:14_QUX_BAZ")
+
+    def test_arrow_GHI_first(self):
+        self.assert_string(
+            "GHI#exon[2]-2 -> JKL#exon[1]+2",
+            "GHI#exon[2]-2->JKL#exon[1]+2_3:9/4:100_BAZ_QUX")
