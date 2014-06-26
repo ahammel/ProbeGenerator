@@ -148,7 +148,9 @@ def coding_exons(row):
     if strand == '-':
         exon_positions.reverse()
     for start, end in exon_positions:
-        if start <= cds_start <= end:
+        if end < cds_start:
+            pass
+        elif start <= cds_start <= end:
             positions.append((cds_start, end))
         elif start <= cds_end <= end:
             positions.append((start, cds_end))
