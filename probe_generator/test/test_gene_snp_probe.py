@@ -41,7 +41,7 @@ class TestGeneSnpProbe(unittest.TestCase):
             {"gene":        "GHI",
              "base":        6,
              "reference":   'A',
-             "mutation":    'C',
+             "mutation":    'G',
              "bases":       50,
              "transcript":  "BAZ",
              "chromosome":  "3",

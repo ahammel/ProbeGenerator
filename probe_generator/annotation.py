@@ -157,6 +157,7 @@ def coding_exons(row):
             break
         else:
             positions.append((start, end))
+        # Don't do anything if the exon ends before the coding sequence starts.
     if strand == '-':
         positions.reverse()
     return positions
@@ -165,6 +166,8 @@ def coding_exons(row):
 def nucleotide_index(index, transcript):
     """Given a base pair index and a row of a UCSC gene table, return the
     genomic coordinate of the base pair at that index in the transcript.
+
+    'transcript' is a row from a UCSC genome annotation table.
 
     """
     strand = transcript["strand"]
@@ -203,21 +206,6 @@ def _base_indices(exon_range, strand):
         return range(p, q)
     else:
         return reversed(range(p, q))
-
-
-def get_bases(bases, index):
-    """Given the number of bases and an index, return the start and end indices
-    of the probe.
-
-    """
-    buff = bases // 2
-    if bases % 2 == 0:
-        # There's no centre item in a sequence with an even number of
-        # elements. The special case makes it off by one in a predicatable
-        # manner.
-        return (index - buff + 1), (index + buff)
-    else:
-        return (index - buff), (index + buff)
 
 
 class FormattingError(Exception):

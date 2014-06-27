@@ -3,9 +3,11 @@
 """
 import re
 import sys
+import itertools
 
-from probe_generator import annotation, probe, reference
-from probe_generator.sequence import reverse_complement
+from probe_generator import annotation
+from probe_generator.sequence import reverse_complement, SequenceRange
+from probe_generator.probe import AbstractProbe, InvalidStatement
 
 _STATEMENT_REGEX = re.compile("""
         \s*                                           # whitespace
@@ -25,9 +27,6 @@ _STATEMENT_REGEX = re.compile("""
         \s*
         (--.*|\s*)                                    # comment
         """, re.VERBOSE)
-
-_STATEMENT_SKELETON = ("{gene}:{reference}{codon}{mutation}({mutation_bases})"
-                       "/{bases}_{transcript}_{chromosome}:{index}{comment}")
 
 _DNA_CODON_TABLE = {
     'A': ("GCT", "GCC", "GCA", "GCG"),
@@ -54,62 +53,36 @@ _DNA_CODON_TABLE = {
 }
 
 
-class AminoAcidProbe(object):
+class AminoAcidProbe(AbstractProbe):
     """Probe for a single nucleotide polymorphism from an amino acid change at
     a codon.
 
     """
-    def __init__(self, specification):
-        self._spec = specification
+    _STATEMENT_SKELETON = ("{gene}:{reference_aa}{codon}{mutation_aa}"
+                           "({reference_bases}>{mutation_bases})/"
+                           "{bases}_{transcript}_{chromosome}:{index}{comment}")
 
-    def __str__(self):
-        return _STATEMENT_SKELETON.format(**self._spec)
+    def get_ranges(self):
+        index = self._spec['index']
+        bases = self._spec['bases']
+        chromosome = self._spec['chromosome']
 
-    def sequence(self, genome):
-        """Return the probe sequence given a genome sequence.
+        left_buffer = bases // 2
+        if bases % 2 == 0:
+            left_buffer -= 1
+        right_buffer = bases - left_buffer
 
-        """
-        if self._spec["strand"] == '+':
-            index = self._spec["index"] + 1
-        else:
-            index = self._spec["index"] - 1
-        start, end = annotation.get_bases(
-            self._spec['bases'],
-            index)
-        raw_bases = reference.bases(
-            genome,
-            self._spec["chromosome"],
-            start,
-            end)
-        return self._mutate(raw_bases)
-
-    def _mutate(self, bases):
-        codon_index = (self._spec["bases"] // 2)
-        spec_codons = _DNA_CODON_TABLE[self._spec["reference"]]
-        if self._spec["bases"] % 2 == 0:
-            # p and q are the positions of the start and end of the codon
-            # relative to the codon_index
-            p, q = 2, 1
-        else:
-            p, q = 1, 2
-        if self._spec['strand'] == '+':
-            reference_codon = bases[codon_index-p:codon_index+q].upper()
-            mutation_bases = self._spec["mutation_bases"]
-        else:
-            reference_codon = reverse_complement(
-                bases[codon_index-p:codon_index+q].upper())
-            mutation_bases = reverse_complement(
-                self._spec["mutation_bases"])
-        if reference_codon not in spec_codons:
-            raise CodonMismatch(
-                "Reference sequence {!r} does not match requested amino "
-                "acid {!r} in probe {}".format(
-                    reference_codon,
-                    self._spec["reference"],
-                    self))
-        return (bases[:codon_index-p] +
-                mutation_bases        +
-                bases[codon_index+q:])
+        return (
+            SequenceRange(chromosome,
+                          index-left_buffer,
+                          index-1),
+            SequenceRange(chromosome,
+                          index-1,
+                          index+2,
+                          mutation=True),
+            SequenceRange(chromosome,
+                          index+2,
+                          index+right_buffer))
 
     @staticmethod
     def explode(statement, genome_annotation=None):
@@ -129,10 +102,7 @@ class AminoAcidProbe(object):
         coordinate_cache = set()
         for transcript in transcripts:
             try:
-                if transcript["strand"] == "-":
-                    index = annotation.codon_index(partial_spec['codon'], transcript) + 2
-                else:
-                    index = annotation.codon_index(partial_spec['codon'], transcript)
+                index = annotation.codon_index(partial_spec['codon'], transcript)
             except annotation.OutOfRange as error:
                 print("{} in statement: {!r}".format(error, statement),
                       file=sys.stderr)
@@ -140,14 +110,33 @@ class AminoAcidProbe(object):
                 chromosome = transcript['chrom'].lstrip('chr')
                 if (chromosome, index) not in coordinate_cache:
                     coordinate_cache.add((chromosome, index))
-                    codons = _DNA_CODON_TABLE[partial_spec['mutation'].upper()]
-                    for codon in codons:
+                    reference_codons = _DNA_CODON_TABLE[
+                        partial_spec['reference_aa'].upper()]
+                    mutation_codons = _DNA_CODON_TABLE[
+                        partial_spec['mutation_aa'].upper()]
+                    for reference_codon, mutation_codon in itertools.product(
+                        reference_codons, mutation_codons):
+                        if transcript['strand'] == '+':
+                            mutation = mutation_codon
+                            reference = reference_codon
+                        else:
+                            mutation = reverse_complement(mutation_codon)
+                            reference = reverse_complement(reference_codon)
                         spec = dict(partial_spec,
                                     index=index,
                                     chromosome=chromosome,
                                     strand=transcript['strand'],
                                     transcript=transcript['name'],
-                                    mutation_bases=codon)
+                                    reference=reference,
+                                    reference_bases=reference_codon,
+                                    mutation_bases=mutation_codon,
+                                    mutation=mutation)
+                        # 'mutation_bases' is displayed in the probe's string,
+                        # while 'mutation' is used internally to determine the
+                        # sequence.
+                        #
+                        # They are different sequences if the transcript is on
+                        # the '-' strand.
                         yield AminoAcidProbe(spec)
 
 
@@ -160,7 +149,7 @@ def _parse(statement):
     """
     match = _STATEMENT_REGEX.match(statement)
     if not match:
-        raise probe.InvalidStatement
+        raise InvalidStatement
 
     (gene,
      reference_aa,
@@ -169,16 +158,9 @@ def _parse(statement):
      bases,
      comment) = match.groups()
 
-    return {"gene":       gene,
-            "reference":  reference_aa,
-            "codon":      int(codon),
-            "mutation":   mutation_aa,
-            "bases":      int(bases),
-            "comment":    comment}
-
-
-class CodonMismatch(probe.NonFatalError):
-    """Raised when the codon at the genome reference does not match the codon
-    specified in the statement.
-
-    """
+    return {"gene":          gene,
+            "reference_aa":  reference_aa,
+            "codon":         int(codon),
+            "mutation_aa":   mutation_aa,
+            "bases":         int(bases),
+            "comment":       comment}

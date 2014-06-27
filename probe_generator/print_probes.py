@@ -81,7 +81,7 @@ def print_probes(statement_file, genome_file, *annotation_files):
         for statement in statements:
             chain = TryChain(InvalidStatement)
             chain.bind_all(
-                lambda: [CoordinateProbe.from_statement(statement)],
+                lambda: list(CoordinateProbe.explode(statement)),
                 lambda: list(SnpProbe.explode(statement)),
                 lambda: list(GeneSnpProbe.explode(statement, annotations)),
                 lambda: list(AminoAcidProbe.explode(statement, annotations)),

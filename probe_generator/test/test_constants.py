@@ -44,4 +44,13 @@ ANNOTATION = [
      'cdsStart':   '10',
      'cdsEnd':     '23',
      },
+    {'name':       'QUX',
+     'proteinID':  'JKL',
+     'exonStarts': '100,200',
+     'exonEnds':   '150,250',
+     'strand':     '+',
+     'chrom':      '4',
+     'cdsStart':   '120',
+     'cdsEnd':     '240',
+     },
     ]
