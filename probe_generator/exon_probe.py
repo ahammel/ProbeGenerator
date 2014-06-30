@@ -5,7 +5,7 @@ import itertools
 import re
 import sys
 
-from probe_generator import annotation, exon_coordinate
+from probe_generator import annotation
 from probe_generator.probe import AbstractProbe, InvalidStatement
 from probe_generator.sequence import SequenceRange
 
@@ -52,21 +52,62 @@ class ExonProbe(AbstractProbe):
             "{comment}")
 
     def get_ranges(self):
-        # TODO: the start and end of the range should be calculated in this
-        # method, not before the probe has been instantiated.
-        #
-        # AJH, June 23, 2014
+        """Return the sequence ranges for an exon probe.
+
+        If necessary, each probe half-sequence will be reverse-complemented so
+        that the breakpoint is in the centre of the probe. We
+        reverse-complement the first half-sequence if it's the start of an exon
+        on the plus strand, or the end of an exon on the minus strand. The
+        second half-sequence is reverse-complemented if it's the start of an
+        exon on the minus strand or the end of an exon on the plus strand.
+
+        If the arrow separator is used, the two sides of the probe will be
+        rearranged if necessary so that the reading frames of the two exons
+        will be preserved.
+
+        For example:
+                                                BAR
+                                               |=========>
+            ..............................................
+            ..............................................
+            <-------|
+                 FOO
+
+
+            FOO-/BAR+
+                    <----|====
+            FOO->BAR
+                    ====|<----
+
+        """
+        chromosome1 = self._spec["chromosome1"]
+        chromosome2 = self._spec["chromosome2"]
+        strand1     = self._spec["strand1"]
+        strand2     = self._spec["strand2"]
+        side1       = self._spec["side1"]
+        side2       = self._spec["side2"]
+        start1, end1, start2, end2 = self._get_ranges()
+        if self._spec['separator'] == '->' and self._spec['strand1'] == '-':
+            start1, start2           = start2, start1
+            end1, end2               = end2, end1
+            chromosome1, chromosome2 = chromosome2, chromosome1
+            strand1, strand2         = strand2, strand1
+            side1, side2             = side2, side1
         return (
             SequenceRange(
-                self._spec['chromosome1'],
-                self._spec['start1'],
-                self._spec['end1'],
-                reverse_complement=self._spec['rc_side_1']),
+                chromosome1,
+                start1,
+                end1,
+                reverse_complement=(
+                    side1 == strand1),
+                ),
             SequenceRange(
-                self._spec['chromosome2'],
-                self._spec['start2'],
-                self._spec['end2'],
-                reverse_complement=self._spec['rc_side_2']),
+                chromosome2,
+                start2,
+                end2,
+                reverse_complement=(
+                    strand2 != side2),
+                ),
             )
 
     @staticmethod
@@ -78,6 +119,8 @@ class ExonProbe(AbstractProbe):
         only the first is returned.
 
         """
+        probes = []
+
         if genome_annotation is None:
             genome_annotation = []
         cached_specifications = set()
@@ -87,9 +130,28 @@ class ExonProbe(AbstractProbe):
             if not spec_hash in cached_specifications:
                 cached_specifications.add(spec_hash)
                 breakpoint1, breakpoint2 = _get_breakpoints(spec)
-                yield ExonProbe(dict(spec,
-                                     breakpoint1=breakpoint1,
-                                     breakpoint2=breakpoint2))
+                probes.append(ExonProbe(dict(spec,
+                                             breakpoint1=breakpoint1,
+                                             breakpoint2=breakpoint2)))
+        return probes
+
+    def _get_ranges(self):
+        """Return a four-tuple of the start and end genomic coordinates of the
+        two sides of the probe.
+
+        """
+        left_range = _get_range(
+            self._spec["exon_range_1"],
+            self._spec["side1"],
+            self._spec["strand1"],
+            self._spec["bases1"])
+        right_range = _get_range(
+            self._spec["exon_range_2"],
+            self._spec["side2"],
+            self._spec["strand2"],
+            self._spec["bases2"])
+        return left_range + right_range
+
 
 
 def _parse(probe_statement):
@@ -102,17 +164,17 @@ def _parse(probe_statement):
 
     {
       'gene(1|2)':     The name of the gene
-                       "str"
+                       'str'
 
       'feature(1|2)':  The name and number of the feature e.g.: ('exon', 2)
-                       ("str" or "*", int or "*")
+                       ('str' or '*', int or '*')
                        Currently only the value 'exon' is supported.
 
       'side(1|2)':     The end of the feature from which to construct the probe
-                       "start", "end", or "*"
+                       'start', 'end', or '*'
 
       'bases(1|2)':    The number of bases to include in the probe
-                       int or "*"
+                       int or '*'
     }
 
     See the README for the probe language specification.
@@ -173,7 +235,7 @@ def _expand(specification, genome_annotation):
         for unglobbed_spec in unglobbed_specs:
             try:
                 yield _expand_partial_spec(unglobbed_spec, left, right)
-            except exon_coordinate.NoFeatureError as error:
+            except annotation.NoFeature as error:
                 print("Warning: {!s}".format(error), file=sys.stderr)
 
 
@@ -192,9 +254,6 @@ def _expand_globs(specification, left_exons=None, right_exons=None):
 
     If the statement has no globs, return a generator containing only that
     statement.
-
-    WARNING: globbing feature types is not supported. In fact, exons are the
-    only feature that are supported.
 
     Raises an ExpandError if the number of features is unspecified
     when the feature number is globbed.
@@ -241,13 +300,18 @@ def _expand_partial_spec(specification, row_1, row_2):
     identifiers and the coordinates of the probe to the specification.
 
     """
-    coordinate = exon_coordinate.sequence_range(specification, row_1, row_2)
+    first_exon  = specification['exon1']
+    second_exon = specification['exon2']
     return dict(specification,
                 transcript1=row_1['name'],
                 transcript2=row_2['name'],
                 strand1=row_1['strand'],
                 strand2=row_2['strand'],
-                **coordinate)
+                exon_range_1=annotation.exon(row_1, first_exon),
+                exon_range_2=annotation.exon(row_2, second_exon),
+                chromosome1=row_1['chrom'].lstrip('chr'),
+                chromosome2=row_2['chrom'].lstrip('chr'),
+                )
 
 
 def _maybe_int(string):
@@ -265,8 +329,8 @@ def _coord_hash(spec):
 
     """
     return hash(tuple([
-        spec['chromosome1'], spec['start1'], spec['end1'], spec['side1'],
-        spec['chromosome2'], spec['start2'], spec['end2'], spec['side2']]))
+        spec['chromosome1'], spec['exon_range_1'], spec['side1'],
+        spec['chromosome2'], spec['exon_range_2'], spec['side2']]))
 
 
 def _get_breakpoints(spec):
@@ -275,20 +339,24 @@ def _get_breakpoints(spec):
 
     """
     chromosome1, chromosome2 = spec['chromosome1'], spec['chromosome2']
-    if spec['strand1'] == '+':
-        index1 = spec['end1'] if spec['side1'] == '-' else spec['start1'] - 1
+    start1, end1 = spec['exon_range_1']
+    start2, end2 = spec['exon_range_2']
+    index1 = start1 - 1 if spec['side1'] == spec['strand1'] else end1
+    index2 = start2     if spec['side2'] == spec['strand2'] else end2 - 1
+    return ("{}:{}".format(chromosome1, index1),
+            "{}:{}".format(chromosome2, index2))
+
+
+def _get_range(exon_range, side, strand, bases):
+    """Return the start and end of the base pair range, given the exon, the
+    start of the exon requested, and the number of base pairs.
+
+    """
+    start, end = exon_range
+    if (side == '+') == (strand == '+'):
+        return (start, start + bases)
     else:
-        index1 = spec['start1'] if spec['side1'] == '-' else spec['start1'] + 1
-    if spec['strand2'] == '+':
-        index2 = spec['end2'] if spec['side2'] == '-' else spec['start2'] - 1
-    else:
-        index2 = spec['start2'] if spec['side2'] == '-' else spec['start2'] + 1
-    if spec['separator'] == '->' and spec['strand1'] == '-':
-        return ("{}:{}".format(chromosome2, index2),
-                "{}:{}".format(chromosome1, index1))
-    else:
-        return ("{}:{}".format(chromosome1, index1),
-                "{}:{}".format(chromosome2, index2))
+        return (end - bases, end)
 
 
 class ExpandError(Exception):

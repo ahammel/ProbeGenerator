@@ -130,6 +130,17 @@ def exons(row):
     return positions
 
 
+def exon(transcript, index):
+    """Return the exon at the index of the transcript, raising a NoFeatureError
+    when the index is out of range.
+
+    """
+    try:
+        return exons(transcript)[index-1]
+    except IndexError as error:
+        raise NoFeature(error)
+
+
 def coding_exons(row):
     """As in `exons`, but with the UTRs trimmed out.
 
@@ -157,7 +168,6 @@ def coding_exons(row):
             break
         else:
             positions.append((start, end))
-        # Don't do anything if the exon ends before the coding sequence starts.
     if strand == '-':
         positions.reverse()
     return positions
@@ -216,5 +226,11 @@ class FormattingError(Exception):
 
 class OutOfRange(probe.NonFatalError):
     """Raised when a base index outside the range of a transcript is specified.
+
+    """
+
+class NoFeature(probe.NonFatalError):
+    """Raised when the index of the exon is outside the range of the
+    transcript.
 
     """
