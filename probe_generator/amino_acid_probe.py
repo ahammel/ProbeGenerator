@@ -93,6 +93,8 @@ class AminoAcidProbe(AbstractProbe):
         first is returned.
 
         """
+        probes = []
+
         if genome_annotation is None:
             genome_annotation = []
         partial_spec = _parse(statement)
@@ -137,7 +139,8 @@ class AminoAcidProbe(AbstractProbe):
                         #
                         # They are different sequences if the transcript is on
                         # the '-' strand.
-                        yield AminoAcidProbe(spec)
+                        probes.append(AminoAcidProbe(spec))
+        return probes
 
 
 def _parse(statement):

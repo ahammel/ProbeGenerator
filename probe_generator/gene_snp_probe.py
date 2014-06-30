@@ -53,6 +53,8 @@ class GeneSnpProbe(AbstractProbe):
         first is returned.
 
         """
+        probes = []
+        
         if genome_annotation is None:
             genome_annotation = []
         partial_spec = _parse(statement)
@@ -81,7 +83,8 @@ class GeneSnpProbe(AbstractProbe):
                                 chromosome=chromosome,
                                 transcript=transcript,
                                 index=index)
-                    yield GeneSnpProbe(spec)
+                    probes.append(GeneSnpProbe(spec))
+        return probes
 
 
 def _parse(statement):
