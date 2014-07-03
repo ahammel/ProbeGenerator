@@ -115,11 +115,14 @@ class Transcript(object):
 
         if not self.plus_strand:
             exon_positions.reverse()
+
         for exon in exon_positions:
             if exon.end < cds_start:
                 pass
             elif exon.start <= cds_start <= exon.end:
                 positions.append((cds_start, exon.end))
+            elif cds_start <= exon.start <= exon.end <= cds_end:
+                positions.append((exon.start, exon.end))
             elif exon.start <= cds_end <= exon.end:
                 positions.append((exon.start, cds_end))
                 break
@@ -148,15 +151,19 @@ class Transcript(object):
 
         """
         base_index = self._transcript_index(index)
-        return SequenceRange(self.chromosome, base_index, base_index+1)
+        return SequenceRange(self.chromosome, base_index-1, base_index)
+        # TODO: confirm the above is correct for both strands
 
     def codon_index(self, index):
         """Given a codon index and a row of a UCSC gene table, return the genomic
         coordinate of the second base pair of that codon.
 
         """
-        base_index = self._transcript_index((index * 3) - 1)
-        return SequenceRange(self.chromosome, base_index, base_index+3)
+        base_index = self._transcript_index((index-1)*3)
+        if self.plus_strand:
+            return SequenceRange(self.chromosome, base_index, base_index+3)
+        else:
+            return SequenceRange(self.chromosome, base_index-2, base_index+1)
 
     def _transcript_index(self, index):
         """Return the genomic coordinate of the base pair at the index as an
