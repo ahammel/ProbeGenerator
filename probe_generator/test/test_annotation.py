@@ -121,8 +121,6 @@ class TestAnnotationValidation(unittest.TestCase):
     def test_codon_index(self):
         transcript1, transcript2, transcript3, _transcript_4 = ANNOTATION
         self.assertEqual(
-            transcript3.codon_index(1), SequenceRange('3', 21, 24))
+            transcript3.codon_index(1), SequenceRange('3', 20, 23))
         self.assertEqual(
-            transcript3.codon_index(2), SequenceRange('3', 13, 16))
-        self.assertEqual(
-            transcript3.codon_index(3), SequenceRange('3', 10, 13))
+            transcript3.codon_index(2), SequenceRange('3', 12, 15))

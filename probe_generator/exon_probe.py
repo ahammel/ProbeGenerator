@@ -5,7 +5,7 @@ import itertools
 import re
 import sys
 
-from probe_generator import annotation
+from probe_generator import annotation, transcript
 from probe_generator.probe import AbstractProbe, InvalidStatement
 from probe_generator.sequence import SequenceRange
 
@@ -153,7 +153,6 @@ class ExonProbe(AbstractProbe):
         return left_range + right_range
 
 
-
 def _parse(probe_statement):
     """Return a partial exon probe specification given a statement in probe
     language.
@@ -230,12 +229,12 @@ def _expand(specification, genome_annotation):
     for left, right in itertools.product(left_rows, right_rows):
         unglobbed_specs = _expand_globs(
                 specification,
-                len(annotation.exons(left)),
-                len(annotation.exons(right)))
+                len(left.exons()),
+                len(left.exons()))
         for unglobbed_spec in unglobbed_specs:
             try:
                 yield _expand_partial_spec(unglobbed_spec, left, right)
-            except annotation.NoFeature as error:
+            except transcript.NoFeature as error:
                 print("Warning: {!s}".format(error), file=sys.stderr)
 
 
@@ -303,14 +302,14 @@ def _expand_partial_spec(specification, row_1, row_2):
     first_exon  = specification['exon1']
     second_exon = specification['exon2']
     return dict(specification,
-                transcript1=row_1['name'],
-                transcript2=row_2['name'],
-                strand1=row_1['strand'],
-                strand2=row_2['strand'],
-                exon_range_1=annotation.exon(row_1, first_exon),
-                exon_range_2=annotation.exon(row_2, second_exon),
-                chromosome1=row_1['chrom'].lstrip('chr'),
-                chromosome2=row_2['chrom'].lstrip('chr'),
+                transcript1=row_1.name,
+                transcript2=row_2.name,
+                strand1='+' if row_1.plus_strand else '-',
+                strand2='+' if row_2.plus_strand else '-',
+                exon_range_1=row_1.exon(first_exon),
+                exon_range_2=row_2.exon(second_exon),
+                chromosome1=row_1.chromosome,
+                chromosome2=row_2.chromosome,
                 )
 
 
@@ -338,9 +337,8 @@ def _get_breakpoints(spec):
     specification.
 
     """
-    chromosome1, chromosome2 = spec['chromosome1'], spec['chromosome2']
-    start1, end1 = spec['exon_range_1']
-    start2, end2 = spec['exon_range_2']
+    chromosome1, start1, end1, _, _ = spec['exon_range_1']
+    chromosome2, start2, end2, _, _ = spec['exon_range_2']
     index1 = start1 - 1 if spec['side1'] == spec['strand1'] else end1
     index2 = start2     if spec['side2'] == spec['strand2'] else end2 - 1
     return ("{}:{}".format(chromosome1, index1),
@@ -352,7 +350,7 @@ def _get_range(exon_range, side, strand, bases):
     start of the exon requested, and the number of base pairs.
 
     """
-    start, end = exon_range
+    chromosome, start, end, _, _ = exon_range
     if (side == '+') == (strand == '+'):
         return (start, start + bases)
     else:

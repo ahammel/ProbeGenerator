@@ -155,7 +155,7 @@ class Transcript(object):
         coordinate of the second base pair of that codon.
 
         """
-        base_index = self._transcript_index((index * 3) - 2)
+        base_index = self._transcript_index((index * 3) - 1)
         return SequenceRange(self.chromosome, base_index, base_index+3)
 
     def _transcript_index(self, index):

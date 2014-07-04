@@ -5,8 +5,8 @@ sequence.
 import re
 import sys
 
-from probe_generator import annotation
-from probe_generator.snp_probe import SnpProbe
+from probe_generator import annotation, transcript
+from probe_generator.amino_acid_probe import AminoAcidProbe
 from probe_generator.probe import AbstractProbe, InvalidStatement
 from probe_generator.sequence import reverse_complement
 
@@ -42,7 +42,7 @@ class GeneSnpProbe(AbstractProbe):
                            "{transcript}_{chromosome}:{index}{comment}")
 
     def get_ranges(self):
-        return SnpProbe.get_ranges(self)
+        return AminoAcidProbe.get_ranges(self)
 
     @staticmethod
     def explode(statement, genome_annotation=None):
@@ -54,34 +54,32 @@ class GeneSnpProbe(AbstractProbe):
 
         """
         probes = []
-        
+
         if genome_annotation is None:
             genome_annotation = []
         partial_spec = _parse(statement)
         transcripts = annotation.lookup_gene(
             partial_spec["gene"], genome_annotation)
         cached_coordinates = set()
-        for transcript in transcripts:
-            if transcript["strand"] == '-':
+        for txt in transcripts:
+            if txt.plus_strand:
+                base = partial_spec["base"]
+            else:
                 base = partial_spec["base"] - 2
                 partial_spec["mutation"] = reverse_complement(
                     partial_spec["mutation"])
-            else:
-                base = partial_spec["base"]
             try:
-                index = annotation.nucleotide_index(
-                    base, transcript)
-            except annotation.OutOfRange as error:
+                index = txt.nucleotide_index(base)
+            except transcript.OutOfRange as error:
                 print("{} in statement: {!r}".format(error, statement),
                       file=sys.stderr)
             else:
-                chromosome = transcript["chrom"].lstrip("chr")
+                chromosome = txt.chromosome
                 if not (chromosome, index) in cached_coordinates:
-                    transcript = transcript["name"]
                     cached_coordinates.add((chromosome, index))
                     spec = dict(partial_spec,
                                 chromosome=chromosome,
-                                transcript=transcript,
+                                transcript=txt.name,
                                 index=index)
                     probes.append(GeneSnpProbe(spec))
         return probes
