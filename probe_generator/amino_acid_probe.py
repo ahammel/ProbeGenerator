@@ -19,7 +19,7 @@ _STATEMENT_REGEX = re.compile("""
         \s*
         ([0-9]+)                                      # codon number
         \s*
-        ([ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy*])
+        ([ACDEFGHIKLMNPQRSTVWYXacdefghiklmnpqrstvwyx*])
         \s*
         /
         \s*
@@ -50,7 +50,8 @@ _DNA_CODON_TABLE = {
     'W': ("TGG",),
     'Y': ("TAT", "TAC"),
     '*': ("TAA", "TAG", "TGA"),
-}
+    'X': tuple(''.join(bases) for bases in itertools.product("ACGT", repeat=3)),
+    }
 
 
 class AminoAcidProbe(AbstractProbe):
@@ -118,28 +119,29 @@ class AminoAcidProbe(AbstractProbe):
                         partial_spec['mutation_aa'].upper()]
                     for reference_codon, mutation_codon in itertools.product(
                         reference_codons, mutation_codons):
-                        if transcript['strand'] == '+':
-                            mutation = mutation_codon
-                            reference = reference_codon
-                        else:
-                            mutation = reverse_complement(mutation_codon)
-                            reference = reverse_complement(reference_codon)
-                        spec = dict(partial_spec,
-                                    index=index,
-                                    chromosome=chromosome,
-                                    strand=transcript['strand'],
-                                    transcript=transcript['name'],
-                                    reference=reference,
-                                    reference_bases=reference_codon,
-                                    mutation_bases=mutation_codon,
-                                    mutation=mutation)
-                        # 'mutation_bases' is displayed in the probe's string,
-                        # while 'mutation' is used internally to determine the
-                        # sequence.
-                        #
-                        # They are different sequences if the transcript is on
-                        # the '-' strand.
-                        probes.append(AminoAcidProbe(spec))
+                        if mutation_codon not in _DNA_CODON_TABLE[partial_spec["reference_aa"]]:
+                            if transcript['strand'] == '+':
+                                mutation = mutation_codon
+                                reference = reference_codon
+                            else:
+                                mutation = reverse_complement(mutation_codon)
+                                reference = reverse_complement(reference_codon)
+                            spec = dict(partial_spec,
+                                        index=index,
+                                        chromosome=chromosome,
+                                        strand=transcript['strand'],
+                                        transcript=transcript['name'],
+                                        reference=reference,
+                                        reference_bases=reference_codon,
+                                        mutation_bases=mutation_codon,
+                                        mutation=mutation)
+                            # 'mutation_bases' is displayed in the probe's
+                            # string, while 'mutation' is used internally to
+                            # determine the sequence.
+                            #
+                            # They are different
+                            # sequences if the transcript is on the '-' strand.
+                            probes.append(AminoAcidProbe(spec))
         return probes
 
 

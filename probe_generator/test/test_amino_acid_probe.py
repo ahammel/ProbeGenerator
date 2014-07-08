@@ -9,7 +9,6 @@ class TestAminoAcidProbe(unittest.TestCase):
             AminoAcidProbe.explode("GHI: P2M /9", ANNOTATION),
             "GGG")
 
-
     def test_amino_acid_probe_sequence(self):
         self.assertEqual(
             self.probe.sequence(GENOME),
@@ -33,6 +32,8 @@ class TestAminoAcidProbe(unittest.TestCase):
             len(list(AminoAcidProbe.explode("GHI: M2* /9", ANNOTATION))), 3)
         self.assertEqual(
             len(list(AminoAcidProbe.explode("GHI: L2* /9", ANNOTATION))), 18)
+        self.assertEqual(
+            len(list(AminoAcidProbe.explode("GHI: M2X /9", ANNOTATION))), 63)
 
 
 def select_reference_codon(probes, codon):
