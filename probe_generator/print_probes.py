@@ -90,21 +90,22 @@ def print_probes(statement_file, genome_file, *annotation_files):
             if chain.value is Nothing:
                 print(INVALID_STATEMENT_WARNING.format(statement),
                       file=sys.stderr)
-            probes = chain.value
+            else:
+                probes = chain.value
 
-            one_probe_printed = False
-            for probe in probes:
-                try:
-                    print_fasta(probe, probe.sequence(ref_genome))
-                except NonFatalError as error:
-                    print(
-                        "In probe: {}: {}".format(probe, error),
-                        file=sys.stderr)
-                else:
-                    one_probe_printed = True
+                one_probe_printed = False
+                for probe in probes:
+                    try:
+                        print_fasta(probe, probe.sequence(ref_genome))
+                    except NonFatalError as error:
+                        print(
+                            "In probe: {}: {}".format(probe, error),
+                            file=sys.stderr)
+                    else:
+                        one_probe_printed = True
 
-            if not one_probe_printed: # i.e., the generator was empty
-                print(NO_PROBES_WARNING.format(statement), file=sys.stderr)
+                if not one_probe_printed: # i.e., the generator was empty
+                    print(NO_PROBES_WARNING.format(statement), file=sys.stderr)
 
 
 def print_fasta(head, bases):
