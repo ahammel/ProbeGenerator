@@ -119,6 +119,9 @@ class Transcript(object):
         for exon in exon_positions:
             if exon.end < cds_start:
                 pass
+            elif exon.start <= cds_start <= cds_end <= exon.end:
+                positions.append((cds_start, cds_end))
+                break
             elif exon.start <= cds_start <= exon.end:
                 positions.append((cds_start, exon.end))
             elif cds_start <= exon.start <= exon.end <= cds_end:
@@ -126,8 +129,10 @@ class Transcript(object):
             elif exon.start <= cds_end <= exon.end:
                 positions.append((exon.start, cds_end))
                 break
-            else:
+            elif cds_start <= exon.start <= exon.end <= cds_end:
                 positions.append((exon.start, exon.end))
+            else:
+                assert False, "unreachable"
         if not self.plus_strand:
             positions.reverse()
         return [SequenceRange(self.chromosome, start, end)
@@ -165,13 +170,14 @@ class Transcript(object):
         else:
             return SequenceRange(self.chromosome, base_index-2, base_index+1)
 
-    def _transcript_index(self, index):
+    def _transcript_index(self, index, *, coding=False):
         """Return the genomic coordinate of the base pair at the index as an
         integer.
 
         """
         indices = []
-        for exon in self.coding_exons():
+        exons = self.coding_exons() if coding else self.exons()
+        for exon in exons:
             nucleotide_range = list(range(exon.start, exon.end))
             if not self.plus_strand:
                 nucleotide_range.reverse()
