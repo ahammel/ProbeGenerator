@@ -44,7 +44,9 @@ class GeneIndelProbe(AbstractProbe):
         reference_bases = len(self._spec["reference"])
         mutation_bases = len(self._spec["mutation"])
 
-        left_buffer = bases // 2 - 1
+        left_buffer = bases // 2
+        if bases % 2 == 0:
+            left_buffer -= 1
         right_buffer = bases - left_buffer - mutation_bases
 
         return (

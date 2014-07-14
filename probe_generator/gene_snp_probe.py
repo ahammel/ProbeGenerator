@@ -48,7 +48,9 @@ class GeneSnpProbe(AbstractProbe):
 
         mutation_bases = len(self._spec["mutation"])
 
-        left_buffer = bases // 2 - 1
+        left_buffer = bases // 2
+        if bases % 2 == 0:
+            left_buffer -= 1
         right_buffer = bases - left_buffer - mutation_bases
 
         return (
@@ -58,7 +60,8 @@ class GeneSnpProbe(AbstractProbe):
             SequenceRange(chromosome,
                           start,
                           end,
-                          mutation=True),
+                          mutation=True,
+                          reverse_complement=self._spec['strand'] == '-'),
             SequenceRange(chromosome,
                           end,
                           end+right_buffer))
@@ -81,10 +84,8 @@ class GeneSnpProbe(AbstractProbe):
             partial_spec["gene"], genome_annotation)
         cached_coordinates = set()
         for txt in transcripts:
-            if txt.plus_strand:
-                base = partial_spec["base"]
-            else:
-                base = partial_spec["base"] - 2
+            base = partial_spec["base"]
+            if not txt.plus_strand:
                 partial_spec["mutation"] = reverse_complement(
                     partial_spec["mutation"])
             try:
@@ -97,6 +98,7 @@ class GeneSnpProbe(AbstractProbe):
                 if not (chromosome, index) in cached_coordinates:
                     cached_coordinates.add((chromosome, index))
                     spec = dict(partial_spec,
+                                strand='+' if txt.plus_strand else '-',
                                 chromosome=chromosome,
                                 transcript=txt.name,
                                 index=index,

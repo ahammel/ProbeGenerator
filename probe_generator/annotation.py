@@ -30,9 +30,7 @@ To add support for a new table:
 
 """
 import csv
-import itertools
 
-from probe_generator import probe
 from probe_generator.transcript import Transcript
 
 

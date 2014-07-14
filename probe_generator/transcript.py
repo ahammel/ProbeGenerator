@@ -149,35 +149,31 @@ class Transcript(object):
             raise NoFeature(error)
 
     def nucleotide_index(self, index):
-        """Given a base pair index and a row of a UCSC gene table, return the
-        genomic coordinate of the base pair at that index in the transcript.
-
-        'transcript' is a row from a UCSC genome annotation table.
+        """Given a 1-based base pair index, return a SequenceRange object
+        representing the base pair at that index in the transcript.
 
         """
         base_index = self._transcript_index(index)
-        return SequenceRange(self.chromosome, base_index-1, base_index)
-        # TODO: confirm the above is correct for both strands
+        return SequenceRange(self.chromosome, base_index, base_index+1)
 
     def codon_index(self, index):
-        """Given a codon index and a row of a UCSC gene table, return the genomic
-        coordinate of the second base pair of that codon.
+        """Given a 1-based codon index, return a SequenceRange object
+        representing that codon.
 
         """
-        base_index = self._transcript_index((index-1)*3)
+        base_index = self._transcript_index(index*3)
         if self.plus_strand:
-            return SequenceRange(self.chromosome, base_index, base_index+3)
-        else:
             return SequenceRange(self.chromosome, base_index-2, base_index+1)
+        else:
+            return SequenceRange(self.chromosome, base_index, base_index+3)
 
-    def _transcript_index(self, index, *, coding=False):
-        """Return the genomic coordinate of the base pair at the index as an
-        integer.
+    def _transcript_index(self, index):
+        """Given the 1-based index of a nucleotide in the coding sequence,
+        return the 0-based genomic index of that nucleotide as an integer.
 
         """
         indices = []
-        exons = self.coding_exons() if coding else self.exons()
-        for exon in exons:
+        for exon in self.coding_exons():
             nucleotide_range = list(range(exon.start, exon.end))
             if not self.plus_strand:
                 nucleotide_range.reverse()
@@ -186,7 +182,7 @@ class Transcript(object):
         try:
             base_index = next(itertools.islice(
                     base_coordinates,
-                    index,
+                    index-1,
                     None))
         except StopIteration:
             raise OutOfRange(

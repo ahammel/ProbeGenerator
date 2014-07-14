@@ -107,13 +107,13 @@ class TestAnnotationValidation(unittest.TestCase):
     def test_nucleotide_index(self):
         transcript1, transcript2, transcript3, _transcript_4 = ANNOTATION
         self.assertEqual(
-            transcript1.nucleotide_index(0),
-            SequenceRange('1', 0, 1))
+            transcript1.nucleotide_index(1),
+            SequenceRange('1', 1, 2))
         self.assertEqual(
-            transcript2.nucleotide_index(1),
-            SequenceRange('2', 8, 9))
-        transcript_3_indices = [21, 20, 19, 13, 12, 11, 10, 9]
-        for base_pair, index in zip(transcript_3_indices, range(10)):
+            transcript2.nucleotide_index(2),
+            SequenceRange('2', 9, 10))
+        transcript_3_indices = [22, 21, 20, 14, 13, 12, 11, 10]
+        for base_pair, index in zip(transcript_3_indices, range(1,11)):
             self.assertEqual(
                 transcript3.nucleotide_index(index),
                 SequenceRange('3', base_pair, base_pair+1))
@@ -121,6 +121,6 @@ class TestAnnotationValidation(unittest.TestCase):
     def test_codon_index(self):
         transcript1, transcript2, transcript3, _transcript_4 = ANNOTATION
         self.assertEqual(
-            transcript3.codon_index(2), SequenceRange('3', 12, 15)),
+            transcript3.codon_index(1), SequenceRange('3', 20, 23)),
         self.assertEqual(
-            transcript3.codon_index(3), SequenceRange('3', 9, 12)),
+            transcript3.codon_index(2), SequenceRange('3', 12, 15)),
