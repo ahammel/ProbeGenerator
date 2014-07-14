@@ -10,8 +10,8 @@ from probe_generator.exceptions import NonFatalError
 class AbstractProbe(metaclass=abc.ABCMeta):
     """Super-class for Probe objects.
 
-    Subclasses provide the _STATEMENT_SKELETON property, an 'explode' explode
-    static method, and a 'get_ranges' method. The '__init__', '__str__', and
+    Subclasses provide the _STATEMENT_SKELETON property, an 'explode' static
+    method, and a 'get_ranges' method. The '__init__', '__str__', and
     'sequence' methods are mixed-in.
 
     """
@@ -23,9 +23,8 @@ class AbstractProbe(metaclass=abc.ABCMeta):
         return self._STATEMENT_SKELETON.format(**self._spec)
 
     def sequence(self, genome):
-        """Return the sequence of representing the probe given a reference
-        genome object using the SequenceRange objects returned by the
-        get_ranges method.
+        """Return the sequence of the probe given a reference genome object
+        using the SequenceRange objects returned by the get_ranges method.
 
         Raises a MissingChromosome exception (non-fatal) when the chromosome is
         not present in the reference genome.
@@ -46,7 +45,7 @@ class AbstractProbe(metaclass=abc.ABCMeta):
         """Return a string of base pairs given a SequenceRange object and a
         reference genome.
 
-        If the SequenceRage is a mutation, check that the reference base
+        If the SequenceRange is a mutation, check that the reference base
         specified by the probe matches the reference sequence and return the
         mutation bases specified by the probe.
 
@@ -72,8 +71,10 @@ class AbstractProbe(metaclass=abc.ABCMeta):
 
     @abc.abstractproperty
     def _STATEMENT_SKELETON(self):
-        """The template into which data from the _spec property is poured using
-        the string format method by __str__.
+        """The template of the __str__ property of the probe.
+
+        The internal _spec property of an instance is passed to
+        _STATEMENT_SKELETON.format to produce the probe's string.
 
         """
 

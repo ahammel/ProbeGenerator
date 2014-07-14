@@ -119,7 +119,7 @@ def _flip_specification(specification):
 
 
 def _check_read_through_spec(specification):
-    """Prins a warning message to standard error if the sides of the
+    """Prints a warning message to standard error if the sides of the
     specification don't make sense.
 
     This is only an issue for probes specified using the read-through syntax.
@@ -204,9 +204,9 @@ def _get_base_positions(specification, row_1, row_2):
 
 
 def _get_base_position_per_row(exon_number, bases, side, row):
-    """Return the start and end positions of a probe, given a exon, the
-    side of the exon, the number of bases required (may be a glob) and the
-    related row of a UCSC gene annotation table.
+    """Return the start and end positions of a probe, given an exon, the side
+    of the exon, the number of bases required (may be a glob) and the related
+    row of a UCSC gene annotation table.
 
     Raises an InterfaceError if the row has no 'strand' key.
 

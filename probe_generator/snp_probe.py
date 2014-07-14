@@ -47,7 +47,7 @@ class SnpProbe(AbstractProbe):
     def get_ranges(self):
         bases = self._spec['bases']
         chromosome = self._spec['chromosome']
-        index = self._spec['index'] - 1 # Convert from to 1-based indexing
+        index = self._spec['index'] - 1 # Convert from 0- to 1-based indexing
         left_buffer = bases // 2 - 1
         right_buffer = bases - left_buffer
         return (
