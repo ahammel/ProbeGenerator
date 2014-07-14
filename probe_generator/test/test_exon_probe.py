@@ -11,7 +11,7 @@ class AbstractExonStatementTestCase(unittest.TestCase):
     """
     def setUp(self):
         self.probe_statement = "ABC#exon[1]-2 / DEF#exon[3]+3"
-        self.probe_string = "ABC#exon[1]-2/DEF#exon[3]+3_1:2/2:10_FOO_BAR"
+        self.probe_string = "ABC#exon[1]-2/DEF#exon[3]+3_1:2/2:11_FOO_BAR"
 
 
 class TestExonStatementParsing(AbstractExonStatementTestCase):

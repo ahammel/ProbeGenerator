@@ -56,20 +56,8 @@ class CoordinateProbe(AbstractProbe):
         probe.
 
         """
-        start1, end1 = _parse_range(
-            specification['index1'],
-            specification['operation1'],
-            specification['bases1'])
-        start2, end2 = _parse_range(
-            specification['index2'],
-            specification['operation2'],
-            specification['bases2'])
         breakpoint1, breakpoint2     = _get_breakpoints(specification)
 
-        specification['start1']      = start1
-        specification['end1']        = end1
-        specification['start2']      = start2
-        specification['end2']        = end2
         specification['breakpoint1'] = breakpoint1
         specification['breakpoint2'] = breakpoint2
 
@@ -82,16 +70,24 @@ class CoordinateProbe(AbstractProbe):
         return [CoordinateProbe(specification)]
 
     def get_ranges(self):
+        start1, end1 = _parse_range(
+            self._spec['index1'],
+            self._spec['operation1'],
+            self._spec['bases1'])
+        start2, end2 = _parse_range(
+            self._spec['index2'],
+            self._spec['operation2'],
+            self._spec['bases2'])
         return (
             SequenceRange(
                 self._spec['chromosome1'],
-                self._spec['start1'],
-                self._spec['end1'],
+                start1,
+                end1,
                 reverse_complement= self._spec['rc_side_1']),
             SequenceRange(
                 self._spec['chromosome2'],
-                self._spec['start2'],
-                self._spec['end2'],
+                start2,
+                end2,
                 reverse_complement= self._spec['rc_side_2']))
 
 def _parse(statement):
