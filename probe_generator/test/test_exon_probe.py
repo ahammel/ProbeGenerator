@@ -93,8 +93,8 @@ class TestExplode(AbstractExonStatementTestCase):
         self.assertCountEqual(
                 [(probe._spec['exon1'], probe._spec['exon2'])
                   for probe in ExonProbe.explode(statement, ANNOTATION)],
-                 [(1, 1), (1, 2), (1, 3),
-                  (2, 1), (2, 2), (2, 3)])
+                 [(1, 1), (1, 2),
+                  (2, 1), (2, 2),])
 
 
 class TestSequence(unittest.TestCase):

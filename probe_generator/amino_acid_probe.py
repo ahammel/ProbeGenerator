@@ -5,7 +5,7 @@ import re
 import sys
 import itertools
 
-from probe_generator import annotation
+from probe_generator import annotation, transcript
 from probe_generator.sequence import reverse_complement, SequenceRange
 from probe_generator.probe import AbstractProbe, InvalidStatement
 
@@ -61,29 +61,30 @@ class AminoAcidProbe(AbstractProbe):
     """
     _STATEMENT_SKELETON = ("{gene}:{reference_aa}{codon}{mutation_aa}"
                            "({reference_bases}>{mutation_bases})/"
-                           "{bases}_{transcript}_{chromosome}:{index}{comment}")
+                           "{bases}_{transcript}_{chromosome}:{coordinate}{comment}")
 
     def get_ranges(self):
-        index = self._spec['index']
+        chromosome, start, end, _, _ = self._spec['index']
         bases = self._spec['bases']
         chromosome = self._spec['chromosome']
 
-        left_buffer = bases // 2
+        mutation_bases = len(self._spec["mutation"])
+        left_buffer = bases // 2 - 1
         if bases % 2 == 0:
             left_buffer -= 1
-        right_buffer = bases - left_buffer
+        right_buffer = bases - left_buffer - mutation_bases
 
         return (
             SequenceRange(chromosome,
-                          index-left_buffer,
-                          index-1),
+                          start-left_buffer,
+                          start),
             SequenceRange(chromosome,
-                          index-1,
-                          index+2,
+                          start,
+                          end,
                           mutation=True),
             SequenceRange(chromosome,
-                          index+2,
-                          index+right_buffer))
+                          end,
+                          end+right_buffer))
 
     @staticmethod
     def explode(statement, genome_annotation=None):
@@ -103,14 +104,14 @@ class AminoAcidProbe(AbstractProbe):
             partial_spec['gene'],
             genome_annotation)
         coordinate_cache = set()
-        for transcript in transcripts:
+        for txt in transcripts:
             try:
-                index = annotation.codon_index(partial_spec['codon'], transcript)
-            except annotation.OutOfRange as error:
+                index = txt.codon_index(partial_spec['codon'])
+            except transcript.OutOfRange as error:
                 print("{} in statement: {!r}".format(error, statement),
                       file=sys.stderr)
             else:
-                chromosome = transcript['chrom'].lstrip('chr')
+                chromosome = txt.chromosome
                 if (chromosome, index) not in coordinate_cache:
                     coordinate_cache.add((chromosome, index))
                     reference_codons = _DNA_CODON_TABLE[
@@ -119,28 +120,32 @@ class AminoAcidProbe(AbstractProbe):
                         partial_spec['mutation_aa'].upper()]
                     for reference_codon, mutation_codon in itertools.product(
                         reference_codons, mutation_codons):
-                        if mutation_codon not in _DNA_CODON_TABLE[partial_spec["reference_aa"]]:
-                            if transcript['strand'] == '+':
+                        if (mutation_codon not in
+                            _DNA_CODON_TABLE[partial_spec["reference_aa"]]):
+                            if txt.plus_strand:
                                 mutation = mutation_codon
                                 reference = reference_codon
+                                strand = '+'
                             else:
                                 mutation = reverse_complement(mutation_codon)
                                 reference = reverse_complement(reference_codon)
+                                strand = '-'
                             spec = dict(partial_spec,
                                         index=index,
                                         chromosome=chromosome,
-                                        strand=transcript['strand'],
-                                        transcript=transcript['name'],
+                                        strand=strand,
+                                        transcript=txt.name,
                                         reference=reference,
                                         reference_bases=reference_codon,
                                         mutation_bases=mutation_codon,
-                                        mutation=mutation)
-                            # 'mutation_bases' is displayed in the probe's
-                            # string, while 'mutation' is used internally to
-                            # determine the sequence.
+                                        mutation=mutation,
+                                        coordinate=index.start+1)
+                            # 'mutation_bases' is displayed in the probe's string,
+                            # while 'mutation' is used internally to determine the
+                            # sequence.
                             #
-                            # They are different
-                            # sequences if the transcript is on the '-' strand.
+                            # They are different sequences if the transcript is on
+                            # the '-' strand.
                             probes.append(AminoAcidProbe(spec))
         return probes
 

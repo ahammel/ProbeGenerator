@@ -1,10 +1,9 @@
 import unittest
 import os
-import re
-
-import mock
 
 from probe_generator import annotation
+from probe_generator.transcript import Transcript
+from probe_generator.sequence import SequenceRange
 from probe_generator.test.test_constants import VALIDATION_DATA_DIR, ANNOTATION
 
 MOCK_ANNOTATION_FILE = [ # input is any iterable of strings
@@ -23,119 +22,50 @@ MOCK_UCSC_GENES_FILE = os.path.join(
         VALIDATION_DATA_DIR, "test_ucsc_genes.txt")
 
 
-class TestAnnotaion(unittest.TestCase):
-    """Test cases for annotation parsing.
-
-    """
-    def setUp(self):
-        self.annotation_file = iter(MOCK_ANNOTATION_FILE)
-
-    def test_mock_annotation_parsed_correctly(self):
-        self.assertEqual(
-                list(annotation.parse_ucsc_file(MOCK_ANNOTATION_FILE)),
-                [MOCK_ROW])
-
-
-class TestLookupGene(unittest.TestCase):
-    """Test cases for getting the data of genes by name.
-
-    """
-    def setUp(self):
-        self.annotation = iter([MOCK_ROW])
-
-    @mock.patch.object(annotation, "_GENE_NAME_FIELDS", ('foo',))
-    def test_lookup_gene_yields_rows_matching_gene_name_for_refseq_file(self):
-        """
-        By patching the _GENE_NAME_FIELDS module constant, we specify that gene
-        names should be looked up under the field named 'foo'.
-
-        """
-        self.assertEqual(
-                list(annotation.lookup_gene('ding', self.annotation)),
-                [MOCK_ROW])
-
-    def test_lookup_gene_returns_empty_generator_for_empty_annotation(self):
-        self.assertEqual(
-                list(annotation.lookup_gene('wilder', self.annotation)),
-                [])
-
-
-class TestExons(unittest.TestCase):
+class TestTranscript(unittest.TestCase):
     """Test cases for the annotation.exons function
 
     """
     def setUp(self):
-        self.row = {
-                'strand': '+',
-                'exonStarts': '10,30,50,',
-                'exonEnds': '20,40,60,'}
+        self.transcript = Transcript(
+            {'strand'     : '+',
+             'exonStarts' : '3,10,30,50,',
+             'exonEnds'   : '5,20,40,60,',
+             'chrom'      : '0',
+             'name'       : 'FOO',
+             'name2'      : 'BAR',
+             'cdsStart'   : '11',
+             'cdsEnd'     : '59'})
 
-    def test_exons_returns_exon_position_tuples(self):
-        """
-        Given a properly-formatted UCSC table row, annotations.exons returns a
-        list of tuples the exon's start position and the exon's end position.
-
-        """
+    def test_exons_returns_exon_sequence_ranges(self):
         self.assertEqual(
-                annotation.exons(self.row),
-                [(10, 20),
-                 (30, 40),
-                 (50, 60)])
+            self.transcript.exons(),
+            [SequenceRange('0', 3, 5),
+             SequenceRange('0', 10, 20),
+             SequenceRange('0', 30, 40),
+             SequenceRange('0', 50, 60)])
+
+    def test_exon_returns_exon_sequence_range_at_one_based_index(self):
+        self.assertEqual(
+            self.transcript.exon(2),
+            SequenceRange('0', 10, 20))
 
     def test_exons_returns_reversed_positions_when_strand_minus(self):
-        self.row['strand'] = '-'
+        self.transcript.plus_strand = False # Note: never do this outside of a
+                                             # test.
         self.assertEqual(
-                annotation.exons(self.row),
-                [(50, 60),
-                 (30, 40),
-                 (10, 20)])
+            self.transcript.exons(),
+            [SequenceRange('0', 50, 60),
+             SequenceRange('0', 30, 40),
+             SequenceRange('0', 10, 20),
+             SequenceRange('0', 3,  5)])
 
-    def test_exons_raises_FormattingError_on_empty_dictionary(self):
-        message = "key 'exonStarts' not in fields: \[\]"
-        with self.assertRaisesRegex(annotation.FormattingError, message):
-            annotation.exons({})
-
-    def test_exons_raises_FormattingError_on_non_int_values_in_string(self):
-        message = re.escape(
-                   "unexpected values for 'exonStarts' and 'exonEnds' fields: "
-                   "'1,banana,' and '2,surprise,'")
-        with self.assertRaisesRegex(annotation.FormattingError, message):
-            annotation.exons({
-                'exonStarts': '1,banana,',
-                'exonEnds': '2,surprise,',
-                'strand': '-'
-                })
-
-    def test_exons_raises_FormattingError_when_start_greater_than_end(self):
-        message = re.escape(
-                "unexpected values for 'exonStarts' and 'exonEnds' fields: "
-                "'10,20,' and '1,2,'. exonEnds values must be strictly "
-                "greater than exonStarts")
-        with self.assertRaisesRegex(annotation.FormattingError, message):
-            annotation.exons({
-                'exonStarts': '10,20,',
-                'exonEnds': '1,2,',
-                'strand': '-'})
-
-    def test_exons_raises_FormattingError_when_row_missing_strand(self):
-        message = re.escape(
-                "key 'strand' not in fields: ['exonEnds', 'exonStarts']")
-        with self.assertRaisesRegex(annotation.FormattingError, message):
-            del self.row['strand']
-            annotation.exons(self.row)
-
-
-class TestAnnotationLookupGeneIntegration(TestLookupGene):
-    """Integration tests for `annotation.parse_annotation` and
-    `annotation.lookup_gene`
-
-    This is done by re-running the TestLookupGene test using the output of
-    `parse_annotation` as the fixture instead of a mock.
-
-    """
-    def setUp(self):
-        self.annotation = annotation.parse_ucsc_file(
-                iter(MOCK_ANNOTATION_FILE))
+    def test_coding_exons_returns_coding_sequence_ranges(self):
+        self.assertEqual(
+            self.transcript.coding_exons(),
+            [SequenceRange('0', 11, 20),
+             SequenceRange('0', 30, 40),
+             SequenceRange('0', 50, 59)])
 
 
 class TestAnnotationValidation(unittest.TestCase):
@@ -157,14 +87,10 @@ class TestAnnotationValidation(unittest.TestCase):
         matching_features = annotation.lookup_gene("MOCK_GENE", annotations)
         try:
             mock_row, = tuple(matching_features)
-            exons = annotation.exons(mock_row)
-            self.assertEqual(exons, [(2, 3)])
+            exons = mock_row.exons()
+            self.assertEqual(exons, [SequenceRange('0', 2, 3)])
         except ValueError as error:
-            self.fail(
-                    "Unexpected number of mock genes: {}".format(error))
-        except annotation.FormattingError as error:
-            raise annotation.FormattingError(
-                    "Mock row formatted improperly: {}".format(error))
+            self.fail("Unexpected number of mock genes: {}".format(error))
 
     @unittest.skipIf(not os.path.exists(MOCK_REFSEQ_GENES_FILE),
                      "{} not reachable".format(MOCK_REFSEQ_GENES_FILE))
@@ -178,28 +104,23 @@ class TestAnnotationValidation(unittest.TestCase):
         with open(MOCK_UCSC_GENES_FILE) as handle:
             self.assert_mock_gene_in_file(handle)
 
-
-class TestAnnotationIndexFunctions(unittest.TestCase):
-    """Test cases for the annotation.nucleotide_index and codon_index
-    functions.
-
-    """
     def test_nucleotide_index(self):
         transcript1, transcript2, transcript3, _transcript_4 = ANNOTATION
         self.assertEqual(
-            annotation.nucleotide_index(0, transcript1), 1)
+            transcript1.nucleotide_index(0),
+            SequenceRange('1', 1, 2))
         self.assertEqual(
-            annotation.nucleotide_index(1, transcript2), 9)
+            transcript2.nucleotide_index(1),
+            SequenceRange('2', 9, 10))
         transcript_3_indices = [22, 21, 20, 14, 13, 12, 11, 10]
         for base_pair, index in zip(transcript_3_indices, range(10)):
             self.assertEqual(
-                annotation.nucleotide_index(index, transcript3), base_pair)
+                transcript3.nucleotide_index(index),
+                SequenceRange('3', base_pair, base_pair+1))
 
     def test_codon_index(self):
         transcript1, transcript2, transcript3, _transcript_4 = ANNOTATION
         self.assertEqual(
-            annotation.codon_index(1, transcript3), 21)
+            transcript3.codon_index(1), SequenceRange('3', 20, 23))
         self.assertEqual(
-            annotation.codon_index(2, transcript3), 13)
-        self.assertEqual(
-            annotation.codon_index(3, transcript3), 10)
+            transcript3.codon_index(2), SequenceRange('3', 12, 15))
