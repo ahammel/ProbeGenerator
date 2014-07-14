@@ -51,7 +51,7 @@ In either case, copy or link the script under `bin/probe-generator` to
 somewhere in your $PATH and test that everything worked:
 
     $ probe-generator --version
-    ProbeGenerator version 0.3
+    ProbeGenerator version 0.4
 
 
 # Probe statements
@@ -326,7 +326,7 @@ produced for all of them (although frequently the reference sequence will not
 match for alternative transcripts, meaning that no probe sequence is produced).
 
 In the case that the amino acid is specified, one probe is produced for every
-codon which codes for each amino acid. For instance, specifying leucine as the
+codon which codes for an amino acid. For instance, specifying leucine as the
 mutation amino acid results in at least six probe sequences, some of which will
 have more than one base pair difference from the reference genome. All possible
 codons are also used for the reference amino acid, although obviously a maximum
@@ -428,7 +428,7 @@ transcript ID are added:
     >FOO:c.123_T>A/5_N00001_1:100
     TTATT
 
-When an amino acid changes is specified, the coordinate of the first base pair
+When an amino acid change is specified, the coordinate of the first base pair
 of the _codon_ (not necessarily the coordinate of the mutation) as well as the
 reference and mutation codon sequences are also given:
 

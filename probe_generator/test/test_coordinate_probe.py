@@ -40,11 +40,11 @@ class TestCoordinateStatementParse(unittest.TestCase):
             str(self.probe))
 
     def test_parse_is_whitespace_insensitive(self):
-        whitspace_probe, = CoordinateProbe.explode(
+        whitespace_probe, = CoordinateProbe.explode(
                  " 1:4\t-\n2    /2 : 3+\t\t\t3")
         self.assertEqual(
                 "gtaag",
-                whitspace_probe.sequence(GENOME))
+                whitespace_probe.sequence(GENOME))
 
     def test_parse_probe_with_comments(self):
         self.specification["comment"] = "-- I'm a comment!"

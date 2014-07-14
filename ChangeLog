@@ -1,3 +1,9 @@
+July 14, 2014	Alex Hammel		<ahammel@bcgsc.ca>
+	* Release version 0.4
+		* Added Gene SNP Probes
+		* Added Amino Acid Probes
+		* Changed object architecture
+
 May 07, 2014	Alex Hammel		<ahammel@bcgsc.ca>
 	* Release version 0.3
 		* Added SNP probes.

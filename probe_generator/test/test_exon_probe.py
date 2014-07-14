@@ -139,7 +139,7 @@ class TestBreakpoints(unittest.TestCase):
 
     """
     def assert_string(self, statement, string):
-        """Assert that the Probe.__str__ method returns the 'string'.
+        """Assert that the Probe.__str__ method returns 'string'.
 
         """
         try:
