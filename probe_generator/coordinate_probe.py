@@ -35,7 +35,9 @@ class CoordinateProbe(AbstractProbe):
         'chromosome(1|2)': str
         'start(1|2)':      int
         'end(1|2)':        int
+        'operation(1|2):   ('+' | '-')
         'rc_side_(1|2)':   bool
+        'comment':         str
         }
 
     'start' and 'end' values in the specification are 1-based inclusive ranges.
@@ -46,7 +48,7 @@ class CoordinateProbe(AbstractProbe):
                            "{comment}")
 
     def __init__(self, specification, *rows):
-        """At init time, the start, end, and breakpoints are caluclated and
+        """At init time, the start, end, and breakpoints are calculated and
         added to the specification.
 
         The start and end values are passed internally to SequenceRange
@@ -125,8 +127,8 @@ def _parse(statement):
 
 
 def _parse_range(index, operation, bases):
-    """Given the start, bases, and operation as strings, return the
-    bases of the specification.
+    """Given the index, bases, and operation as strings, return the start and
+    end bases of the probe.
 
     """
     if operation == '+':
@@ -152,8 +154,11 @@ def _get_breakpoint(index, operation, bases, is_left):
     """Return the breakpoint of a half-probe.
 
     The breakpoint differs from the sequence range in that it is reported using
-    an inclusive range convention, rather thant the left-inclusive
+    an inclusive range convention, rather than the left-inclusive
     right-exclusive convention used internally.
+
+    `is_left` is True when the half-probe is the first bit of the probe, and
+    False otherwise.
 
     """
     if operation == '+' and is_left:
