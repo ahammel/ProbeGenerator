@@ -2,63 +2,21 @@
 
 """
 from probe_generator import sequence
+from probe_generator.exceptions import NonFatalError
 
-
-def bases(ref_genome, chromosome, start, end):
-    """Return the base pairs of `chromosome` from `start` to `end`.
-
-    The string of base pairs is from the `start` to `end` _inclusive_,
-    where the first base of the chromosome is 1.
-
-    `ref_genome` is a dictionary relating chromosome names to base pair
-    sequences (which are strings). `chromosome` is a string, `start` and `end`
-    are ints.
-
-    Returns a string of base pairs.
+def bases(sequence_range, genome):
+    """Return the bases from a SequenceRange object.
 
     """
-    try:
-        base_pairs = ref_genome[chromosome][start-1:end]
-    except KeyError:
-        raise MissingChromosome(
-                "no such chromosome: {!r}".format(
-                    chromosome))
-    except TypeError:
-        raise InvalidRange(
-                "unsupported values for `start` and `end`: "
-                "({!r}, {!r})".format(
-                    start, end))
-    if start > end:
-        raise InvalidRange("unsupported values for `start` and `end`: "
-                           "({}, {}). `start` must be  <= `end`".format(
-                               start, end))
-    if end-start+1 != len(base_pairs):
-        raise NonContainedRange(
-                "range [{0}:{1}] outside the "
-                "range of chromosome {2!r}".format(
-                    start, end, chromosome))
-    return base_pairs
-
-
-def bases_from_coordinate(coordinate, ref_genome):
-    """Given a set of coordinates and a genome, return a probe sequence.
-
-    """
-    first_bases = bases(
-            ref_genome,
-            coordinate['chromosome1'],
-            coordinate['start1'],
-            coordinate['end1'])
-    second_bases = bases(
-            ref_genome,
-            coordinate['chromosome2'],
-            coordinate['start2'],
-            coordinate['end2'])
-    if coordinate['rc_side_1']:
-        first_bases = sequence.reverse_complement(first_bases)
-    if coordinate['rc_side_2']:
-        second_bases = sequence.reverse_complement(second_bases)
-    return first_bases + second_bases
+    raw_bases = _raw_bases(
+        sequence_range.chromosome,
+        sequence_range.start,
+        sequence_range.end,
+        genome)
+    if sequence_range.reverse_complement:
+        return sequence.reverse_complement(raw_bases)
+    else:
+        return raw_bases
 
 
 def reference_genome(genome):
@@ -93,16 +51,29 @@ def reference_genome(genome):
             in genome_map.items()}
 
 
-class MissingChromosome(Exception):
-    """Raised when a chromosome is not present in the reference genome.
+def _raw_bases(chromosome, start, end, genome):
+    """Return a string of the base pairs of chromosome from start to end.
+
+    The start and end attributes follow the Python convention for slices
+    (indexed from zero, start inclusive, end exclusive).
+
+    The genome is a dictionary relating chromosome names to base pair sequences
+    (which are strings).
 
     """
+    try:
+        base_pairs = genome[chromosome][start:end]
+    except KeyError:
+        raise MissingChromosome(
+                "no such chromosome: {!r}".format(
+                    chromosome))
+    if end - start != len(base_pairs):
+        raise NonContainedRange(
+                "range [{0}:{1}] outside the "
+                "range of chromosome {2!r}".format(
+                    start, end, chromosome))
+    return base_pairs
 
-
-class InvalidRange(TypeError):
-    """Raised on a TypeError while slicing a genome.
-
-    """
 
 
 class NonContainedRange(Exception):
@@ -114,5 +85,11 @@ class NonContainedRange(Exception):
 
 class InvalidGenomeFile(Exception):
     """Raised when a a genome_file cannot be parsed.
+
+    """
+
+
+class MissingChromosome(NonFatalError):
+    """Raised when a chromosome is not present in the reference genome.
 
     """

@@ -30,6 +30,9 @@ To add support for a new table:
 
 """
 import csv
+import itertools
+
+from probe_generator import probe
 
 _GENE_NAME_FIELDS = (
         # the names of the fields which might contain the name of a gene in any
@@ -94,6 +97,9 @@ def exons(row):
     valid UCSC gene table.
 
     """
+    # TODO: At some point we should think about how much of this exception code
+    # we really want to support to confirm that the UCSC tables are in the
+    # right format. It's starting to irritate me.
     try:
         exon_starts = row['exonStarts'].split(',')
         exon_ends = row['exonEnds'].split(',')
@@ -124,7 +130,91 @@ def exons(row):
     return positions
 
 
+def coding_exons(row):
+    """As in `exons`, but with the UTRs trimmed out.
+
+    """
+    try:
+        cds_start = int(row['cdsStart'])
+        cds_end = int(row['cdsEnd'])
+        strand = row['strand']
+    except KeyError as error:
+        raise FormattingError(
+                "key {!s} not in fields: {!r}".format(
+                    error, list(row.keys())))
+    exon_positions = exons(row)
+    positions = []
+
+    if strand == '-':
+        exon_positions.reverse()
+    for start, end in exon_positions:
+        if end < cds_start:
+            pass
+        elif start <= cds_start <= end:
+            positions.append((cds_start, end))
+        elif start <= cds_end <= end:
+            positions.append((start, cds_end))
+            break
+        else:
+            positions.append((start, end))
+        # Don't do anything if the exon ends before the coding sequence starts.
+    if strand == '-':
+        positions.reverse()
+    return positions
+
+
+def nucleotide_index(index, transcript):
+    """Given a base pair index and a row of a UCSC gene table, return the
+    genomic coordinate of the base pair at that index in the transcript.
+
+    'transcript' is a row from a UCSC genome annotation table.
+
+    """
+    strand = transcript["strand"]
+    indices = (_base_indices(pair, strand) for pair in coding_exons(transcript))
+    base_coordinates = itertools.chain(*indices)
+    try:
+        base_index = next(itertools.islice(
+                base_coordinates,
+                index,
+                None))
+    except StopIteration:
+        raise OutOfRange(
+            "Base {} is outside the range of transcript '{}'".format(
+                index, transcript["name"]))
+    return base_index
+
+
+def codon_index(index, transcript):
+    """Given a codon index and a row of a UCSC gene table, return the genomic
+    coordinate of the second base pair of that codon.
+
+    """
+    return nucleotide_index(
+        (index * 3) - 2, transcript)
+
+
+def _base_indices(exon_range, strand):
+    """Given an exon range (int, int) the strand of the exon ("+" or "-"),
+    return a generator of the genomic coordinates of the bases in the exon.
+
+    """
+    assert strand in "+-"
+
+    p, q = exon_range
+    if strand == "+":
+        return range(p, q)
+    else:
+        return reversed(range(p, q))
+
+
 class FormattingError(Exception):
     """Raised when a UCSC file is improperly formatted.
+
+    """
+
+
+class OutOfRange(probe.NonFatalError):
+    """Raised when a base index outside the range of a transcript is specified.
 
     """

@@ -108,8 +108,8 @@ def _flip_specification(specification):
                 specification,
                 gene1=specification['gene2'],
                 gene2=specification['gene1'],
-                feature1=specification['feature2'],
-                feature2=specification['feature1'],
+                exon1=specification['exon2'],
+                exon2=specification['exon1'],
                 side1=specification['side2'],
                 side2=specification['side1'],
                 bases1=specification['bases2'],
@@ -119,7 +119,7 @@ def _flip_specification(specification):
 
 
 def _check_read_through_spec(specification):
-    """Prins a warning message to standard error if the sides of the
+    """Prints a warning message to standard error if the sides of the
     specification don't make sense.
 
     This is only an issue for probes specified using the read-through syntax.
@@ -130,8 +130,8 @@ def _check_read_through_spec(specification):
 
     """
     try:
-        sides_ok = (specification['side1'] == 'end' and
-                    specification['side2'] == 'start')
+        sides_ok = (specification['side1'] == '-' and
+                    specification['side2'] == '+')
     except KeyError:
         raise InterfaceError
     if not sides_ok:
@@ -178,40 +178,39 @@ def _get_base_positions(specification, row_1, row_2):
 
     """
     try:
-        (first_feature,
+        (first_exon,
          first_bases,
          first_side,
-         second_feature,
+         second_exon,
          second_bases,
-         second_side) = (specification['feature1'],
+         second_side) = (specification['exon1'],
                          specification['bases1'],
                          specification['side1'],
-                         specification['feature2'],
+                         specification['exon2'],
                          specification['bases2'],
                          specification['side2'])
     except KeyError as error:
         raise InterfaceError(str(error))
     start_1, end_1 = _get_base_position_per_row(
-            first_feature,
+            first_exon,
             first_bases,
             first_side, row_1)
     start_2, end_2 = _get_base_position_per_row(
-            second_feature,
+            second_exon,
             second_bases,
             second_side,
             row_2)
     return start_1, end_1, start_2, end_2
 
 
-def _get_base_position_per_row(feature, bases, side, row):
-    """Return the start and end positions of a probe, given a feature, the
-    side of the feature, the number of bases required (may be a glob) and the
-    related row of a UCSC gene annotation table.
+def _get_base_position_per_row(exon_number, bases, side, row):
+    """Return the start and end positions of a probe, given an exon, the side
+    of the exon, the number of bases required (may be a glob) and the related
+    row of a UCSC gene annotation table.
 
     Raises an InterfaceError if the row has no 'strand' key.
 
     """
-    _, exon_number = feature
     try:
         strand = row['strand']
     except KeyError as error:
@@ -227,15 +226,15 @@ def _get_base_position_per_row(feature, bases, side, row):
 
 
 def _get_base_pair_range(bases, start, end, side, strand):
-    """Return the desired sub-range of a genomic feature, given its range, the
+    """Return the desired sub-range of a genomic exon, given its range, the
     number of base-pairs required, the side from which the sub-range is to be
-    extracted, and the strand of the feature.
+    extracted, and the strand of the exon.
 
     """
     if _is_leftmost_side(side, strand):
-        return start + 1, (start + bases)
+        return start, (start + bases)
     else:
-        return (end - bases + 1), end
+        return (end - bases), end
 
 
 def _is_leftmost_side(side, strand):
@@ -272,7 +271,7 @@ def _is_leftmost_side(side, strand):
              non-exon }   { exon    ...
 
     """
-    return (side == 'start') == (strand == '+')
+    return (side == '+') == (strand == '+')
 
 
 def _get_exon(positions, index):
@@ -308,8 +307,8 @@ def _get_rev_comp_flags(specification, row_1, row_2):
     """
     side1, side2 = specification['side1'], specification['side2']
     strand1, strand2 = row_1['strand'], row_2['strand']
-    return ((side1, strand1) in (('start', '+'), ('end', '-')),
-            (side2, strand2) in (('start', '-'), ('end', '+')))
+    return ((side1, strand1) in (('+', '+'), ('-', '-')),
+            (side2, strand2) in (('+', '-'), ('-', '+')))
 
 
 class InterfaceError(Exception):

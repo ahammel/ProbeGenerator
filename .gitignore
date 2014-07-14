@@ -8,3 +8,5 @@ __pycache__/
 # SVN stuff
 .svn
 build
+TAGS
+.coverage

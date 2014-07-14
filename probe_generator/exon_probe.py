@@ -5,16 +5,17 @@ import itertools
 import re
 import sys
 
-from probe_generator import reference, annotation, exon_coordinate
-from probe_generator.probe import InvalidStatement
+from probe_generator import annotation, exon_coordinate
+from probe_generator.probe import AbstractProbe, InvalidStatement
+from probe_generator.sequence import SequenceRange
 
 _PROBE_STATEMENT = r"""    # The regex for one side of a probe statement
         \s*                # non-significant whitespace
         ([a-zA-Z0-9_./-]+) # gene name
         \s*\#\s*           # hash-separator
-        ([a-zA-Z]+|\*)     # feature name
+        exon
         \s*\[\s*           # bracket-delimiter
-        (\d+|\*)           # the number of the feature
+        (\d+|\*)           # exon number
         \s*\]\s*
         ([*+-])            # feature side
         \s*
@@ -28,7 +29,7 @@ _SEPARATOR = r"""
     ->)     # read-through separator
 """
 
-_PROBE_STATEMENT_REGEX = re.compile(r"""
+_STATEMENT_REGEX = re.compile(r"""
         {statement}
         {separator}
         {statement}
@@ -37,35 +38,36 @@ _PROBE_STATEMENT_REGEX = re.compile(r"""
                    separator=_SEPARATOR),
         re.VERBOSE)
 
-_PROBE_STATEMENT_SKELETON = (
-        "{gene1}#{feature1[0]}[{feature1[1]}]{side1}{bases1}"
-        "{separator}"
-        "{gene2}#{feature2[0]}[{feature2[1]}]{side2}{bases2}"
-        "_{chromosome1}:{end1}/{chromosome2}:{start2}"
-        "_{transcript1}_{transcript2}"
-        "{comment}")
 
-
-class ExonProbe(object):
+class ExonProbe(AbstractProbe):
     """Probe for a mutation event specified as a fusion of two exons.
 
     """
-    def __init__(self, specification):
-        self._spec = specification
+    _STATEMENT_SKELETON = (
+            "{gene1}#exon[{exon1}]{side1}{bases1}"
+            "{separator}"
+            "{gene2}#exon[{exon2}]{side2}{bases2}"
+            "_{breakpoint1}/{breakpoint2}"
+            "_{transcript1}_{transcript2}"
+            "{comment}")
 
-    def __str__(self):
-        side1 = '+' if self._spec['side1'] == 'start' else '-'
-        side2 = '+' if self._spec['side2'] == 'start' else '-'
-        return _PROBE_STATEMENT_SKELETON.format(
-                **dict(self._spec,
-                       side1=side1,
-                       side2=side2))
-
-    def sequence(self, genome):
-        """Return the sequence of the probe, given a genome reference.
-
-        """
-        return reference.bases_from_coordinate(self._spec, genome)
+    def get_ranges(self):
+        # TODO: the start and end of the range should be calculated in this
+        # method, not before the probe has been instantiated.
+        #
+        # AJH, June 23, 2014
+        return (
+            SequenceRange(
+                self._spec['chromosome1'],
+                self._spec['start1'],
+                self._spec['end1'],
+                reverse_complement=self._spec['rc_side_1']),
+            SequenceRange(
+                self._spec['chromosome2'],
+                self._spec['start2'],
+                self._spec['end2'],
+                reverse_complement=self._spec['rc_side_2']),
+            )
 
     @staticmethod
     def explode(statement, genome_annotation=None):
@@ -84,7 +86,10 @@ class ExonProbe(object):
             spec_hash = _coord_hash(spec)
             if not spec_hash in cached_specifications:
                 cached_specifications.add(spec_hash)
-                yield ExonProbe(spec)
+                breakpoint1, breakpoint2 = _get_breakpoints(spec)
+                yield ExonProbe(dict(spec,
+                                     breakpoint1=breakpoint1,
+                                     breakpoint2=breakpoint2))
 
 
 def _parse(probe_statement):
@@ -116,36 +121,29 @@ def _parse(probe_statement):
     or if a feature aside from an exon is requested.
 
     """
-    match = _PROBE_STATEMENT_REGEX.match(probe_statement)
+    match = _STATEMENT_REGEX.match(probe_statement)
     if not match:
         raise InvalidStatement(
                 "Cannot parse probe statement: {!r}".format(
                     probe_statement))
     (gene_1,
-     feature_1,
-     feature_number_1,
+     exon_number_1,
      side_1,
      bases_1,
      separator,
      gene_2,
-     feature_2,
-     feature_number_2,
+     exon_number_2,
      side_2,
      bases_2,
      comment) = match.groups()
-    feature_1, feature_2 = feature_1.lower(), feature_2.lower()
-    if not feature_1 == feature_2 == 'exon':
-        raise InvalidStatement("could not parse {!r}: "
-                               "currently only exons are supported".format(
-                                   probe_statement))
     return {
             'gene1':       gene_1,
-            'feature1':    (feature_1, _maybe_int(feature_number_1)),
-            'side1' :      side_1.replace('+', 'start').replace('-', 'end'),
+            'exon1':       _maybe_int(exon_number_1),
+            'side1' :      side_1,
             'bases1':      _maybe_int(bases_1),
             'gene2':       gene_2,
-            'feature2':    (feature_2, _maybe_int(feature_number_2)),
-            'side2' :      side_2.replace('+', 'start').replace('-', 'end'),
+            'exon2':       _maybe_int(exon_number_2),
+            'side2' :      side_2,
             'bases2':      _maybe_int(bases_2),
             'separator':   separator,
             'comment':     comment,
@@ -179,7 +177,7 @@ def _expand(specification, genome_annotation):
                 print("Warning: {!s}".format(error), file=sys.stderr)
 
 
-def _expand_globs(specification, left_features=None, right_features=None):
+def _expand_globs(specification, left_exons=None, right_exons=None):
     """Yield fully-realized probe statements.
 
     Given a probe_statement with globs, iterate through all the possible
@@ -207,28 +205,28 @@ def _expand_globs(specification, left_features=None, right_features=None):
 
     if specification['side1'] == '*':
         fields.append('side1')
-        values.append(('start', 'end'))
+        values.append(('+', '-'))
     if specification['side2'] == '*':
         fields.append('side2')
-        values.append(('start', 'end'))
+        values.append(('+', '-'))
 
-    feature_1, feature_number_1 = specification['feature1']
-    feature_2, feature_number_2 = specification['feature2']
+    exon_number_1 = specification['exon1']
+    exon_number_2 = specification['exon2']
 
-    if feature_number_1 == '*':
-        if left_features is None:
+    if exon_number_1 == '*':
+        if left_exons is None:
             raise ExpandError(
-                    "number of features must be specified "
-                    "when feature number is globbed")
-        fields.append('feature1')
-        values.append(tuple((feature_1, n+1) for n in range(left_features)))
-    if feature_number_2 == '*':
-        if right_features is None:
+                    "number of exons must be specified "
+                    "when exon number is globbed")
+        fields.append('exon1')
+        values.append(n+1 for n in range(left_exons))
+    if exon_number_2 == '*':
+        if right_exons is None:
             raise ExpandError(
-                    "number of features must be specified "
-                    "when feature number is globbed")
-        fields.append('feature2')
-        values.append(tuple((feature_2, n+1) for n in range(right_features)))
+                    "number of exons must be specified "
+                    "when exon number is globbed")
+        fields.append('exon2')
+        values.append(n+1 for n in range(right_exons))
 
     if fields:
         for parameters in itertools.product(*values):
@@ -247,6 +245,8 @@ def _expand_partial_spec(specification, row_1, row_2):
     return dict(specification,
                 transcript1=row_1['name'],
                 transcript2=row_2['name'],
+                strand1=row_1['strand'],
+                strand2=row_2['strand'],
                 **coordinate)
 
 
@@ -265,8 +265,30 @@ def _coord_hash(spec):
 
     """
     return hash(tuple([
-        spec['chromosome1'], spec['start1'], spec['end1'],
-        spec['chromosome2'], spec['start2'], spec['end2']]))
+        spec['chromosome1'], spec['start1'], spec['end1'], spec['side1'],
+        spec['chromosome2'], spec['start2'], spec['end2'], spec['side2']]))
+
+
+def _get_breakpoints(spec):
+    """Return the breakpoint strings ("chromosome:index") of a probe given a
+    specification.
+
+    """
+    chromosome1, chromosome2 = spec['chromosome1'], spec['chromosome2']
+    if spec['strand1'] == '+':
+        index1 = spec['end1'] if spec['side1'] == '-' else spec['start1'] - 1
+    else:
+        index1 = spec['start1'] if spec['side1'] == '-' else spec['start1'] + 1
+    if spec['strand2'] == '+':
+        index2 = spec['end2'] if spec['side2'] == '-' else spec['start2'] - 1
+    else:
+        index2 = spec['start2'] if spec['side2'] == '-' else spec['start2'] + 1
+    if spec['separator'] == '->' and spec['strand1'] == '-':
+        return ("{}:{}".format(chromosome2, index2),
+                "{}:{}".format(chromosome1, index1))
+    else:
+        return ("{}:{}".format(chromosome1, index1),
+                "{}:{}".format(chromosome2, index2))
 
 
 class ExpandError(Exception):

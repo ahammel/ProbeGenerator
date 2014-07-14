@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from probe_generator import reference
+from probe_generator import reference, sequence
 from probe_generator.test.test_constants import VALIDATION_DATA_DIR
 
 MOCK_GENOME_FILE = [ # input is any iter of strings
@@ -33,43 +33,55 @@ class TestReferenceBases(unittest.TestCase):
     def setUp(self):
         self.ref_genome = MOCK_REFERENCE_GENOME
 
-    def test_bases_returns_inclusive_base_pair_range(self):
-        """
-        Reference.slice('chr', p, q) should return the base pair sequence
-        from the pth base to the qth base inclusive.
-
-        """
+    def test_bases_returns_base_pair_range(self):
         self.assertEqual(
-                reference.bases(self.ref_genome, '1', 3, 8),
+                reference.bases(
+                    sequence.SequenceRange('1', 2, 8),
+                    self.ref_genome),
                 'AACCCC')
         self.assertEqual(
-                reference.bases(self.ref_genome, 'X', 16, 16),
+                reference.bases(
+                    sequence.SequenceRange('X', 15, 16),
+                    self.ref_genome),
                 't')
         self.assertEqual(
-                reference.bases(self.ref_genome, '1', 1, 16),
+                reference.bases(
+                    sequence.SequenceRange('1', 0, 16),
+                    self.ref_genome),
+                'AAAACCCCGGGGTTTT')
+
+    def test_bases_with_reverse_complement(self):
+        self.assertEqual(
+                reference.bases(
+                    sequence.SequenceRange(
+                        '1', 2, 8, reverse_complement=True),
+                    self.ref_genome),
+                'GGGGTT')
+        self.assertEqual(
+                reference.bases(
+                    sequence.SequenceRange(
+                        'X', 15, 16, reverse_complement=True),
+                    self.ref_genome),
+                'a')
+        self.assertEqual(
+                reference.bases(
+                    sequence.SequenceRange(
+                        '1', 0, 16, reverse_complement=True),
+                    self.ref_genome),
                 'AAAACCCCGGGGTTTT')
 
     def test_bases_raises_MissingChromosome_when_chromosome_key_missing(self):
         message = "no such chromosome: 'banana'"
         with self.assertRaisesRegex(reference.MissingChromosome, message):
-            reference.bases(self.ref_genome, 'banana', 1, 2)
-
-    def test_bases_raises_InvalidRange_on_nonsensical_range(self):
-        message = ("unsupported values for `start` and `end`: "
-                   "\('foo', 'bar'\)")
-        with self.assertRaisesRegex(reference.InvalidRange, message):
-            reference.bases(self.ref_genome, '1', 'foo', 'bar')
+            reference.bases(sequence.SequenceRange('banana', 1, 2),
+                            self.ref_genome)
 
     def test_bases_raises_NonContainedRange_on_range_outside_of_chromosome(self):
         message = "range \[1:100\] outside the range of chromosome '1'"
         with self.assertRaisesRegex(reference.NonContainedRange, message):
-            reference.bases(self.ref_genome, '1', 1, 100)
+            reference.bases(sequence.SequenceRange('1', 1, 100),
+                            self.ref_genome)
 
-    def test_bases_raises_InvalidRange_when_start_greater_than_end(self):
-        message = ("unsupported values for `start` and `end`: "
-                   "\(100, 1\). `start` must be  <= `end`")
-        with self.assertRaisesRegex(reference.InvalidRange, message):
-            reference.bases(self.ref_genome, '1', 100, 1)
 
 class TestReferenceGenome(unittest.TestCase):
     """Test cases for the reference.reference_genome function.

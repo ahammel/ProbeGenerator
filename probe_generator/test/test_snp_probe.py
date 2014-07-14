@@ -36,12 +36,6 @@ class TestSnpProbe(unittest.TestCase):
                 "acggacgt",
                 self.probe.sequence(GENOME))
 
-    def test_snp_negative_strand_mutation(self):
-        rc_probe, = SnpProbe.explode("2:4 t>a /8")
-        self.assertEqual(
-                "aaatgggg",
-                rc_probe.sequence(GENOME))
-
     def test_snp_probe_is_case_insensitive(self):
         upper_probe, = SnpProbe.explode("1:4 T>G /8")
         self.assertEqual(
@@ -69,5 +63,12 @@ class TestSnpProbe(unittest.TestCase):
              "1:4_A>T/8",
              "1:4_C>A/8",
              "1:4_C>G/8",
-             "1:4_C>T/8"],
+             "1:4_C>T/8",
+             "1:4_G>A/8",
+             "1:4_G>C/8",
+             "1:4_G>T/8",
+             "1:4_T>A/8",
+             "1:4_T>C/8",
+             "1:4_T>G/8",
+             ],
             [str(probe) for probe in self.globbed_both_probes])

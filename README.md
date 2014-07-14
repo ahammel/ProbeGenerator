@@ -51,7 +51,7 @@ In either case, copy or link the script under `bin/probe-generator` to
 somewhere in your $PATH and test that everything worked:
 
     $ probe-generator --version
-    ProbeGenerator version 0.3
+    ProbeGenerator version 0.4
 
 
 # Probe statements
@@ -71,25 +71,25 @@ indicating that any value is acceptable.
 
 Exon statements are in the form:
 
-    "<gene>#exon[<number>] <side><bases> <sep> <gene>#exon[<number>] <side><bases>"
+    "{gene}#exon[{number}] {side}{bases} {sep} {gene}#exon[{number}] {side}{bases}"
 
 
-    <gene>:    the name of the gene of interest. Acceptable characters are
+    {gene}:    the name of the gene of interest. Acceptable characters are
                letters, numbers, and '_-/.'. Case is not significant.
 
-    <number>:  the cardinality of the feature of interest (1 for the first exon,
+    {number}:  the cardinality of the feature of interest (1 for the first exon,
                etc.). Must be a digit or '*'.
 
-    <side>:    Whether to return a sequence at the start or end of the feature.
+    {side}:    Whether to return a sequence at the start or end of the feature.
                Acceptable characters are '+-*'.
 
-    <bases>:   The length of probe sequence to return for this feature. Must be
+    {bases}:   The length of probe sequence to return for this feature. Must be
                a digit or '*'.
 
-    <sep>:     The separator. One of '/' or '->'. Determines the probing strategy.
+    {sep}:     The separator. One of '/' or '->'. Determines the probing strategy.
 
-Any of "<feature>", "<number>", "<side>", or "<bases>" can be replaced with the
-glob character ("*"). In the "<bases>" field, the interpretation is that the
+Any of "{feature}", "{number}", "{side}", or "{bases}" can be replaced with the
+glob character ("*"). In the "{bases}" field, the interpretation is that the
 sequence of the entire exon will be included in the probe.
 
 White-space between the elements of the statement is ignored.
@@ -223,7 +223,7 @@ features covered:
 The exact genomic location of the breakpoints of the fusion event can also be
 specified directly using the coordinate-statement format:
 
-    "chromosome:breakpoint(+|-)bases/chromosome:breakpoint(+|-)bases"
+    "{chromosome}:{breakpoint}{+|-}{bases}/{chromosome}:{breakpoint}{+|-}{bases}"
 
 No globbing is allowed in coordinate statements. Any white-space between elements
 of the statement is ignored.
@@ -253,18 +253,8 @@ The length of the probe sequence is determined by 'bases'. The mutant base is
 in the centre of the probe (or as near as possible when the number of bases is
 even).
 
-### Dealing with strand
-
-In databases such as [COSMIC][cosmic_link], the SNP mutations are usually
-described relative to the reading frame of the gene. An A>G mutation in a SNP
-catalogue may be a T>C mutation relative to the plus strand of the reference
-genome.
-
-When the reference base in the probe statement is the reverse complement of the
-reference base, the entire probe sequence is reverse-complemented and the
-mutation specified in the statement is applied. If the base in the reference
-genome is neither the specified reference base nor its reverse complement
-(e.g.: an 'A>T' mutation is specified and the reference base is 'C'), no probe
+If the base in the reference genome is not the specified reference base (e.g.:
+an 'A>T' mutation is specified and the reference base is 'C'), no probe
 sequence is generated and a warning message is printed.
 
 ### Globbing
@@ -274,8 +264,7 @@ the base at that location in the genome and its reverse-complement.
 
 If a glob character is supplied for the mutation base, all three possible SNPs
 at that genomic location are generated. Globbing the reference as well as the
-mutation base results in the three probes, but there is no check to see whether
-the base at the genomic reference matches the specified reference.
+mutation base gives all six possible probes.
 
 ### Examples
 
@@ -283,7 +272,6 @@ An A>C mutation at the 100th base of the X chromosome with 25 bases either
 side of it:
 
      "X:100 A>C /51"
-
 
 Probes for both the A>C event specified above and a T>C event on the opposite
 strand:
@@ -293,6 +281,65 @@ strand:
 A ten base pair probe for any mutation at the 1000th base pair of chromosome 3:
 
      "3:1000 *>* /10"
+
+
+## SNP statements in transcripts
+
+It is also possible to specify SNPs relative to a transcript. To specify a
+mutation for a particular nucleotide, use the following syntax:
+
+    "{gene}: c.{nucleotide} {reference base} > {mutation base} / {bases}"
+
+It is also possible to specify probes for an amino acid change using this
+syntax:
+
+    "{gene}: {reference AA} {codon} {mutation AA} / {bases}"
+
+For instance, to specify a 50 base pair probe for a C to G mutation at the 27th
+nucleotide of the FOO gene, use the statement:
+
+    "FOO: c.27 C>G /50"
+
+This statement specifies a proline to histidine mutation at the 50th codon of
+FOO:
+
+    "FOO: P50H /50"
+
+An anti-sense mutation at the same location is given by:
+
+    "FOO: P50* /50"
+
+As usual, neither case nor white space is significant (except in the name of
+the gene).
+
+Globbing is not supported when specifying SNP's relative to a transcript.
+
+In both cases, no probe sequence is produced and a warning is printed if the
+sequence in the reference genome does not match the sequence specified in the
+probe statement.
+
+Sequences are reverse-complemented automatically when the specified transcript
+is on the minus strand.
+
+If there is more than one transcript matching the gene name given, probes are
+produced for all of them (although frequently the reference sequence will not
+match for alternative transcripts, meaning that no probe sequence is produced).
+
+In the case that the amino acid is specified, one probe is produced for every
+codon which codes for an amino acid. For instance, specifying leucine as the
+mutation amino acid results in at least six probe sequences, some of which will
+have more than one base pair difference from the reference genome. All possible
+codons are also used for the reference amino acid, although obviously a maximum
+of one will match the reference genome.
+
+For example, the probe statement:
+
+    "ALK: Q115R /50"
+
+will result in (2 proline codons) x (4 arginine codons) = 8 probes, four
+specifying CAA as the reference sequence and four specifying CAG. If the
+reference sequence at the specified location is CAA, four probe sequences will
+be produced (one for each codon which codes for arginine).
 
 ## Comments
 
@@ -373,6 +420,23 @@ identifiers of the transcripts used in determining the location of the probe:
     ACGTTACGTTATATATATAT
     ... etc
 
+In SNP probes which specify a transcript, the coordinate of the the SNP and the
+transcript ID are added:
+
+    # FOO: c.123 T>A /5 -->
+
+    >FOO:c.123_T>A/5_N00001_1:100
+    TTATT
+
+When an amino acid change is specified, the coordinate of the first base pair
+of the _codon_ (not necessarily the coordinate of the mutation) as well as the
+reference and mutation codon sequences are also given:
+
+    # FOO:L50*/5
+
+    >FOO:L50*(TTA>TAA)/5_N00001_1:100
+    GTAAG
+
 ## Performance
 
 Using the hg19 human genome reference, `probe-generator` uses about 15.5 Gb of
@@ -383,6 +447,35 @@ than mine.
 As a rule of thumb, the peak memory usage will be about 5 times the size of the
 sum of the text input (annotations and genome) on disk.
 
+## Troubleshooting
+
+`probe-generator` often produces many warning messages due to reference
+mismatches in alternatively-spliced transcripts or ambiguous reference
+sequences (caused by globbing or specifying an amino acid mutation). In most
+cases, these can be ignored.
+
+If no probe sequences can be produced for a particular probe, a warning message
+starting with "WARNING" (in capitals) will be printed to standard error, along
+with the statement itself. The most common causes are:
+
+     - The probe statement could not be parsed
+        * Check the syntax of the statement
+
+     - No annotation file was provided for a statement specifying a transcript
+        * Check that at least one annotation file was specified using the '-a'
+          flag when running the `probe-generator` command
+
+     - The gene could not be found in any of the annotation files provided
+        * Check that the name of the gene is spelled correctly
+        * Check that the case of the gene name is correct
+        * Check to see whether the gene has any synonyms, e.g.:
+            - "GOPC "and "FIG "refer to the same gene
+            - "NEURL" is called "NEURL1" in the UCSC annotations
+
+    - The reference genome does not match any of the possible values for the
+      specified reference sequence
+        * Check that the coordinate and reference sequence are specified
+          correctly in the probe
 
 [cosmic_link]: http://cancer.sanger.ac.uk/cancergenome/projects/cosmic/
 [ucsc_tables]: http://genome.ucsc.edu/cgi-bin/hgTables
