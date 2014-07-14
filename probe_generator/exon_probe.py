@@ -119,6 +119,8 @@ class ExonProbe(AbstractProbe):
         only the first is returned.
 
         """
+        probes = []
+
         if genome_annotation is None:
             genome_annotation = []
         cached_specifications = set()
@@ -128,9 +130,10 @@ class ExonProbe(AbstractProbe):
             if not spec_hash in cached_specifications:
                 cached_specifications.add(spec_hash)
                 breakpoint1, breakpoint2 = _get_breakpoints(spec)
-                yield ExonProbe(dict(spec,
-                                     breakpoint1=breakpoint1,
-                                     breakpoint2=breakpoint2))
+                probes.append(ExonProbe(dict(spec,
+                                             breakpoint1=breakpoint1,
+                                             breakpoint2=breakpoint2)))
+        return probes
 
     def _get_ranges(self):
         """Return a four-tuple of the start and end genomic coordinates of the
