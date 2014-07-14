@@ -1,6 +1,7 @@
 import unittest
 
 from probe_generator.gene_snp_probe import GeneSnpProbe
+from probe_generator.sequence import SequenceRange
 from probe_generator.test.test_constants import ANNOTATION, GENOME
 
 class TestGeneSnpProbe(unittest.TestCase):
@@ -22,7 +23,8 @@ class TestGeneSnpProbe(unittest.TestCase):
              "bases":       4,
              "transcript":  "FOO",
              "chromosome":  "1",
-             "index":       3,
+             "index":       SequenceRange('1', 2, 3),
+             "index_base":  3,
              "comment":     ""},
             self.probe._spec)
 
@@ -45,6 +47,7 @@ class TestGeneSnpProbe(unittest.TestCase):
              "bases":       50,
              "transcript":  "BAZ",
              "chromosome":  "3",
-             "index":       13,
+             "index":       SequenceRange('3', 12, 13),
+             "index_base":  13,
              "comment":     "-- 2nd exon / - strand"},
             self.other_probe._spec)

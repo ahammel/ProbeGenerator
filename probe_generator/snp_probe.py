@@ -62,35 +62,36 @@ class SnpProbe(AbstractProbe):
                           index+1,
                           index+right_buffer))
 
-    @staticmethod
-    def explode(statement):
+    @classmethod
+    def explode(cls, statement):
         """Yield probe statements with globbed reference and mutation
         bases filled in.
 
         """
-        partial_spec = _parse(statement)
+        partial_spec = cls._parse(statement)
         specs = _expand(partial_spec)
         return [SnpProbe(spec) for spec in specs]
 
 
-def _parse(statement):
-    """Return a partial SNP probe specification given a probe statement.
+    @staticmethod
+    def _parse(statement):
+        """Return a partial SNP probe specification given a probe statement.
 
-    """
-    match = _STATEMENT_REGEX.match(statement)
+        """
+        match = _STATEMENT_REGEX.match(statement)
 
-    if not match:
-        raise InvalidStatement(
-            "could not parse snp statement {!r}".format(
-                    statement))
+        if not match:
+            raise InvalidStatement(
+                "could not parse snp statement {!r}".format(
+                        statement))
 
-    chromosome, index, reference_base, mutation, bases, comment = match.groups()
-    return {"chromosome": chromosome,
-            "index":      int(index),
-            "reference":  reference_base,
-            "mutation":   mutation,
-            "bases":      int(bases),
-            "comment":    comment}
+        chromosome, index, reference_base, mutation, bases, comment = match.groups()
+        return {"chromosome": chromosome,
+                "index":      int(index),
+                "reference":  reference_base,
+                "mutation":   mutation,
+                "bases":      int(bases),
+                "comment":    comment}
 
 
 def _expand(partial_spec):

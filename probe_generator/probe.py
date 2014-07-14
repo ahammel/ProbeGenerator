@@ -65,7 +65,7 @@ class AbstractProbe(metaclass=abc.ABCMeta):
         if not self._spec['reference'].lower() == bases.lower():
             raise ReferenceMismatch(
                     "Reference sequence {!r} does not match requested mutation "
-                    "'{}>{}'".format(bases,
+                    "{!r} => {!r}".format(bases,
                                      self._spec["reference"],
                                      self._spec["mutation"]))
 
