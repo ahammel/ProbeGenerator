@@ -51,7 +51,7 @@ In either case, copy or link the script under `bin/probe-generator` to
 somewhere in your $PATH and test that everything worked:
 
     $ probe-generator --version
-    ProbeGenerator version 0.3
+    ProbeGenerator version 0.4
 
 
 # Probe statements
