@@ -131,8 +131,8 @@ def exons(row):
 
 
 def exon(transcript, index):
-    """Return the exon at the index of the transcript, raising a NoFeatureError
-    when the index is out of range.
+    """Return the exon at the 1-based index of the transcript, raising a
+    NoFeatureError when the index is out of range.
 
     """
     try:
