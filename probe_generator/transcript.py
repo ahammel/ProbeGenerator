@@ -52,7 +52,7 @@ class Transcript(object):
         self.plus_strand = self._spec['strand'] == '+'
 
     def _assert_spec_correct(self):
-        """Raises and InvalidAnnotationFile exception unless all of the
+        """Raises an InvalidAnnotationFile exception unless all of the
         _REQUIRED_FIELDS and exactly one of the _GENE_NAME_FIELDS are present
         in the _spec.
 
@@ -66,7 +66,7 @@ class Transcript(object):
                       if field in self._spec]
         if not len(gene_names) == 1:
             raise InvalidAnnotationFile(
-                "Anotation file contains gene id fields: {}. "
+                "Annotation file contains gene id fields: {}. "
                 "Expected exactly one of {}".format(
                     gene_names, _GENE_NAME_FIELDS))
 
@@ -78,15 +78,15 @@ class Transcript(object):
 
             '20,30,40,'
 
-        Given a dictionary with this data, we return of a list of tuples:
+        Given a dictionary with this data, we return a list of tuples:
 
             (exonStart, exonEnd)
 
         If the 'strand' of the row is '-', the function return the exons in
-        reversed order. In this case, the first exon relative the the direction of
-        transcription (which is probably what the user means, is the last exon
-        along the chromosome reading from left to right along the '+' strand (which
-        is how the data are stored in UCSC tables).
+        reversed order. In this case, the first exon relative to the direction
+        of transcription (which is probably what the user means), is the last
+        exon along the chromosome reading from left to right along the '+'
+        strand (which is how the data are stored in UCSC tables).
 
         Raises a FormattingError when the `row` does not appear to come from a
         valid UCSC gene table.
@@ -131,8 +131,11 @@ class Transcript(object):
                 for start, end in positions]
 
     def exon(self, index):
-        """Return the exon at the index of the transcript, raising a NoFeatureError
-        when the index is out of range.
+        """Given the one-based index of an exon, return a SequenceRange object
+        representing the genomic coordinates of that exon.
+
+        Raise a NoFeature error when the exon is out of the bounds of the
+        transcript.
 
         """
         try:
