@@ -5,7 +5,7 @@ from probe_generator.test.test_constants import ANNOTATION, GENOME
 
 
 class TestGeneIndelProbe(unittest.TestCase):
-    def setUp(self, ):
+    def setUp(self):
         self.ins_probe, = GeneIndelProbe.explode(
             "ABC: c.1 insT /4",
             ANNOTATION)
