@@ -71,8 +71,8 @@ class GeneIndelProbe(AbstractProbe):
         transcripts = annotation.lookup_gene(
             partial_spec["gene"], genome_annotation)
         cached_coordinates = set()
-        for tx in transcripts:
-            if tx.plus_strand:
+        for txt in transcripts:
+            if txt.plus_strand:
                 base = partial_spec["base"]
             else:
                 base = partial_spec["base"] - 2
@@ -81,17 +81,17 @@ class GeneIndelProbe(AbstractProbe):
                 partial_spec["reference"] = reverse_complement(
                     partial_spec["reference"])
             try:
-                index = tx.nucleotide_index(base)
+                index = txt.nucleotide_index(base)
             except transcript.OutOfRange as error:
                 print("{} in statement: {!r}".format(error, statement),
                       file=sys.stderr)
             else:
-                chromosome = tx.chromosome
+                chromosome = txt.chromosome
                 if not (chromosome, index) in cached_coordinates:
                     cached_coordinates.add((chromosome, index))
                     spec = dict(partial_spec,
                                 chromosome=chromosome,
-                                transcript=tx.name,
+                                transcript=txt.name,
                                 index=index,
                                 index_base=index.start+1)
                     probes.append(GeneIndelProbe(spec))

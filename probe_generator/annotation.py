@@ -59,5 +59,3 @@ def lookup_gene(gene_name, ucsc_file):
     for transcript in ucsc_file:
         if transcript.gene_id == gene_name:
             yield transcript
-
-
