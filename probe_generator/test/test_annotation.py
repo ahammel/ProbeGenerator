@@ -2,9 +2,8 @@ import unittest
 import os
 
 from probe_generator import annotation
-from probe_generator.transcript import Transcript
 from probe_generator.sequence import SequenceRange
-from probe_generator.test.test_constants import VALIDATION_DATA_DIR, ANNOTATION
+from probe_generator.test.test_constants import VALIDATION_DATA_DIR
 
 MOCK_ANNOTATION_FILE = [ # input is any iterable of strings
         # UCSC annotation files have a header in this format:
@@ -20,52 +19,6 @@ MOCK_REFSEQ_GENES_FILE = os.path.join(
         VALIDATION_DATA_DIR, "test_refseq_genes.txt")
 MOCK_UCSC_GENES_FILE = os.path.join(
         VALIDATION_DATA_DIR, "test_ucsc_genes.txt")
-
-
-class TestTranscript(unittest.TestCase):
-    """Test cases for the annotation.exons function
-
-    """
-    def setUp(self):
-        self.transcript = Transcript(
-            {'strand'     : '+',
-             'exonStarts' : '3,10,30,50,',
-             'exonEnds'   : '5,20,40,60,',
-             'chrom'      : '0',
-             'name'       : 'FOO',
-             'name2'      : 'BAR',
-             'cdsStart'   : '11',
-             'cdsEnd'     : '59'})
-
-    def test_exons_returns_exon_sequence_ranges(self):
-        self.assertEqual(
-            self.transcript.exons(),
-            [SequenceRange('0', 3, 5),
-             SequenceRange('0', 10, 20),
-             SequenceRange('0', 30, 40),
-             SequenceRange('0', 50, 60)])
-
-    def test_exon_returns_exon_sequence_range_at_one_based_index(self):
-        self.assertEqual(
-            self.transcript.exon(2),
-            SequenceRange('0', 10, 20))
-
-    def test_exons_returns_reversed_positions_when_strand_minus(self):
-        self.transcript.plus_strand = False # Note: never do this outside of a
-                                             # test.
-        self.assertEqual(
-            self.transcript.exons(),
-            [SequenceRange('0', 50, 60),
-             SequenceRange('0', 30, 40),
-             SequenceRange('0', 10, 20),
-             SequenceRange('0', 3,  5)])
-
-    def test_coding_exons_returns_coding_sequence_ranges(self):
-        self.assertEqual(
-            self.transcript.coding_exons(),
-            [SequenceRange('0', 11, 20),
-             SequenceRange('0', 30, 40),
-             SequenceRange('0', 50, 59)])
 
 
 class TestAnnotationValidation(unittest.TestCase):
@@ -103,24 +56,3 @@ class TestAnnotationValidation(unittest.TestCase):
     def test_ucsc_gene_table(self):
         with open(MOCK_UCSC_GENES_FILE) as handle:
             self.assert_mock_gene_in_file(handle)
-
-    def test_nucleotide_index(self):
-        transcript1, transcript2, transcript3, _transcript_4 = ANNOTATION
-        self.assertEqual(
-            transcript1.nucleotide_index(1),
-            SequenceRange('1', 1, 2))
-        self.assertEqual(
-            transcript2.nucleotide_index(2),
-            SequenceRange('2', 9, 10))
-        transcript_3_indices = [22, 21, 20, 14, 13, 12, 11, 10]
-        for base_pair, index in zip(transcript_3_indices, range(1,11)):
-            self.assertEqual(
-                transcript3.nucleotide_index(index),
-                SequenceRange('3', base_pair, base_pair+1))
-
-    def test_codon_index(self):
-        transcript1, transcript2, transcript3, _transcript_4 = ANNOTATION
-        self.assertEqual(
-            transcript3.codon_index(1), SequenceRange('3', 20, 23)),
-        self.assertEqual(
-            transcript3.codon_index(2), SequenceRange('3', 12, 15)),

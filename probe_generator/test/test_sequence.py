@@ -23,3 +23,41 @@ class TestSequence(unittest.TestCase):
                 'ccNNNt')
 
 
+class TestSequenceRange(unittest.TestCase):
+    def setUp(self):
+        self.range_12 = sequence.SequenceRange('0', 1, 2)
+        self.range_24 = sequence.SequenceRange('0', 2, 4)
+        self.range_56 = sequence.SequenceRange('0', 5, 6)
+
+    def test_concat(self):
+        self.assertEqual(
+            self.range_12.concat(self.range_24),
+            sequence.SequenceRange('0', 1, 4))
+        self.assertEqual(
+            self.range_24.concat(self.range_12),
+            sequence.SequenceRange('0', 1, 4))
+        self.assertRaises(
+            ValueError,
+            lambda: self.range_12.concat(self.range_56))
+
+    def test_adjacent(self):
+        self.assertTrue(
+            self.range_12.adjacent(self.range_24))
+        self.assertTrue(
+            self.range_24.adjacent(self.range_12))
+        self.assertFalse(
+            self.range_12.adjacent(self.range_56))
+
+    def test_condense(self):
+        self.assertEqual(
+            sequence.SequenceRange.condense(
+                self.range_12,
+                self.range_24),
+            [sequence.SequenceRange('0', 1, 4)])
+        self.assertEqual(
+            sequence.SequenceRange.condense(
+                self.range_12,
+                self.range_24,
+                self.range_56),
+            [sequence.SequenceRange('0', 1, 4),
+             self.range_56])

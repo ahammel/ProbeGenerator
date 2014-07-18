@@ -2,6 +2,7 @@
 
 """
 import itertools
+import functools
 
 from probe_generator import probe
 from probe_generator.sequence import SequenceRange
@@ -22,6 +23,7 @@ _GENE_NAME_FIELDS = (
     'name2',
     'proteinID',
     )
+
 
 class Transcript(object):
     """Represents a UCSC annotation of a transcript.
@@ -169,6 +171,22 @@ class Transcript(object):
             return SequenceRange(self.chromosome, base_index-2, base_index+1)
         else:
             return SequenceRange(self.chromosome, base_index, base_index+3)
+
+    def transcript_range(self, start, end):
+        """Return a list of SequenceRange objects representing the genomic
+        location(s) of the transcript from `start` to `end`.
+
+        More than one SequenceRange is returned if the requested range crosses
+        exon boundaries.
+
+        The `start` and `end` variables use the same 0-based left-inclusive,
+        right-exclusive conventions as general list access in Python using the
+        [m,n] syntax.
+
+        """
+        ranges = [self.nucleotide_index(i+1) for i in range(start, end)]
+        return SequenceRange.condense(*ranges)
+
 
     def _transcript_index(self, index):
         """Given the 1-based index of a nucleotide in the coding sequence,
