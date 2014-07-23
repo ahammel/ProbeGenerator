@@ -50,7 +50,7 @@ class TestTranscript(unittest.TestCase):
              SequenceRange('0', 50, 59)])
 
     def test_nucleotide_index(self):
-        transcript1, transcript2, transcript3, _transcript_4 = ANNOTATION
+        transcript1, transcript2, transcript3, *rest = ANNOTATION
         self.assertEqual(
             transcript1.nucleotide_index(1),
             SequenceRange('1', 1, 2))
@@ -64,7 +64,7 @@ class TestTranscript(unittest.TestCase):
                 SequenceRange('3', base_pair, base_pair+1))
 
     def test_codon_index(self):
-        transcript1, transcript2, transcript3, _transcript_4 = ANNOTATION
+        transcript1, transcript2, transcript3, *rest = ANNOTATION
         self.assertEqual(
             transcript3.codon_index(1), SequenceRange('3', 20, 23)),
         self.assertEqual(
@@ -72,12 +72,12 @@ class TestTranscript(unittest.TestCase):
 
     def test_transcript_range(self):
         self.assertEqual(
-            self.transcript.transcript_range(0, 1),
+            self.transcript.transcript_range(1, 2),
             [SequenceRange('0', 11, 12)])
         self.assertEqual(
-            self.transcript.transcript_range(0, 5),
+            self.transcript.transcript_range(1, 6),
             [SequenceRange('0', 11, 16)])
         self.assertEqual(
-            self.transcript.transcript_range(0, 15),
+            self.transcript.transcript_range(1, 16),
             [SequenceRange('0', 11, 20),
              SequenceRange('0', 30, 36)])

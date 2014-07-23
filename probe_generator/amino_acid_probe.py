@@ -21,6 +21,8 @@ _STATEMENT_REGEX = re.compile("""
         \s*
         ([ACDEFGHIKLMNPQRSTVWYXacdefghiklmnpqrstvwyx*])
         \s*
+        (\[trans\]|)                                  # transcript-only-sequence
+        \s*
         /
         \s*
         ([0-9]+)                                      # number of base pairs
@@ -60,13 +62,13 @@ class AminoAcidProbe(AbstractProbe):
 
     """
     _STATEMENT_SKELETON = ("{gene}:{reference_aa}{codon}{mutation_aa}"
-                           "({reference_bases}>{mutation_bases})/"
-                           "{bases}_{transcript}_{chromosome}:{coordinate}{comment}")
+                           "({reference_bases}>{mutation_bases})"
+                           "{transcript_sequence}/{bases}_{transcript_name}_"
+                           "{chromosome}:{coordinate}{comment}")
 
     def get_ranges(self):
         chromosome, start, end, _, _ = self._spec['index']
         bases = self._spec['bases']
-        chromosome = self._spec['chromosome']
 
         mutation_bases = len(self._spec["mutation"])
         left_buffer = bases // 2 - 1
@@ -74,6 +76,37 @@ class AminoAcidProbe(AbstractProbe):
             left_buffer -= 1
         right_buffer = bases - left_buffer - mutation_bases
 
+        if self._spec['transcript_sequence']:
+            return self._get_ranges_transcript(left_buffer, right_buffer)
+        else:
+            return self._get_ranges_genome(left_buffer, right_buffer)
+
+    def _get_ranges_transcript(self, left_buffer, right_buffer):
+        """Return the SequenceRange representation of the variant buffered by
+        bases taken from the transcript sequence of the gene.
+
+        E.g., if the variant is at the end of an exon on the plus strand, the
+        right_buffer bases will be taken from the next exon.
+
+        """
+        txt = self._spec['transcript']
+        codon = self._spec['codon']
+        codon_start, codon_end = (codon-1)*3+1, (codon*3)+1
+        chromosome, start, end, _, _ = self._spec['index']
+
+        return (txt.transcript_range(codon_start-left_buffer, codon_start) +
+                [SequenceRange(chromosome,
+                               start,
+                               end ,
+                               mutation=True)] +
+                txt.transcript_range(codon_end, codon_end+right_buffer))
+
+    def _get_ranges_genome(self, left_buffer, right_buffer):
+        """Return the SequenceRagne representation of the variant buffered by
+        bases taken from the reference genome seqeunce.
+
+        """
+        chromosome, start, end, _, _ = self._spec['index']
         return (
             SequenceRange(chromosome,
                           start-left_buffer,
@@ -134,7 +167,8 @@ class AminoAcidProbe(AbstractProbe):
                                         index=index,
                                         chromosome=chromosome,
                                         strand=strand,
-                                        transcript=txt.name,
+                                        transcript=txt,
+                                        transcript_name=txt.name,
                                         reference=reference,
                                         reference_bases=reference_codon,
                                         mutation_bases=mutation_codon,
@@ -165,12 +199,14 @@ def _parse(statement):
      reference_aa,
      codon,
      mutation_aa,
+     transcript_sequence,
      bases,
      comment) = match.groups()
 
-    return {"gene":          gene,
-            "reference_aa":  reference_aa,
-            "codon":         int(codon),
-            "mutation_aa":   mutation_aa,
-            "bases":         int(bases),
-            "comment":       comment}
+    return {"gene":                gene,
+            "reference_aa":        reference_aa,
+            "codon":               int(codon),
+            "mutation_aa":         mutation_aa,
+            "bases":               int(bases),
+            "transcript_sequence": transcript_sequence,
+            "comment":             comment}

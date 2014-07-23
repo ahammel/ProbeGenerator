@@ -8,11 +8,19 @@ class TestAminoAcidProbe(unittest.TestCase):
         self.probe = select_reference_codon(
             AminoAcidProbe.explode("GHI: P2M /9", ANNOTATION),
             "GGG")
+        self.transcript_probe = select_reference_codon(
+            AminoAcidProbe.explode("MNO: G2M [trans]/9", ANNOTATION),
+            "GGG")
 
     def test_amino_acid_probe_sequence(self):
         self.assertEqual(
             self.probe.sequence(GENOME),
             "cccCATccc")
+
+    def test_transcript_probe_sequence(self):
+        self.assertEqual(
+            self.transcript_probe.sequence(GENOME),
+            "aaaATGaaa")
 
     def test_amino_acid_probe_sequence_even_number_of_bases(self):
         even_probe = select_reference_codon(
@@ -24,6 +32,10 @@ class TestAminoAcidProbe(unittest.TestCase):
 
     def test_amino_acid_probe_string(self):
         self.assertEqual(str(self.probe), "GHI:P2M(CCC>ATG)/9_BAZ_3:13")
+
+    def test_transcript_probe_string(self):
+        self.assertEqual(str(self.transcript_probe),
+                         "MNO:G2M(GGG>ATG)[trans]/9_FROB_3:13")
 
     def test_explode_gives_one_probe_per_possible_mutation_codon(self):
         self.assertEqual(

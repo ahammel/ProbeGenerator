@@ -2,7 +2,6 @@
 
 """
 import itertools
-import functools
 
 from probe_generator import probe
 from probe_generator.sequence import SequenceRange
@@ -179,12 +178,11 @@ class Transcript(object):
         More than one SequenceRange is returned if the requested range crosses
         exon boundaries.
 
-        The `start` and `end` variables use the same 0-based left-inclusive,
-        right-exclusive conventions as general list access in Python using the
-        [m,n] syntax.
+        The `start` and `end` variables are 1-based left-inclusive,
+        right-exclusive.
 
         """
-        ranges = [self.nucleotide_index(i+1) for i in range(start, end)]
+        ranges = [self.nucleotide_index(i) for i in range(start, end)]
         return SequenceRange.condense(*ranges)
 
 

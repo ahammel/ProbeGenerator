@@ -25,6 +25,8 @@ _STATEMENT_REGEX = re.compile("""
         \s*
         ([ACGTacgt])       # mutation base
         \s*
+        (\[trans\]|)       # transcript-only sequence
+        \s*
         /
         \s*
         ([0-9]+)           # number of base pairs
@@ -38,13 +40,13 @@ class GeneSnpProbe(AbstractProbe):
     relative to the start of a transcript.
 
     """
-    _STATEMENT_SKELETON = ("{gene}:c.{base}{reference}>{mutation}/{bases}_"
-                           "{transcript}_{chromosome}:{index_base}{comment}")
+    _STATEMENT_SKELETON = ("{gene}:c.{base}{reference}>{mutation}"
+                           "{transcriptome_sequence}/{bases}_{transcript_name}_"
+                           "{chromosome}:{index_base}{comment}")
 
     def get_ranges(self):
         chromosome, start, end, _, _ = self._spec['index']
         bases = self._spec['bases']
-        chromosome = self._spec['chromosome']
 
         mutation_bases = len(self._spec["mutation"])
 
@@ -53,6 +55,37 @@ class GeneSnpProbe(AbstractProbe):
             left_buffer -= 1
         right_buffer = bases - left_buffer - mutation_bases
 
+        if self._spec["transcriptome_sequence"]:
+            return self._get_ranges_transcript(left_buffer, right_buffer)
+        else:
+            return self._get_ranges_genome(left_buffer, right_buffer)
+
+    def _get_ranges_transcript(self, left_buffer, right_buffer):
+        """Return the SequenceRange representation of the variant buffered by
+        bases taken from the transcript sequence of the gene.
+
+        E.g., if the variant is at the end of an exon on the plus strand, the
+        right_buffer bases will be taken from the next exon.
+
+        """
+        chromosome, start, end, _, _ = self._spec['index']
+        txt = self._spec['transcript']
+        base, = self._spec["base"],
+        return (
+            txt.transcript_range(base-left_buffer, base) +
+            [SequenceRange(chromosome,
+                           start,
+                           end,
+                           mutation=True,
+                           reverse_complement= self._spec['strand'] == '-')] +
+            txt.transcript_range(base+1, base+1+right_buffer))
+
+    def _get_ranges_genome(self, left_buffer, right_buffer):
+        """Return the SequenceRagne representation of the variant buffered by
+        bases taken from the reference genome seqeunce.
+
+        """
+        chromosome, start, end, _, _ = self._spec['index']
         return (
             SequenceRange(chromosome,
                           start-left_buffer,
@@ -100,7 +133,8 @@ class GeneSnpProbe(AbstractProbe):
                     spec = dict(partial_spec,
                                 strand='+' if txt.plus_strand else '-',
                                 chromosome=chromosome,
-                                transcript=txt.name,
+                                transcript=txt,
+                                transcript_name=txt.name,
                                 index=index,
                                 index_base=index.start+1)
                     probes.append(GeneSnpProbe(spec))
@@ -122,11 +156,14 @@ def _parse(statement):
      base,
      reference,
      mutation,
+     transcriptome_sequnce,
      bases,
      comment) = match.groups()
-    return {"gene": gene,
-            "base": int(base),
-            "reference": reference,
-            "mutation": mutation,
-            "bases": int(bases),
-            "comment": comment}
+    return {"gene":                   gene,
+            "base":                   int(base),
+            "reference":              reference,
+            "mutation":               mutation,
+            "bases":                  int(bases),
+            "transcriptome_sequence": transcriptome_sequnce,
+            "comment":                comment,
+            }

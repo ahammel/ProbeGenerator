@@ -14,7 +14,7 @@ VALIDATION_DATA_DIR = os.path.join(
 
 GENOME =  {
         "1": "acgtacgt",
-        "2": "aaaagggg",
+        "2": "aaaaggggacata",
         "3": "aaaaaaaaacccGGGcccaaaaaaaaaaaaaaa",
         }
 
@@ -55,6 +55,15 @@ ANNOTATION = [
          'chrom':      '4',
          'cdsStart':   '120',
          'cdsEnd':     '240',
+         },
+        {'name':       'FROB',
+         'proteinID':  'MNO',
+         'exonStarts': '6,12,18,',
+         'exonEnds':   '9,15,21,',
+         'strand':     '+',
+         'chrom':      '3',
+         'cdsStart':   '6',
+         'cdsEnd':     '21',
          },
         )
     ]
