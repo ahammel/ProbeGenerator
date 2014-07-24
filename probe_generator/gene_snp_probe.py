@@ -45,9 +45,7 @@ class GeneSnpProbe(AbstractProbe):
                            "{chromosome}:{index_base}{comment}")
 
     def get_ranges(self):
-        chromosome, start, end, _, _ = self._spec['index']
         bases = self._spec['bases']
-
         mutation_bases = len(self._spec["mutation"])
 
         left_buffer = bases // 2
