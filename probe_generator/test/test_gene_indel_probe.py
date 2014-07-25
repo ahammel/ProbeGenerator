@@ -10,13 +10,16 @@ class TestGeneIndelProbe(unittest.TestCase):
             "ABC: c.1 insT /4",
             ANNOTATION)
         self.del_probe, = GeneIndelProbe.explode(
-            "ABC: c.1 delC /4",
+            "ABC: c.2 delT /4",
             ANNOTATION)
         self.indel_probe, = GeneIndelProbe.explode(
             "ABC: c.1 delC insT /4",
             ANNOTATION)
         self.double_indel_probe, = GeneIndelProbe.explode(
             "ABC: c.1 del CG ins \t TA /4",
+            ANNOTATION)
+        self.trans_indel_probe, = GeneIndelProbe.explode(
+            "MNO: c.4 del GGG ins TTTTT [trans] /9",
             ANNOTATION)
 
     def test_ins_probe_string(self):
@@ -26,7 +29,7 @@ class TestGeneIndelProbe(unittest.TestCase):
 
     def test_del_probe_string(self):
         self.assertEqual(
-            "ABC:c.1delC/4_FOO_1:2",
+            "ABC:c.2delT/4_FOO_1:4",
             str(self.del_probe))
 
     def test_indel_probe_string(self):
@@ -39,6 +42,11 @@ class TestGeneIndelProbe(unittest.TestCase):
             "ABC:c.1delCGinsTA/4_FOO_1:2",
             str(self.double_indel_probe))
 
+    def test_trans_indel_probe_strgin(self):
+        self.assertEqual(
+            "MNO:c.4delGGGinsTTTTT[trans]/9_FROB_3:13",
+            str(self.trans_indel_probe))
+
     def test_ins_probe_sequence(self):
         self.assertEqual(
             "aTcg",
@@ -46,7 +54,7 @@ class TestGeneIndelProbe(unittest.TestCase):
 
     def test_del_probe_sequence(self):
         self.assertEqual(
-            "agta",
+            "cgac",
             self.del_probe.sequence(GENOME))
 
     def test_indel_probe_sequence(self):
@@ -58,3 +66,8 @@ class TestGeneIndelProbe(unittest.TestCase):
         self.assertEqual(
             "aTAt",
             self.double_indel_probe.sequence(GENOME))
+
+    def test_trans_indel_probe(self):
+        self.assertEqual(
+            "aaTTTTTaa",
+            self.trans_indel_probe.sequence(GENOME))

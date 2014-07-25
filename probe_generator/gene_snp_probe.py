@@ -69,7 +69,11 @@ class GeneSnpProbe(AbstractProbe):
         chromosome, start, end, _, _ = self._spec['index']
         txt = self._spec['transcript']
         base, = self._spec["base"],
-        return (
+
+        if not txt.plus_strand:
+            left_buffer, right_buffer = right_buffer, left_buffer
+
+        sequence = (
             txt.transcript_range(base-left_buffer, base) +
             [SequenceRange(chromosome,
                            start,
@@ -77,6 +81,11 @@ class GeneSnpProbe(AbstractProbe):
                            mutation=True,
                            reverse_complement= self._spec['strand'] == '-')] +
             txt.transcript_range(base+1, base+1+right_buffer))
+
+        if txt.plus_strand:
+            return sequence
+        else:
+            return reversed(sequence)
 
     def _get_ranges_genome(self, left_buffer, right_buffer):
         """Return the SequenceRagne representation of the variant buffered by
