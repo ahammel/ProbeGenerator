@@ -89,7 +89,6 @@ class AminoAcidProbe(AbstractProbe):
         right_buffer bases will be taken from the next exon.
 
         """
-
         txt = self._spec['transcript']
         codon = self._spec['codon']
         codon_start, codon_end = (codon-1)*3+1, (codon*3)+1
@@ -105,14 +104,15 @@ class AminoAcidProbe(AbstractProbe):
                            end ,
                            mutation=True)] +
             txt.transcript_range(codon_end, codon_end+right_buffer))
+
         if self._spec['transcript'].plus_strand:
             return sequence
         else:
             return reversed(sequence)
 
     def _get_ranges_genome(self, left_buffer, right_buffer):
-        """Return the SequenceRagne representation of the variant buffered by
-        bases taken from the reference genome seqeunce.
+        """Return the SequenceRange representation of the variant buffered by
+        bases taken from the reference genome sequence.
 
         """
         chromosome, start, end, _, _ = self._spec['index']
