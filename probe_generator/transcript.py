@@ -185,7 +185,6 @@ class Transcript(object):
         ranges = [self.nucleotide_index(i) for i in range(start, end)]
         return SequenceRange.condense(*ranges)
 
-
     def _transcript_index(self, index):
         """Given the 1-based index of a nucleotide in the coding sequence,
         return the 0-based genomic index of that nucleotide as an integer.

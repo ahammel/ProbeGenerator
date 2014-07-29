@@ -102,8 +102,8 @@ class AminoAcidProbe(AbstractProbe):
                 txt.transcript_range(codon_end, codon_end+right_buffer))
 
     def _get_ranges_genome(self, left_buffer, right_buffer):
-        """Return the SequenceRagne representation of the variant buffered by
-        bases taken from the reference genome seqeunce.
+        """Return the SequenceRange representation of the variant buffered by
+        bases taken from the reference genome sequence.
 
         """
         chromosome, start, end, _, _ = self._spec['index']

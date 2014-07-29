@@ -41,7 +41,7 @@ class GeneSnpProbe(AbstractProbe):
 
     """
     _STATEMENT_SKELETON = ("{gene}:c.{base}{reference}>{mutation}"
-                           "{transcriptome_sequence}/{bases}_{transcript_name}_"
+                           "{transcript_sequence}/{bases}_{transcript_name}_"
                            "{chromosome}:{index_base}{comment}")
 
     def get_ranges(self):
@@ -55,7 +55,7 @@ class GeneSnpProbe(AbstractProbe):
             left_buffer -= 1
         right_buffer = bases - left_buffer - mutation_bases
 
-        if self._spec["transcriptome_sequence"]:
+        if self._spec["transcript_sequence"]:
             return self._get_ranges_transcript(left_buffer, right_buffer)
         else:
             return self._get_ranges_genome(left_buffer, right_buffer)
@@ -81,7 +81,7 @@ class GeneSnpProbe(AbstractProbe):
             txt.transcript_range(base+1, base+1+right_buffer))
 
     def _get_ranges_genome(self, left_buffer, right_buffer):
-        """Return the SequenceRagne representation of the variant buffered by
+        """Return the SequenceRange representation of the variant buffered by
         bases taken from the reference genome seqeunce.
 
         """
@@ -156,14 +156,14 @@ def _parse(statement):
      base,
      reference,
      mutation,
-     transcriptome_sequnce,
+     transcript_sequnce,
      bases,
      comment) = match.groups()
-    return {"gene":                   gene,
-            "base":                   int(base),
-            "reference":              reference,
-            "mutation":               mutation,
-            "bases":                  int(bases),
-            "transcriptome_sequence": transcriptome_sequnce,
-            "comment":                comment,
+    return {"gene":                gene,
+            "base":                int(base),
+            "reference":           reference,
+            "mutation":            mutation,
+            "bases":               int(bases),
+            "transcript_sequence": transcript_sequnce,
+            "comment":             comment,
             }

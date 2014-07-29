@@ -65,7 +65,7 @@ class SequenceRange(namedtuple("SequenceRange",
         """Return True if the SequenceRange object ends where the other starts
         or vice-versa.
 
-        The chromsome, mutation, and reverse_complement status must be equal
+        The chromosome, mutation, and reverse_complement status must be equal
         for both SequenceRange objects.
 
         """
@@ -91,6 +91,7 @@ class SequenceRange(namedtuple("SequenceRange",
                 chunk = other
         ranges.append(chunk)
         return ranges
+
 
 def complement(string):
     """Return the complement of a string of nucleotides.
