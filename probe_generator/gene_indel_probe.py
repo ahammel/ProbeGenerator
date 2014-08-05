@@ -75,7 +75,7 @@ class GeneIndelProbe(AbstractProbe):
             [SequenceRange(chromosome,
                            start,
                            start+reference_bases,
-                           mutation=True,
+                           mutation=self._spec["mutation"],
                            reverse_complement=not txt.plus_strand)] +
             txt.transcript_range(base+reference_bases,
                                  base+reference_bases+right_buffer))
@@ -100,7 +100,7 @@ class GeneIndelProbe(AbstractProbe):
             SequenceRange(chromosome,
                           start,
                           start+reference_bases,
-                          mutation=True),
+                          mutation=self._spec["mutation"]),
             SequenceRange(chromosome,
                           start+reference_bases,
                           start+reference_bases+right_buffer))

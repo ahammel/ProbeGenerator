@@ -57,7 +57,7 @@ class SnpProbe(AbstractProbe):
             SequenceRange(chromosome,
                           index,
                           index+1,
-                          mutation=True),
+                          mutation=self._spec["mutation"]),
             SequenceRange(chromosome,
                           index+1,
                           index+right_buffer))

@@ -27,7 +27,7 @@ class TestGeneSnpProbe(unittest.TestCase):
 
     def test_gene_snp_probe_string_with_comments(self):
         self.assertEqual(
-            "GHI:c.6C>T/5_BAZ_3:13-- 2nd exon / - strand",
+            "GHI:c.6C>A/5_BAZ_3:13-- 2nd exon / - strand",
             str(self.other_probe))
 
     def test_gene_snp_probe_sequence(self):
