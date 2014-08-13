@@ -15,7 +15,7 @@ class SequenceRange(namedtuple("SequenceRange",
                                 "start",
                                 "end",
                                 "reverse_complement",
-                                "mutation"])):
+                                "private_mutation"])):
     """Data object for specifying a range of base pairs to be extracted from
     the genome.
 
@@ -31,13 +31,22 @@ class SequenceRange(namedtuple("SequenceRange",
     # object.
 
     def __new__(self, chromosome, start, end, *,
-                reverse_complement=False, mutation=False):
+                reverse_complement=False, mutation=None):
         return super().__new__(self,
                                chromosome,
                                start,
                                end,
                                reverse_complement,
                                mutation)
+
+    @property
+    def mutation(self):
+        if self.private_mutation is None:
+            return None
+        elif self.reverse_complement:
+            return reverse_complement(self.private_mutation)
+        else:
+            return self.private_mutation
 
     def concat(self, other):
         """Return a new SequeceRange object representing the combined genomic

@@ -78,7 +78,7 @@ class GeneSnpProbe(AbstractProbe):
             [SequenceRange(chromosome,
                            start,
                            end,
-                           mutation=True,
+                           mutation=self._spec["mutation"],
                            reverse_complement= self._spec['strand'] == '-')] +
             txt.transcript_range(base+1, base+1+right_buffer))
 
@@ -100,7 +100,7 @@ class GeneSnpProbe(AbstractProbe):
             SequenceRange(chromosome,
                           start,
                           end,
-                          mutation=True,
+                          mutation=self._spec["mutation"],
                           reverse_complement=self._spec['strand'] == '-'),
             SequenceRange(chromosome,
                           end,
@@ -125,9 +125,6 @@ class GeneSnpProbe(AbstractProbe):
         cached_coordinates = set()
         for txt in transcripts:
             base = partial_spec["base"]
-            if not txt.plus_strand:
-                partial_spec["mutation"] = reverse_complement(
-                    partial_spec["mutation"])
             try:
                 index = txt.nucleotide_index(base)
             except transcript.OutOfRange as error:

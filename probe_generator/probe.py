@@ -51,9 +51,9 @@ class AbstractProbe(metaclass=abc.ABCMeta):
 
         """
         bases = reference.bases(seq_range, genome)
-        if seq_range.mutation:
+        if seq_range.mutation is not None:
             self._assert_reference_matches(bases)
-            return self._spec['mutation']
+            return seq_range.mutation
         else:
             return bases
 
@@ -64,10 +64,10 @@ class AbstractProbe(metaclass=abc.ABCMeta):
         """
         if not self._spec['reference'].lower() == bases.lower():
             raise ReferenceMismatch(
-                    "Reference sequence {!r} does not match requested mutation "
-                    "{!r} => {!r}".format(bases,
-                                     self._spec["reference"],
-                                     self._spec["mutation"]))
+                "Reference sequence {!r} does not match requested mutation "
+                "{!r} => {!r}".format(bases,
+                                      self._spec["reference"],
+                                      self._spec["mutation"]))
 
     @abc.abstractproperty
     def _STATEMENT_SKELETON(self):
