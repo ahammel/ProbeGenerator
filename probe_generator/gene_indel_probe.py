@@ -6,7 +6,7 @@ import re
 import sys
 
 from probe_generator import annotation, transcript
-from probe_generator.sequence import SequenceRange
+from probe_generator.variant import TranscriptVariant, GenomeVariant
 from probe_generator.sequence import reverse_complement
 from probe_generator.probe import AbstractProbe, InvalidStatement
 
@@ -39,71 +39,35 @@ class GeneIndelProbe(AbstractProbe):
     """
     _STATEMENT_SKELETON = ("{gene}:c.{base}{deletion}{insertion}"
                            "{transcript_sequence}/{bases}_"
-                           "{transcript_name}_{chromosome}:{index_base}")
+                           "{transcript_name}_{chromosome}:{index_base}"
+                           "{comment}")
+
+    def __init__(self, *, variant, index, comment):
+        self.variant = variant
+        self.index = index
+        self.comment = comment
+
+    def __str__(self, ):
+        reference = self.variant.reference
+        mutation = self.variant.mutation
+
+        deletion = 'del'+reference if reference else ''
+        insertion = 'ins'+mutation if mutation else ''
+
+        return self._STATEMENT_SKELETON.format(
+            gene=self.variant.gene,
+            base=self.index,
+            deletion=deletion,
+            insertion=insertion,
+            transcript_sequence='[trans]' if self.variant.is_transcript else '',
+            bases=self.variant.bases,
+            transcript_name=self.variant.transcript_name,
+            chromosome=self.variant.chromosome,
+            index_base=self.variant.coordinate,
+            comment = self.comment)
+
     def get_ranges(self):
-        bases = self._spec['bases']
-
-        mutation_bases = len(self._spec["mutation"])
-
-        total_buffer = bases - mutation_bases
-        left_buffer = total_buffer // 2
-        right_buffer = total_buffer - left_buffer
-
-        if self._spec['transcript_sequence']:
-            return self._get_ranges_transcript(left_buffer, right_buffer)
-        else:
-            return self._get_ranges_genome(left_buffer, right_buffer)
-
-    def _get_ranges_transcript(self, left_buffer, right_buffer):
-        """Return the SequenceRange representation of the variant buffered by
-        bases taken from the transcript sequence of the gene.
-
-        E.g., if the variant is at the end of an exon on the plus strand, the
-        right_buffer bases will be taken from the next exon.
-
-        """
-        chromosome, start, _end, _, _ = self._spec["index"]
-        reference_bases = len(self._spec['reference'])
-        txt = self._spec['transcript']
-        base = self._spec['base']
-
-        if not txt.plus_strand:
-            left_buffer, right_buffer = right_buffer, left_buffer
-
-        sequence = (
-            txt.transcript_range(base-left_buffer, base) +
-            [SequenceRange(chromosome,
-                           start,
-                           start+reference_bases,
-                           mutation=self._spec["mutation"],
-                           reverse_complement=not txt.plus_strand)] +
-            txt.transcript_range(base+reference_bases,
-                                 base+reference_bases+right_buffer))
-
-        if txt.plus_strand:
-            return sequence
-        else:
-            return reversed(sequence)
-
-    def _get_ranges_genome(self, left_buffer, right_buffer):
-        """Return the SequenceRagne representation of the variant buffered by
-        bases taken from the reference genome seqeunce.
-
-        """
-        chromosome, start, _end, _, _ = self._spec["index"]
-        reference_bases = len(self._spec['reference'])
-
-        return (
-            SequenceRange(chromosome,
-                          start-left_buffer,
-                          start),
-            SequenceRange(chromosome,
-                          start,
-                          start+reference_bases,
-                          mutation=self._spec["mutation"]),
-            SequenceRange(chromosome,
-                          start+reference_bases,
-                          start+reference_bases+right_buffer))
+        return self.variant.sequence_ranges()
 
     @staticmethod
     def explode(statement, genome_annotation):
@@ -111,35 +75,44 @@ class GeneIndelProbe(AbstractProbe):
 
         if genome_annotation is None:
             genome_annotation = []
-        partial_spec = _parse(statement)
+        specification = _parse(statement)
+
+        if specification["transcript_sequence"] == '':
+            variant_class = GenomeVariant
+        else:
+            variant_class = TranscriptVariant
+
         transcripts = annotation.lookup_gene(
-            partial_spec["gene"], genome_annotation)
+            specification["gene"], genome_annotation)
         cached_coordinates = set()
+
         for txt in transcripts:
             if txt.plus_strand:
-                base = partial_spec["base"]
+                base = specification["base"]
             else:
-                base = partial_spec["base"] - 2
-                partial_spec["mutation"] = reverse_complement(
-                    partial_spec["mutation"])
-                partial_spec["reference"] = reverse_complement(
-                    partial_spec["reference"])
+                base = specification["base"] - 2
+                specification["mutation"] = reverse_complement(
+                    specification["mutation"])
+                specification["reference"] = reverse_complement(
+                    specification["reference"])
             try:
                 index = txt.nucleotide_index(base)
             except transcript.OutOfRange as error:
                 print("{} in statement: {!r}".format(error, statement),
                       file=sys.stderr)
             else:
-                chromosome = txt.chromosome
-                if not (chromosome, index) in cached_coordinates:
-                    cached_coordinates.add((chromosome, index))
-                    spec = dict(partial_spec,
-                                chromosome=chromosome,
-                                transcript=txt,
-                                transcript_name=txt.name,
-                                index=index,
-                                index_base=index.start+1)
-                    probes.append(GeneIndelProbe(spec))
+                variant = variant_class(
+                    transcript=txt,
+                    index=index,
+                    reference=specification["reference"],
+                    mutation=specification["mutation"],
+                    bases=specification["bases"])
+                if not (index) in cached_coordinates:
+                    cached_coordinates.add(index)
+                    probes.append(GeneIndelProbe(
+                            variant=variant,
+                            index=base,
+                            comment=specification["comment"]))
         return probes
 
 def _parse(statement):

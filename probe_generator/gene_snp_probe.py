@@ -6,9 +6,8 @@ import re
 import sys
 
 from probe_generator import annotation, transcript
-from probe_generator.sequence import SequenceRange
+from probe_generator.variant import TranscriptVariant, GenomeVariant
 from probe_generator.probe import AbstractProbe, InvalidStatement
-from probe_generator.sequence import reverse_complement
 
 _STATEMENT_REGEX = re.compile("""
         \s*                # whitespace
@@ -44,67 +43,26 @@ class GeneSnpProbe(AbstractProbe):
                            "{transcript_sequence}/{bases}_{transcript_name}_"
                            "{chromosome}:{index_base}{comment}")
 
+    def __init__(self, *, variant, index, comment):
+        self.variant = variant
+        self.index = index
+        self.comment = comment
+
+    def __str__(self):
+        return self._STATEMENT_SKELETON.format(
+            gene=self.variant.gene,
+            base=self.index,
+            reference=self.variant.reference,
+            mutation=self.variant.mutation,
+            transcript_sequence='[trans]' if self.variant.is_transcript else '',
+            bases=self.variant.bases,
+            transcript_name=self.variant.transcript_name,
+            chromosome=self.variant.chromosome,
+            index_base=self.variant.coordinate,
+            comment=self.comment)
+
     def get_ranges(self):
-        bases = self._spec['bases']
-        mutation_bases = len(self._spec["mutation"])
-
-        left_buffer = bases // 2
-        if bases % 2 == 0:
-            left_buffer -= 1
-        right_buffer = bases - left_buffer - mutation_bases
-
-        if self._spec["transcript_sequence"]:
-            return self._get_ranges_transcript(left_buffer, right_buffer)
-        else:
-            return self._get_ranges_genome(left_buffer, right_buffer)
-
-    def _get_ranges_transcript(self, left_buffer, right_buffer):
-        """Return the SequenceRange representation of the variant buffered by
-        bases taken from the transcript sequence of the gene.
-
-        E.g., if the variant is at the end of an exon on the plus strand, the
-        right_buffer bases will be taken from the next exon.
-
-        """
-        chromosome, start, end, _, _ = self._spec['index']
-        txt = self._spec['transcript']
-        base, = self._spec["base"],
-
-        if not txt.plus_strand:
-            left_buffer, right_buffer = right_buffer, left_buffer
-
-        sequence = (
-            txt.transcript_range(base-left_buffer, base) +
-            [SequenceRange(chromosome,
-                           start,
-                           end,
-                           mutation=self._spec["mutation"],
-                           reverse_complement= self._spec['strand'] == '-')] +
-            txt.transcript_range(base+1, base+1+right_buffer))
-
-        if txt.plus_strand:
-            return sequence
-        else:
-            return reversed(sequence)
-
-    def _get_ranges_genome(self, left_buffer, right_buffer):
-        """Return the SequenceRange representation of the variant buffered by
-        bases taken from the reference genome seqeunce.
-
-        """
-        chromosome, start, end, _, _ = self._spec['index']
-        return (
-            SequenceRange(chromosome,
-                          start-left_buffer,
-                          start),
-            SequenceRange(chromosome,
-                          start,
-                          end,
-                          mutation=self._spec["mutation"],
-                          reverse_complement=self._spec['strand'] == '-'),
-            SequenceRange(chromosome,
-                          end,
-                          end+right_buffer))
+        return self.variant.sequence_ranges()
 
     @staticmethod
     def explode(statement, genome_annotation=None):
@@ -119,29 +77,38 @@ class GeneSnpProbe(AbstractProbe):
 
         if genome_annotation is None:
             genome_annotation = []
-        partial_spec = _parse(statement)
+
+        specification = _parse(statement)
+
+        if specification["transcript_sequence"] == '':
+            variant_class = GenomeVariant
+        else:
+            variant_class = TranscriptVariant
+
         transcripts = annotation.lookup_gene(
-            partial_spec["gene"], genome_annotation)
+            specification["gene"], genome_annotation)
+
         cached_coordinates = set()
         for txt in transcripts:
-            base = partial_spec["base"]
+            base = specification["base"]
             try:
                 index = txt.nucleotide_index(base)
             except transcript.OutOfRange as error:
                 print("{} in statement: {!r}".format(error, statement),
                       file=sys.stderr)
             else:
-                chromosome = txt.chromosome
-                if not (chromosome, index) in cached_coordinates:
-                    cached_coordinates.add((chromosome, index))
-                    spec = dict(partial_spec,
-                                strand='+' if txt.plus_strand else '-',
-                                chromosome=chromosome,
-                                transcript=txt,
-                                transcript_name=txt.name,
-                                index=index,
-                                index_base=index.start+1)
-                    probes.append(GeneSnpProbe(spec))
+                if not (index) in cached_coordinates:
+                    cached_coordinates.add(index)
+                    variant = variant_class(
+                        transcript=txt,
+                        reference=specification["reference"],
+                        mutation=specification["mutation"],
+                        index=index,
+                        bases=specification["bases"])
+                    probes.append(GeneSnpProbe(
+                            variant=variant,
+                            index=base,
+                            comment=specification["comment"]))
         return probes
 
 

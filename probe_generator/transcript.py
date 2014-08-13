@@ -52,6 +52,15 @@ class Transcript(object):
                          if field in self._spec)
         self.plus_strand = self._spec['strand'] == '+'
 
+    def __hash__(self):
+        return hash(tuple([value for value in sorted(self._spec.values())]))
+
+    def __len__(self):
+        """Return the number of coding nucleotides in the transcript.
+
+        """
+        return sum(exon.end - exon.start for exon in self.coding_exons())
+
     def _assert_spec_correct(self):
         """Raises an InvalidAnnotationFile exception unless all of the
         _REQUIRED_FIELDS and exactly one of the _GENE_NAME_FIELDS are present
@@ -170,6 +179,21 @@ class Transcript(object):
             return SequenceRange(self.chromosome, base_index-2, base_index+1)
         else:
             return SequenceRange(self.chromosome, base_index, base_index+3)
+
+    def base_index(self, sequence_range):
+        """Given a SequenceRange object representing a genomic location within
+        the transcript, return the one-based index of nucleotide at the start
+        of the sequence-range object.
+
+        Raises an OutOfRange error when the `sequence_range` is not within the
+        transcript.
+
+        """
+        for i in range(1, len(self)+1):
+            nucleotide = self.nucleotide_index(i)
+            if sequence_range.start == nucleotide.start:
+                return i
+        raise OutOfRange
 
     def transcript_range(self, start, end):
         """Return a list of SequenceRange objects representing the genomic
