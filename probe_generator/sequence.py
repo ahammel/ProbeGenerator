@@ -4,7 +4,6 @@ Provides complement() and reverse_complemement() functions and the
 SequenceRange object.
 
 """
-import functools
 from collections import namedtuple
 
 _COMPLEMENT = str.maketrans('acgtACGT', 'tgcaTGCA')
