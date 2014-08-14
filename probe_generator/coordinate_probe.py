@@ -62,7 +62,7 @@ class CoordinateProbe(AbstractProbe):
         specification['breakpoint2'] = breakpoint2
         self._spec = specification
 
-    def __str__(self, ):
+    def __str__(self):
         return self._STATEMENT_SKELETON.format(**self._spec)
 
     @staticmethod

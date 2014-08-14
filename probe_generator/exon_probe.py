@@ -55,7 +55,7 @@ class ExonProbe(AbstractProbe):
         self._spec = specification
         self._rows = transcripts
 
-    def __str__(self, ):
+    def __str__(self):
         return self._STATEMENT_SKELETON.format(**self._spec)
 
     def get_ranges(self):

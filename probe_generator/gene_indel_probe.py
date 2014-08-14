@@ -47,7 +47,7 @@ class GeneIndelProbe(AbstractProbe):
         self.index = index
         self.comment = comment
 
-    def __str__(self, ):
+    def __str__(self):
         reference = self.variant.reference
         mutation = self.variant.mutation
 
