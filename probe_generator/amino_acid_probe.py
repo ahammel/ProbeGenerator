@@ -86,7 +86,7 @@ class AminoAcidProbe(AbstractProbe):
             reference=self.variant.reference,
             mutation=self.variant.mutation,
             transcript_sequence='[trans]' if self.variant.is_transcript else '',
-            bases=self.variant.bases,
+            bases=len(self.variant),
             transcript_name=self.variant.transcript_name,
             chromosome=self.variant.chromosome,
             coordinate=self.variant.coordinate,
@@ -140,7 +140,7 @@ class AminoAcidProbe(AbstractProbe):
                     index=sequence_range_index,
                     reference=reference,
                     mutation=mutation,
-                    bases=specification["bases"])
+                    length=specification["bases"])
                 if _AMINO_ACID_TABLE[mutation] != reference_aa:
                     coordinate_cache.add((variant, index))
                     probe = AminoAcidProbe(

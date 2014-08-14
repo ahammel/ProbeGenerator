@@ -55,7 +55,7 @@ class GeneSnpProbe(AbstractProbe):
             reference=self.variant.reference,
             mutation=self.variant.mutation,
             transcript_sequence='[trans]' if self.variant.is_transcript else '',
-            bases=self.variant.bases,
+            bases=len(self.variant),
             transcript_name=self.variant.transcript_name,
             chromosome=self.variant.chromosome,
             index_base=self.variant.coordinate,
@@ -104,7 +104,7 @@ class GeneSnpProbe(AbstractProbe):
                         reference=specification["reference"],
                         mutation=specification["mutation"],
                         index=index,
-                        bases=specification["bases"])
+                        length=specification["bases"])
                     probes.append(GeneSnpProbe(
                             variant=variant,
                             index=base,

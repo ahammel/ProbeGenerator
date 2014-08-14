@@ -60,7 +60,7 @@ class GeneIndelProbe(AbstractProbe):
             deletion=deletion,
             insertion=insertion,
             transcript_sequence='[trans]' if self.variant.is_transcript else '',
-            bases=self.variant.bases,
+            bases=len(self.variant),
             transcript_name=self.variant.transcript_name,
             chromosome=self.variant.chromosome,
             index_base=self.variant.coordinate,
@@ -106,7 +106,7 @@ class GeneIndelProbe(AbstractProbe):
                     index=index,
                     reference=specification["reference"],
                     mutation=specification["mutation"],
-                    bases=specification["bases"])
+                    length=specification["bases"])
                 if not (index) in cached_coordinates:
                     cached_coordinates.add(index)
                     probes.append(GeneIndelProbe(

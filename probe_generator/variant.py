@@ -48,7 +48,7 @@ class TranscriptVariant(AbstractVariant):
         reference_length = len(self.reference)
         mutation_length = len(self.mutation)
 
-        total_buffer = self.length - mutation_length
+        total_buffer = len(self) - mutation_length
         left_buffer = total_buffer // 2
         right_buffer = total_buffer - left_buffer
 
@@ -87,7 +87,7 @@ class GenomeVariant(AbstractVariant):
         reference_length = len(self.reference)
         mutation_length = len(self.mutation)
 
-        total_buffer = self.length - mutation_length
+        total_buffer = len(self) - mutation_length
         left_buffer = total_buffer // 2
         right_buffer = total_buffer - left_buffer
 
