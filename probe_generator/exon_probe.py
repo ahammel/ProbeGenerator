@@ -51,6 +51,13 @@ class ExonProbe(AbstractProbe):
             "_{transcript1}_{transcript2}"
             "{comment}")
 
+    def __init__(self, specification, *transcripts):
+        self._spec = specification
+        self._rows = transcripts
+
+    def __str__(self):
+        return self._STATEMENT_SKELETON.format(**self._spec)
+
     def get_ranges(self):
         """Return the sequence ranges for an exon probe.
 

@@ -47,7 +47,7 @@ class CoordinateProbe(AbstractProbe):
                            "{chromosome2}:{breakpoint2}"
                            "{comment}")
 
-    def __init__(self, specification, *rows):
+    def __init__(self, specification):
         """At init time, the start, end, and breakpoints are calculated and
         added to the specification.
 
@@ -56,13 +56,14 @@ class CoordinateProbe(AbstractProbe):
         probe.
 
         """
+        # TODO: Remove need for a specification
         breakpoint1, breakpoint2     = _get_breakpoints(specification)
-
         specification['breakpoint1'] = breakpoint1
         specification['breakpoint2'] = breakpoint2
+        self._spec = specification
 
-        super().__init__(specification, *rows)
-
+    def __str__(self):
+        return self._STATEMENT_SKELETON.format(**self._spec)
 
     @staticmethod
     def explode(statement):

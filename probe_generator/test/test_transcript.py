@@ -81,3 +81,14 @@ class TestTranscript(unittest.TestCase):
             self.transcript.transcript_range(1, 16),
             [SequenceRange('0', 11, 20),
              SequenceRange('0', 30, 36)])
+
+    def test_base_index_nucleotides(self):
+        """Assert `base_index` is the inverse of `nucleotide_index`.
+
+        """
+        for transcript in ANNOTATION:
+            for i in range(1, len(transcript)+1):
+                nuc = transcript.nucleotide_index(i)
+                base = transcript.base_index(nuc)
+                self.assertEqual(i, base, "Gene name: {}".format(
+                        transcript.gene_id))

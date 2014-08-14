@@ -15,13 +15,6 @@ class AbstractProbe(metaclass=abc.ABCMeta):
     'sequence' methods are mixed-in.
 
     """
-    def __init__(self, specification, *rows):
-        self._spec = specification
-        self._rows = rows
-
-    def __str__(self):
-        return self._STATEMENT_SKELETON.format(**self._spec)
-
     def sequence(self, genome):
         """Return the sequence of the probe given a reference genome object
         using the SequenceRange objects returned by the get_ranges method.
@@ -61,22 +54,17 @@ class AbstractProbe(metaclass=abc.ABCMeta):
         """If the 'bases' string is not the same as the reference bases
         specified by the probe, raise a ReferenceMismatch exception.
 
+        Raises a NotImplementedError if the probe doesn't support sequence
+        variants (i.e., if the probe is not for sequence variant mutations,
+        this method should never be called).
+
         """
-        if not self._spec['reference'].lower() == bases.lower():
+        if not self.variant.reference.lower() == bases.lower():
             raise ReferenceMismatch(
                 "Reference sequence {!r} does not match requested mutation "
                 "{!r} => {!r}".format(bases,
-                                      self._spec["reference"],
-                                      self._spec["mutation"]))
-
-    @abc.abstractproperty
-    def _STATEMENT_SKELETON(self):
-        """The template of the __str__ property of the probe.
-
-        The internal _spec property of an instance is passed to
-        _STATEMENT_SKELETON.format to produce the probe's string.
-
-        """
+                                      self.variant.reference,
+                                      self.variant.mutation))
 
     @abc.abstractmethod
     def get_ranges(self):

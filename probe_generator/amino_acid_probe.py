@@ -6,7 +6,7 @@ import sys
 import itertools
 
 from probe_generator import annotation, transcript
-from probe_generator.sequence import SequenceRange
+from probe_generator.variant import TranscriptVariant, GenomeVariant
 from probe_generator.probe import AbstractProbe, InvalidStatement
 
 _STATEMENT_REGEX = re.compile("""
@@ -55,6 +55,12 @@ _DNA_CODON_TABLE = {
     'X': tuple(''.join(bases) for bases in itertools.product("ACGT", repeat=3)),
     }
 
+_AMINO_ACID_TABLE = {
+    codon: amino_acid
+    for amino_acid, codons in _DNA_CODON_TABLE.items() if amino_acid != 'X'
+    for codon in codons
+    }
+
 
 class AminoAcidProbe(AbstractProbe):
     """Probe for a single nucleotide polymorphism from an amino acid change at
@@ -66,70 +72,28 @@ class AminoAcidProbe(AbstractProbe):
                            "{transcript_sequence}/{bases}_{transcript_name}_"
                            "{chromosome}:{coordinate}{comment}")
 
+    def __init__(self, *, variant, index, comment):
+        self.variant = variant
+        self.index = index
+        self.comment = comment
+
+    def __str__(self):
+        return self._STATEMENT_SKELETON.format(
+            gene=self.variant.gene,
+            reference_aa=_AMINO_ACID_TABLE[self.variant.reference],
+            codon=self.index,
+            mutation_aa=_AMINO_ACID_TABLE[self.variant.mutation],
+            reference=self.variant.reference,
+            mutation=self.variant.mutation,
+            transcript_sequence='[trans]' if self.variant.is_transcript else '',
+            bases=self.variant.bases,
+            transcript_name=self.variant.transcript_name,
+            chromosome=self.variant.chromosome,
+            coordinate=self.variant.coordinate,
+            comment=self.comment)
+
     def get_ranges(self):
-        chromosome, start, end, _, _ = self._spec['index']
-        bases = self._spec['bases']
-
-        mutation_bases = len(self._spec["mutation"])
-        left_buffer = bases // 2 - 1
-        if bases % 2 == 0:
-            left_buffer -= 1
-        right_buffer = bases - left_buffer - mutation_bases
-
-        if self._spec['transcript_sequence']:
-            return self._get_ranges_transcript(left_buffer, right_buffer)
-        else:
-            return self._get_ranges_genome(left_buffer, right_buffer)
-
-    def _get_ranges_transcript(self, left_buffer, right_buffer):
-        """Return the SequenceRange representation of the variant buffered by
-        bases taken from the transcript sequence of the gene.
-
-        E.g., if the variant is at the end of an exon on the plus strand, the
-        right_buffer bases will be taken from the next exon.
-
-        """
-        txt = self._spec['transcript']
-        codon = self._spec['codon']
-        codon_start, codon_end = (codon-1)*3+1, (codon*3)+1
-        chromosome, start, end, _, _ = self._spec['index']
-
-        if not txt.plus_strand:
-            left_buffer, right_buffer = right_buffer, left_buffer
-
-        sequence = (
-            txt.transcript_range(codon_start-left_buffer, codon_start) +
-            [SequenceRange(chromosome,
-                           start,
-                           end ,
-                           mutation=self._spec["mutation"],
-                           reverse_complement=not txt.plus_strand)] +
-            txt.transcript_range(codon_end, codon_end+right_buffer))
-
-        if self._spec['transcript'].plus_strand:
-            return sequence
-        else:
-            return reversed(sequence)
-
-    def _get_ranges_genome(self, left_buffer, right_buffer):
-        """Return the SequenceRange representation of the variant buffered by
-        bases taken from the reference genome sequence.
-
-        """
-        chromosome, start, end, _, _ = self._spec['index']
-        rc = not self._spec['transcript'].plus_strand
-        return (
-            SequenceRange(chromosome,
-                          start-left_buffer,
-                          start),
-            SequenceRange(chromosome,
-                          start,
-                          end,
-                          mutation=self._spec["mutation"],
-                          reverse_complement=rc),
-            SequenceRange(chromosome,
-                          end,
-                          end+right_buffer))
+        return self.variant.sequence_ranges()
 
     @staticmethod
     def explode(statement, genome_annotation=None):
@@ -144,38 +108,46 @@ class AminoAcidProbe(AbstractProbe):
 
         if genome_annotation is None:
             genome_annotation = []
-        partial_spec = _parse(statement)
+
+        specification = _parse(statement)
         transcripts = annotation.lookup_gene(
-            partial_spec['gene'],
+            specification['gene'],
             genome_annotation)
+
+        if specification["transcript_sequence"] == '':
+            variant_class = GenomeVariant
+        else:
+            variant_class = TranscriptVariant
+
+        reference_aa = specification['reference_aa'].upper()
+        mutation_aa = specification['mutation_aa'].upper()
+        reference_codons = _DNA_CODON_TABLE[reference_aa]
+        mutation_codons = _DNA_CODON_TABLE[mutation_aa]
+
+        index = specification["index"]
+
         coordinate_cache = set()
-        for txt in transcripts:
+        for txt, reference, mutation in itertools.product(
+            transcripts, reference_codons, mutation_codons):
             try:
-                index = txt.codon_index(partial_spec['codon'])
+                sequence_range_index = txt.codon_index(specification['index'])
             except transcript.OutOfRange as error:
                 print("{} in statement: {!r}".format(error, statement),
                       file=sys.stderr)
             else:
-                chromosome = txt.chromosome
-                if (chromosome, index) not in coordinate_cache:
-                    coordinate_cache.add((chromosome, index))
-                    reference_codons = _DNA_CODON_TABLE[
-                        partial_spec['reference_aa'].upper()]
-                    mutation_codons = _DNA_CODON_TABLE[
-                        partial_spec['mutation_aa'].upper()]
-                    for reference_codon, mutation_codon in itertools.product(
-                        reference_codons, mutation_codons):
-                        if (mutation_codon not in
-                            _DNA_CODON_TABLE[partial_spec["reference_aa"]]):
-                            spec = dict(partial_spec,
-                                        index=index,
-                                        chromosome=chromosome,
-                                        transcript=txt,
-                                        transcript_name=txt.name,
-                                        reference=reference_codon,
-                                        mutation=mutation_codon,
-                                        coordinate=index.start+1)
-                            probes.append(AminoAcidProbe(spec))
+                variant = variant_class(
+                    transcript=txt,
+                    index=sequence_range_index,
+                    reference=reference,
+                    mutation=mutation,
+                    bases=specification["bases"])
+                if _AMINO_ACID_TABLE[mutation] != reference_aa:
+                    coordinate_cache.add((variant, index))
+                    probe = AminoAcidProbe(
+                        variant=variant,
+                        index=index,
+                        comment=specification["comment"])
+                    probes.append(probe)
         return probes
 
 
@@ -192,7 +164,7 @@ def _parse(statement):
 
     (gene,
      reference_aa,
-     codon,
+     index,
      mutation_aa,
      transcript_sequence,
      bases,
@@ -200,7 +172,7 @@ def _parse(statement):
 
     return {"gene":                gene,
             "reference_aa":        reference_aa,
-            "codon":               int(codon),
+            "index":               int(index),
             "mutation_aa":         mutation_aa,
             "bases":               int(bases),
             "transcript_sequence": transcript_sequence,

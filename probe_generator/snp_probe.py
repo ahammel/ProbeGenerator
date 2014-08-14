@@ -2,6 +2,7 @@
 
 """
 import re
+from collections import namedtuple
 
 from probe_generator.probe import AbstractProbe, InvalidStatement
 from probe_generator.sequence import SequenceRange
@@ -27,6 +28,8 @@ _STATEMENT_REGEX = re.compile(r"""
         (--.*|\s*)      # comment
         """, re.VERBOSE)
 
+# TODO: Fix this ugly hack
+FakeVariant = namedtuple("FakeVariant", "reference")
 
 
 class SnpProbe(AbstractProbe):
@@ -43,6 +46,13 @@ class SnpProbe(AbstractProbe):
     """
     _STATEMENT_SKELETON = ("{chromosome}:{index}_"
                            "{reference}>{mutation}/{bases}{comment}")
+
+    def __init__(self, specification):
+        self._spec=specification
+        self.variant = FakeVariant(self._spec["reference"])
+
+    def __str__(self):
+        return self._STATEMENT_SKELETON.format(**self._spec)
 
     def get_ranges(self):
         bases = self._spec['bases']

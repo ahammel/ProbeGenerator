@@ -50,7 +50,7 @@ class TestAminoAcidProbe(unittest.TestCase):
 
 def select_reference_codon(probes, codon):
     for probe in probes:
-        if probe._spec['reference'] == codon:
+        if probe.variant.reference == codon:
             the_probe = probe
             break
     else:
