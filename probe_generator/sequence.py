@@ -49,7 +49,7 @@ class SequenceRange(namedtuple("SequenceRange",
             return self.private_mutation
 
     def concat(self, other):
-        """Return a new SequeceRange object representing the combined genomic
+        """Return a new SequenceRange object representing the combined genomic
         region of the two SequenceRanges.
 
         Raise a ValueError if the two SequenceRanges are not adjacent.
