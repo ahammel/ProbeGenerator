@@ -2,7 +2,7 @@
 substitutions, etc.)
 
 """
-from probe_generator.sequence import SequenceRange
+from probe_generator.sequence_range import SequenceRange
 
 class AbstractVariant(object):
     """Super-class for Variant objects.
@@ -42,6 +42,14 @@ class TranscriptVariant(AbstractVariant):
     is_transcript = True
 
     def sequence_ranges(self):
+        """Return a list of SequenceRange objects representing the variant and
+        a buffer sequence taken from the surrounding transcript sequence (i.e.,
+        intronic sequences are skipped).
+
+        Raises an OutOfRange exception when the buffer sequences strays outside
+        the range of the transcript.
+
+        """
         chromosome, start, _end, _, _ = self.index
         reference_length = len(self.reference)
 
@@ -51,6 +59,8 @@ class TranscriptVariant(AbstractVariant):
         total_buffer = len(self) - mutation_length
         left_buffer = total_buffer // 2
         right_buffer = total_buffer - left_buffer
+
+        reverse_complement=not self.transcript.plus_strand
 
         base = self.transcript.base_index(self.index)
 
@@ -63,7 +73,7 @@ class TranscriptVariant(AbstractVariant):
                            start,
                            start+reference_length,
                            mutation=self.mutation,
-                           reverse_complement=not self.transcript.plus_strand)] +
+                           reverse_complement=reverse_complement)] +
             self.transcript.transcript_range(base+reference_length,
                                              base+reference_length+right_buffer)
             )
@@ -82,6 +92,10 @@ class GenomeVariant(AbstractVariant):
     is_transcript = False
 
     def sequence_ranges(self):
+        """Return a list of SequenceRange objects representing the variant with
+        buffering sequence taken from the surrounding genomic sequence.
+
+        """
         chromosome, start, _end, _, _ = self.index
 
         reference_length = len(self.reference)
@@ -91,7 +105,7 @@ class GenomeVariant(AbstractVariant):
         left_buffer = total_buffer // 2
         right_buffer = total_buffer - left_buffer
 
-        return (
+        return [
             SequenceRange(chromosome,
                           start-left_buffer,
                           start),
@@ -102,4 +116,4 @@ class GenomeVariant(AbstractVariant):
                           reverse_complement=not self.transcript.plus_strand),
             SequenceRange(chromosome,
                           start+reference_length,
-                          start+reference_length+right_buffer))
+                          start+reference_length+right_buffer)]

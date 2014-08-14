@@ -4,7 +4,7 @@
 import itertools
 
 from probe_generator import probe
-from probe_generator.sequence import SequenceRange
+from probe_generator.sequence_range import SequenceRange
 
 _REQUIRED_FIELDS = (
     # Fields which are assumed to exist by Transcript methods.

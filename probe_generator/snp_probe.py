@@ -5,7 +5,7 @@ import re
 from collections import namedtuple
 
 from probe_generator.probe import AbstractProbe, InvalidStatement
-from probe_generator.sequence import SequenceRange
+from probe_generator.sequence_range import SequenceRange
 
 _STATEMENT_REGEX = re.compile(r"""
         \s*
@@ -48,7 +48,7 @@ class SnpProbe(AbstractProbe):
                            "{reference}>{mutation}/{bases}{comment}")
 
     def __init__(self, specification):
-        self._spec=specification
+        self._spec = specification
         self.variant = FakeVariant(self._spec["reference"])
 
     def __str__(self):
@@ -73,11 +73,16 @@ class SnpProbe(AbstractProbe):
                           index+right_buffer))
 
     @classmethod
-    def explode(cls, statement):
+    def explode(cls, statement, genome_annotation=None):
         """Yield probe statements with globbed reference and mutation
         bases filled in.
 
         """
+        if genome_annotation is not None:
+            raise Exception(
+                "{!r} method 'explode' does not take a 'genome_annotation' "
+                "argument".format(
+                    cls.__name__))
         partial_spec = cls._parse(statement)
         specs = _expand(partial_spec)
         return [SnpProbe(spec) for spec in specs]
@@ -95,7 +100,12 @@ class SnpProbe(AbstractProbe):
                 "could not parse snp statement {!r}".format(
                         statement))
 
-        chromosome, index, reference_base, mutation, bases, comment = match.groups()
+        (chromosome,
+         index,
+         reference_base,
+         mutation,
+         bases,
+         comment) = match.groups()
         return {"chromosome": chromosome,
                 "index":      int(index),
                 "reference":  reference_base,

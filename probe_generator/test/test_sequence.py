@@ -1,6 +1,7 @@
 import unittest
 
 from probe_generator import sequence
+from probe_generator.sequence_range import SequenceRange
 
 
 class TestSequence(unittest.TestCase):
@@ -25,17 +26,17 @@ class TestSequence(unittest.TestCase):
 
 class TestSequenceRange(unittest.TestCase):
     def setUp(self):
-        self.range_12 = sequence.SequenceRange('0', 1, 2)
-        self.range_24 = sequence.SequenceRange('0', 2, 4)
-        self.range_56 = sequence.SequenceRange('0', 5, 6)
+        self.range_12 = SequenceRange('0', 1, 2)
+        self.range_24 = SequenceRange('0', 2, 4)
+        self.range_56 = SequenceRange('0', 5, 6)
 
     def test_concat(self):
         self.assertEqual(
             self.range_12.concat(self.range_24),
-            sequence.SequenceRange('0', 1, 4))
+            SequenceRange('0', 1, 4))
         self.assertEqual(
             self.range_24.concat(self.range_12),
-            sequence.SequenceRange('0', 1, 4))
+            SequenceRange('0', 1, 4))
         self.assertRaises(
             ValueError,
             lambda: self.range_12.concat(self.range_56))
@@ -50,14 +51,14 @@ class TestSequenceRange(unittest.TestCase):
 
     def test_condense(self):
         self.assertEqual(
-            sequence.SequenceRange.condense(
+            SequenceRange.condense(
                 self.range_12,
                 self.range_24),
-            [sequence.SequenceRange('0', 1, 4)])
+            [SequenceRange('0', 1, 4)])
         self.assertEqual(
-            sequence.SequenceRange.condense(
+            SequenceRange.condense(
                 self.range_12,
                 self.range_24,
                 self.range_56),
-            [sequence.SequenceRange('0', 1, 4),
+            [SequenceRange('0', 1, 4),
              self.range_56])

@@ -9,7 +9,7 @@ from probe_generator import annotation, transcript
 from probe_generator.variant import TranscriptVariant, GenomeVariant
 from probe_generator.probe import AbstractProbe, InvalidStatement
 
-_STATEMENT_REGEX = re.compile("""
+_STATEMENT_REGEX = re.compile(r"""
         \s*                                           # whitespace
         ([A-Za-z0-9_./-]+)                            # gene name
         \s*

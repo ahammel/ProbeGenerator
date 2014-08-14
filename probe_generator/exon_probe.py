@@ -7,7 +7,7 @@ import sys
 
 from probe_generator import annotation, transcript
 from probe_generator.probe import AbstractProbe, InvalidStatement
-from probe_generator.sequence import SequenceRange
+from probe_generator.sequence_range import SequenceRange
 
 _PROBE_STATEMENT = r"""    # The regex for one side of a probe statement
         \s*                # non-significant whitespace

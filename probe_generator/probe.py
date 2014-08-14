@@ -7,7 +7,7 @@ from probe_generator import reference
 from probe_generator.exceptions import NonFatalError
 
 
-class AbstractProbe(metaclass=abc.ABCMeta):
+class AbstractProbe(object, metaclass=abc.ABCMeta):
     """Super-class for Probe objects.
 
     Subclasses provide the _STATEMENT_SKELETON property, an 'explode' static
@@ -15,6 +15,8 @@ class AbstractProbe(metaclass=abc.ABCMeta):
     'sequence' methods are mixed-in.
 
     """
+    variant = NotImplemented # provided by children
+
     def sequence(self, genome):
         """Return the sequence of the probe given a reference genome object
         using the SequenceRange objects returned by the get_ranges method.

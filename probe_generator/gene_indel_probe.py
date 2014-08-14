@@ -64,13 +64,13 @@ class GeneIndelProbe(AbstractProbe):
             transcript_name=self.variant.transcript_name,
             chromosome=self.variant.chromosome,
             index_base=self.variant.coordinate,
-            comment = self.comment)
+            comment=self.comment)
 
     def get_ranges(self):
         return self.variant.sequence_ranges()
 
     @staticmethod
-    def explode(statement, genome_annotation):
+    def explode(statement, genome_annotation=None):
         probes = []
 
         if genome_annotation is None:
@@ -107,7 +107,7 @@ class GeneIndelProbe(AbstractProbe):
                     reference=specification["reference"],
                     mutation=specification["mutation"],
                     length=specification["bases"])
-                if not (index) in cached_coordinates:
+                if not index in cached_coordinates:
                     cached_coordinates.add(index)
                     probes.append(GeneIndelProbe(
                             variant=variant,
@@ -115,7 +115,14 @@ class GeneIndelProbe(AbstractProbe):
                             comment=specification["comment"]))
         return probes
 
+
 def _parse(statement):
+    """Return a partial GeneIndelProbe specification given a probe statement.
+
+    Raises an InvalidStatement exception when fed an invalid gene snp
+    statement.
+
+    """
     match = _STATEMENT_REGEX.match(statement)
 
     if not match:

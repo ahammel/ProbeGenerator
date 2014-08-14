@@ -2,7 +2,7 @@ import unittest
 import os
 
 from probe_generator import annotation
-from probe_generator.sequence import SequenceRange
+from probe_generator.sequence_range import SequenceRange
 from probe_generator.test.test_constants import VALIDATION_DATA_DIR
 
 MOCK_ANNOTATION_FILE = [ # input is any iterable of strings

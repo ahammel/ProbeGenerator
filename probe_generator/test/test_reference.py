@@ -2,6 +2,7 @@ import unittest
 import os
 
 from probe_generator import reference, sequence
+from probe_generator.sequence_range import SequenceRange
 from probe_generator.test.test_constants import VALIDATION_DATA_DIR
 
 MOCK_GENOME_FILE = [ # input is any iter of strings
@@ -36,36 +37,36 @@ class TestReferenceBases(unittest.TestCase):
     def test_bases_returns_base_pair_range(self):
         self.assertEqual(
                 reference.bases(
-                    sequence.SequenceRange('1', 2, 8),
+                    SequenceRange('1', 2, 8),
                     self.ref_genome),
                 'AACCCC')
         self.assertEqual(
                 reference.bases(
-                    sequence.SequenceRange('X', 15, 16),
+                    SequenceRange('X', 15, 16),
                     self.ref_genome),
                 't')
         self.assertEqual(
                 reference.bases(
-                    sequence.SequenceRange('1', 0, 16),
+                    SequenceRange('1', 0, 16),
                     self.ref_genome),
                 'AAAACCCCGGGGTTTT')
 
     def test_bases_with_reverse_complement(self):
         self.assertEqual(
                 reference.bases(
-                    sequence.SequenceRange(
+                    SequenceRange(
                         '1', 2, 8, reverse_complement=True),
                     self.ref_genome),
                 'GGGGTT')
         self.assertEqual(
                 reference.bases(
-                    sequence.SequenceRange(
+                    SequenceRange(
                         'X', 15, 16, reverse_complement=True),
                     self.ref_genome),
                 'a')
         self.assertEqual(
                 reference.bases(
-                    sequence.SequenceRange(
+                    SequenceRange(
                         '1', 0, 16, reverse_complement=True),
                     self.ref_genome),
                 'AAAACCCCGGGGTTTT')
@@ -73,13 +74,13 @@ class TestReferenceBases(unittest.TestCase):
     def test_bases_raises_MissingChromosome_when_chromosome_key_missing(self):
         message = "no such chromosome: 'banana'"
         with self.assertRaisesRegex(reference.MissingChromosome, message):
-            reference.bases(sequence.SequenceRange('banana', 1, 2),
+            reference.bases(SequenceRange('banana', 1, 2),
                             self.ref_genome)
 
     def test_bases_raises_NonContainedRange_on_range_outside_of_chromosome(self):
         message = "range \[1:100\] outside the range of chromosome '1'"
         with self.assertRaisesRegex(reference.NonContainedRange, message):
-            reference.bases(sequence.SequenceRange('1', 1, 100),
+            reference.bases(SequenceRange('1', 1, 100),
                             self.ref_genome)
 
 
