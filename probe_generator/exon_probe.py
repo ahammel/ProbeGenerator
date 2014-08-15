@@ -357,7 +357,7 @@ def _get_range(exon_range, side, strand, bases):
     start of the exon requested, and the number of base pairs.
 
     """
-    chromosome, start, end, _, _ = exon_range
+    _, start, end, _, _ = exon_range
     if (side == '+') == (strand == '+'):
         return (start, start + bases)
     else:
