@@ -142,12 +142,13 @@ class AminoAcidProbe(AbstractProbe):
                     mutation=mutation,
                     length=specification["bases"])
                 if _AMINO_ACID_TABLE[mutation] != reference_aa:
-                    coordinate_cache.add((variant, index))
-                    probe = AminoAcidProbe(
-                        variant=variant,
-                        index=index,
-                        comment=specification["comment"])
-                    probes.append(probe)
+                    if (variant.index, reference, mutation) not in coordinate_cache:
+                        coordinate_cache.add((variant.index, reference, mutation))
+                        probe = AminoAcidProbe(
+                            variant=variant,
+                            index=index,
+                            comment=specification["comment"])
+                        probes.append(probe)
         return probes
 
 
