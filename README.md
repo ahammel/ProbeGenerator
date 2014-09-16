@@ -345,7 +345,7 @@ be produced (one for each codon which codes for arginine).
 ## Insertion/deletion probes
 
 Insertion and deletion (indel) probes are specified in the same way as SNP
-statements. Indels can only be specified relative to a transcript at present.
+probes. Indels can only be specified relative to a transcript at present.
 
 Indel statements are similar to SNP statements, except that instead of the
 'N>N' variant specification, the user supplies 'ins' and 'del' fields
@@ -353,7 +353,7 @@ specifying the base inserted and deleted. Both are optional (but you need at
 least one, obviously). As usual, case is insignificant. If both fields are
 used, 'del' must be specified before 'ins'.
 
-There is no globbing mecahnism for indel probes at present. Both the insertion
+There is no globbing mechanism for indel probes at present. Both the insertion
 and deletion sequences must be fully specified.
 
 The insertion and deletion sequences can be any length (although the inserted
