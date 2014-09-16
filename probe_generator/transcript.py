@@ -139,10 +139,10 @@ class Transcript(object):
             elif exon.start <= cds_end <= exon.end:
                 positions.append((exon.start, cds_end))
                 break
-            elif cds_start <= exon.start <= exon.end <= cds_end:
-                positions.append((exon.start, exon.end))
+            elif cds_end <= exon.start:
+                break
             else:
-                assert False, "unreachable"
+                assert False, "unreachable: {}/{}".format(self.name, self.gene_id)
         if not self.plus_strand:
             positions.reverse()
         return [SequenceRange(self.chromosome, start, end)
@@ -159,7 +159,8 @@ class Transcript(object):
         try:
             return self.exons()[index-1]
         except IndexError as error:
-            raise NoFeature(error)
+            raise NoFeature("{}: {}/{}".format(
+                    error, self.gene_id, self.name))
 
     def nucleotide_index(self, index):
         """Given a 1-based base pair index, return a SequenceRange object

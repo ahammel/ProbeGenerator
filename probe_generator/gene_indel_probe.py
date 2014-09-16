@@ -7,8 +7,7 @@ import sys
 
 from probe_generator import annotation, transcript
 from probe_generator.variant import TranscriptVariant, GenomeVariant
-from probe_generator.sequence import reverse_complement
-from probe_generator.probe import AbstractProbe, InvalidStatement
+from probe_generator.probe import AbstractProbe, InvalidStatement, NonFatalError
 
 _STATEMENT_REGEX = re.compile(r"""
         \s*                # whitespace
@@ -82,33 +81,37 @@ class GeneIndelProbe(AbstractProbe):
         else:
             variant_class = TranscriptVariant
 
+        reference=specification["reference"]
+        mutation=specification["mutation"]
+
         transcripts = annotation.lookup_gene(
             specification["gene"], genome_annotation)
         cached_coordinates = set()
 
+
         for txt in transcripts:
-            if txt.plus_strand:
-                base = specification["base"]
-            else:
-                base = specification["base"] - 2
-                specification["mutation"] = reverse_complement(
-                    specification["mutation"])
-                specification["reference"] = reverse_complement(
-                    specification["reference"])
+            base = specification["base"]
             try:
-                index = txt.nucleotide_index(base)
+                indices = txt.transcript_range(
+                    base, base+(len(reference) or 1))
             except transcript.OutOfRange as error:
                 print("{} in statement: {!r}".format(error, statement),
                       file=sys.stderr)
             else:
+                if len(indices) != 1:
+                    raise DiscontinuousIndelRegion(
+                        "In statement {!r}, the requested mutation crosses an "
+                        "exon/exon junction. Debug info {!s}".format(
+                            statement, indices))
+                index, = indices
                 variant = variant_class(
                     transcript=txt,
                     index=index,
-                    reference=specification["reference"],
-                    mutation=specification["mutation"],
+                    reference=reference,
+                    mutation=mutation,
                     length=specification["bases"])
-                if not index in cached_coordinates:
-                    cached_coordinates.add(index)
+                if not (index, reference, mutation) in cached_coordinates:
+                    cached_coordinates.add((index, reference, mutation))
                     probes.append(GeneIndelProbe(
                             variant=variant,
                             index=base,
@@ -149,3 +152,12 @@ def _parse(statement):
             "reference":           deletion.lstrip("del"),
             "mutation":            insertion.lstrip("ins")}
 
+
+
+class DiscontinuousIndelRegion(NonFatalError):
+    """Raised when the transcript region requested by an indel probe crosses an
+    exon/exon junction.
+
+    Will be removed if and when we support exon-crossing events.
+
+    """

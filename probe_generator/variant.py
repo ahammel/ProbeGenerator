@@ -50,8 +50,7 @@ class TranscriptVariant(AbstractVariant):
         the range of the transcript.
 
         """
-        chromosome, start, _end, _, _ = self.index
-        reference_length = len(self.reference)
+        chromosome, start, end, _, _ = self.index
 
         reference_length = len(self.reference)
         mutation_length = len(self.mutation)
@@ -96,7 +95,7 @@ class GenomeVariant(AbstractVariant):
         buffering sequence taken from the surrounding genomic sequence.
 
         """
-        chromosome, start, _end, _, _ = self.index
+        chromosome, start, end, _, _ = self.index
 
         reference_length = len(self.reference)
         mutation_length = len(self.mutation)
