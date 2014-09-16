@@ -1,13 +1,14 @@
 """Shared objects for probe classes.
 
 """
-import abc
+from abc import ABCMeta, abstractmethod
+import sys
 
 from probe_generator import reference
 from probe_generator.exceptions import NonFatalError
 
 
-class AbstractProbe(object, metaclass=abc.ABCMeta):
+class AbstractProbe(object, metaclass=ABCMeta):
     """Super-class for Probe objects.
 
     Subclasses provide the _STATEMENT_SKELETON property, an 'explode' static
@@ -68,14 +69,16 @@ class AbstractProbe(object, metaclass=abc.ABCMeta):
                                       self.variant.reference,
                                       self.variant.mutation))
 
-    @abc.abstractmethod
+
+    @abstractmethod
     def get_ranges(self):
         """Return an iterable of SequenceRange objects representing the bases
         to be collected.
 
         """
 
-    @abc.abstractstaticmethod
+    @staticmethod
+    @abstractmethod
     def explode(statement, genome_annotation=None):
         """Return a list of probes from a statement and, optionally, a genome
         annotation.
