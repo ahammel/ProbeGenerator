@@ -257,6 +257,7 @@ If the base in the reference genome is not the specified reference base (e.g.:
 an 'A>T' mutation is specified and the reference base is 'C'), no probe
 sequence is generated and a warning message is printed.
 
+
 ### Globbing
 
 If the reference base is globbed, probe sequences will be generated for both
@@ -340,6 +341,56 @@ will result in (2 proline codons) x (4 arginine codons) = 8 probes, four
 specifying CAA as the reference sequence and four specifying CAG. If the
 reference sequence at the specified location is CAA, four probe sequences will
 be produced (one for each codon which codes for arginine).
+
+## Insertion/deletion probes
+
+Insertion and deletion (indel) probes are specified in the same way as SNP
+statements. Indels can only be specified relative to a transcript at present.
+
+Indel statements are similar to SNP statements, except that instead of the
+'N>N' variant specification, the user supplies 'ins' and 'del' fields
+specifying the base inserted and deleted. Both are optional (but you need at
+least one, obviously). As usual, case is insignificant. If both fields are
+used, 'del' must be specified before 'ins'.
+
+There is no globbing mecahnism for indel probes at present. Both the insertion
+and deletion sequences must be fully specified.
+
+The insertion and deletion sequences can be any length (although the inserted
+sequence must be shorter than the total length of the probe).
+
+If the deleted sequence requested crosses an exon/exon junction, an error is
+printed and no probe is produced. In this case, there is not a single, unqiue
+sequence that can be said to correspond to the variant.
+
+### Examples
+
+    FOO: c.100 del ACGT /50 --four base-pair deletion
+
+    BAR: c.50 ins gt /20 --two base-pair insertion
+
+    TOB2: c.703 del CT ins AAA /50 --both insertion and deletion specified
+
+    X: c.100 del C ins A /50 --same as X: c.100 C>A/50
+
+
+## Using transcriptome sequence only
+
+You can generate probes using only transcribed sequences by using the '[trans]'
+flag in indel or SNP probes where the gene is specified. If this option is used
+and the probe includes an exon/exon junction, the probe sequence will be taken
+from the next exon rather than the intronic sequence.
+
+If the variant is not near an exon/exon junction then there is no difference
+between standard probes and those which use transcript sequence only.
+
+This feature should be considered experimental.
+
+### Examples
+
+    FOO: P50H [trans] /50
+    ALK: Q115R [trans] /50
+    TOB2: c.703 del CT ins AAA [trans] /50
 
 ## Comments
 
