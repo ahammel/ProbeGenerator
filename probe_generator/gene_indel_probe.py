@@ -88,7 +88,6 @@ class GeneIndelProbe(AbstractProbe):
             specification["gene"], genome_annotation)
         cached_coordinates = set()
 
-
         for txt in transcripts:
             base = specification["base"]
             try:
