@@ -349,7 +349,7 @@ probes. Indels can only be specified relative to a transcript at present.
 
 Indel statements are similar to SNP statements, except that instead of the
 'N>N' variant specification, the user supplies 'ins' and 'del' fields
-specifying the base inserted and deleted. Both are optional (but you need at
+specifying the base(s) inserted and deleted. Both are optional (but you need at
 least one, obviously). As usual, case is insignificant. If both fields are
 used, 'del' must be specified before 'ins'.
 
@@ -360,7 +360,7 @@ The insertion and deletion sequences can be any length (although the inserted
 sequence must be shorter than the total length of the probe).
 
 If the deleted sequence requested crosses an exon/exon junction, an error is
-printed and no probe is produced. In this case, there is not a single, unqiue
+printed and no probe is produced. In this case, there is not a single, unique
 sequence that can be said to correspond to the variant.
 
 ### Examples
