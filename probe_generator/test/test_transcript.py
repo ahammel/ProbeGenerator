@@ -1,7 +1,7 @@
 import unittest
 
 from probe_generator.transcript import Transcript
-from probe_generator.sequence import SequenceRange
+from probe_generator.sequence_range import SequenceRange
 from probe_generator.test.test_constants import ANNOTATION
 
 class TestTranscript(unittest.TestCase):

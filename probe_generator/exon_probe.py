@@ -7,7 +7,7 @@ import sys
 
 from probe_generator import annotation, transcript
 from probe_generator.probe import AbstractProbe, InvalidStatement
-from probe_generator.sequence import SequenceRange
+from probe_generator.sequence_range import SequenceRange
 
 _PROBE_STATEMENT = r"""    # The regex for one side of a probe statement
         \s*                # non-significant whitespace
@@ -357,7 +357,7 @@ def _get_range(exon_range, side, strand, bases):
     start of the exon requested, and the number of base pairs.
 
     """
-    chromosome, start, end, _, _ = exon_range
+    _, start, end, _, _ = exon_range
     if (side == '+') == (strand == '+'):
         return (start, start + bases)
     else:

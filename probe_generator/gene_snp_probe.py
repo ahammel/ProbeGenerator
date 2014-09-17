@@ -9,7 +9,7 @@ from probe_generator import annotation, transcript
 from probe_generator.variant import TranscriptVariant, GenomeVariant
 from probe_generator.probe import AbstractProbe, InvalidStatement
 
-_STATEMENT_REGEX = re.compile("""
+_STATEMENT_REGEX = re.compile(r"""
         \s*                # whitespace
         ([a-zA-Z0-9_./-]+) # gene name
         \s*
@@ -97,7 +97,7 @@ class GeneSnpProbe(AbstractProbe):
                 print("{} in statement: {!r}".format(error, statement),
                       file=sys.stderr)
             else:
-                if not (index) in cached_coordinates:
+                if not index in cached_coordinates:
                     cached_coordinates.add(index)
                     variant = variant_class(
                         transcript=txt,

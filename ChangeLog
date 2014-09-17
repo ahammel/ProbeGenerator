@@ -1,3 +1,11 @@
+September 17, 2014	Alex Hammel	<ahammel@bcgsc.ca>
+	* Release version 0.5
+		* Added indel probes
+		* Added continuous integration script
+		* Amino acid probes can now have 'X' as the mutation AA
+		* Added '[trans]' option to probes where a transcript is specified
+		* Lots of refactoring
+
 July 14, 2014	Alex Hammel		<ahammel@bcgsc.ca>
 	* Release version 0.4
 		* Added Gene SNP Probes

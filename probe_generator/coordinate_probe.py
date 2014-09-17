@@ -4,7 +4,7 @@
 import re
 
 from probe_generator.probe import AbstractProbe, InvalidStatement
-from probe_generator.sequence import SequenceRange
+from probe_generator.sequence_range import SequenceRange
 
 _COORDINATE = r"""
     \s*
@@ -66,7 +66,11 @@ class CoordinateProbe(AbstractProbe):
         return self._STATEMENT_SKELETON.format(**self._spec)
 
     @staticmethod
-    def explode(statement):
+    def explode(statement, genome_annotation=None):
+        if genome_annotation is not None:
+            raise Exception(
+                "CoordinateProbe.explode does not take a genome_annotation")
+
         specification = _parse(statement)
         return [CoordinateProbe(specification)]
 
@@ -84,12 +88,12 @@ class CoordinateProbe(AbstractProbe):
                 self._spec['chromosome1'],
                 start1,
                 end1,
-                reverse_complement= self._spec['rc_side_1']),
+                reverse_complement=self._spec['rc_side_1']),
             SequenceRange(
                 self._spec['chromosome2'],
                 start2,
                 end2,
-                reverse_complement= self._spec['rc_side_2']))
+                reverse_complement=self._spec['rc_side_2']))
 
 def _parse(statement):
     """Return a coordinate specification from a statement.

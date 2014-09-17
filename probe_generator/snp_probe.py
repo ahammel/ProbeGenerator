@@ -5,7 +5,7 @@ import re
 from collections import namedtuple
 
 from probe_generator.probe import AbstractProbe, InvalidStatement
-from probe_generator.sequence import SequenceRange
+from probe_generator.sequence_range import SequenceRange
 
 _STATEMENT_REGEX = re.compile(r"""
         \s*
@@ -48,7 +48,7 @@ class SnpProbe(AbstractProbe):
                            "{reference}>{mutation}/{bases}{comment}")
 
     def __init__(self, specification):
-        self._spec=specification
+        self._spec = specification
         self.variant = FakeVariant(self._spec["reference"])
 
     def __str__(self):
@@ -72,36 +72,44 @@ class SnpProbe(AbstractProbe):
                           index+1,
                           index+right_buffer))
 
-    @classmethod
-    def explode(cls, statement):
+    @staticmethod
+    def explode(statement, genome_annotation=None):
         """Yield probe statements with globbed reference and mutation
         bases filled in.
 
         """
-        partial_spec = cls._parse(statement)
+        if genome_annotation is not None:
+            raise Exception(
+                "SnpProbe.explode does not take a 'genome_annotation' "
+                "argument")
+        partial_spec = _parse(statement)
         specs = _expand(partial_spec)
         return [SnpProbe(spec) for spec in specs]
 
 
-    @staticmethod
-    def _parse(statement):
-        """Return a partial SNP probe specification given a probe statement.
+def _parse(statement):
+    """Return a partial SNP probe specification given a probe statement.
 
-        """
-        match = _STATEMENT_REGEX.match(statement)
+    """
+    match = _STATEMENT_REGEX.match(statement)
 
-        if not match:
-            raise InvalidStatement(
-                "could not parse snp statement {!r}".format(
-                        statement))
+    if not match:
+        raise InvalidStatement(
+            "could not parse snp statement {!r}".format(
+                    statement))
 
-        chromosome, index, reference_base, mutation, bases, comment = match.groups()
-        return {"chromosome": chromosome,
-                "index":      int(index),
-                "reference":  reference_base,
-                "mutation":   mutation,
-                "bases":      int(bases),
-                "comment":    comment}
+    (chromosome,
+     index,
+     reference_base,
+     mutation,
+     bases,
+     comment) = match.groups()
+    return {"chromosome": chromosome,
+            "index":      int(index),
+            "reference":  reference_base,
+            "mutation":   mutation,
+            "bases":      int(bases),
+            "comment":    comment}
 
 
 def _expand(partial_spec):
