@@ -1,13 +1,14 @@
 """Shared objects for probe classes.
 
 """
-import abc
+from abc import ABCMeta, abstractmethod
+import sys
 
 from probe_generator import reference
 from probe_generator.exceptions import NonFatalError
 
 
-class AbstractProbe(metaclass=abc.ABCMeta):
+class AbstractProbe(object, metaclass=ABCMeta):
     """Super-class for Probe objects.
 
     Subclasses provide the _STATEMENT_SKELETON property, an 'explode' static
@@ -15,12 +16,7 @@ class AbstractProbe(metaclass=abc.ABCMeta):
     'sequence' methods are mixed-in.
 
     """
-    def __init__(self, specification, *rows):
-        self._spec = specification
-        self._rows = rows
-
-    def __str__(self):
-        return self._STATEMENT_SKELETON.format(**self._spec)
+    variant = NotImplemented # provided by children
 
     def sequence(self, genome):
         """Return the sequence of the probe given a reference genome object
@@ -51,9 +47,9 @@ class AbstractProbe(metaclass=abc.ABCMeta):
 
         """
         bases = reference.bases(seq_range, genome)
-        if seq_range.mutation:
+        if seq_range.mutation is not None:
             self._assert_reference_matches(bases)
-            return self._spec['mutation']
+            return seq_range.mutation
         else:
             return bases
 
@@ -61,31 +57,28 @@ class AbstractProbe(metaclass=abc.ABCMeta):
         """If the 'bases' string is not the same as the reference bases
         specified by the probe, raise a ReferenceMismatch exception.
 
+        Raises a NotImplementedError if the probe doesn't support sequence
+        variants (i.e., if the probe is not for sequence variant mutations,
+        this method should never be called).
+
         """
-        if not self._spec['reference'].lower() == bases.lower():
+        if not self.variant.reference.lower() == bases.lower():
             raise ReferenceMismatch(
-                    "Reference sequence {!r} does not match requested mutation "
-                    "'{}>{}'".format(bases,
-                                     self._spec["reference"],
-                                     self._spec["mutation"]))
+                "Reference sequence {!r} does not match requested mutation "
+                "{!r} => {!r}".format(bases,
+                                      self.variant.reference,
+                                      self.variant.mutation))
 
-    @abc.abstractproperty
-    def _STATEMENT_SKELETON(self):
-        """The template of the __str__ property of the probe.
 
-        The internal _spec property of an instance is passed to
-        _STATEMENT_SKELETON.format to produce the probe's string.
-
-        """
-
-    @abc.abstractmethod
+    @abstractmethod
     def get_ranges(self):
         """Return an iterable of SequenceRange objects representing the bases
         to be collected.
 
         """
 
-    @abc.abstractstaticmethod
+    @staticmethod
+    @abstractmethod
     def explode(statement, genome_annotation=None):
         """Return a list of probes from a statement and, optionally, a genome
         annotation.

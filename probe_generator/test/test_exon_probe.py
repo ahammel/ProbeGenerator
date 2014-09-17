@@ -11,7 +11,7 @@ class AbstractExonStatementTestCase(unittest.TestCase):
     """
     def setUp(self):
         self.probe_statement = "ABC#exon[1]-2 / DEF#exon[3]+3"
-        self.probe_string = "ABC#exon[1]-2/DEF#exon[3]+3_1:2/2:10_FOO_BAR"
+        self.probe_string = "ABC#exon[1]-2/DEF#exon[3]+3_1:2/2:11_FOO_BAR"
 
 
 class TestExonStatementParsing(AbstractExonStatementTestCase):
@@ -93,8 +93,8 @@ class TestExplode(AbstractExonStatementTestCase):
         self.assertCountEqual(
                 [(probe._spec['exon1'], probe._spec['exon2'])
                   for probe in ExonProbe.explode(statement, ANNOTATION)],
-                 [(1, 1), (1, 2), (1, 3),
-                  (2, 1), (2, 2), (2, 3)])
+                 [(1, 1), (1, 2),
+                  (2, 1), (2, 2),])
 
 
 class TestSequence(unittest.TestCase):

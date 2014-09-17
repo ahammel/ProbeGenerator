@@ -4,7 +4,7 @@
 import re
 
 from probe_generator.probe import AbstractProbe, InvalidStatement
-from probe_generator.sequence import SequenceRange
+from probe_generator.sequence_range import SequenceRange
 
 _COORDINATE = r"""
     \s*
@@ -47,7 +47,7 @@ class CoordinateProbe(AbstractProbe):
                            "{chromosome2}:{breakpoint2}"
                            "{comment}")
 
-    def __init__(self, specification, *rows):
+    def __init__(self, specification):
         """At init time, the start, end, and breakpoints are calculated and
         added to the specification.
 
@@ -56,43 +56,44 @@ class CoordinateProbe(AbstractProbe):
         probe.
 
         """
-        start1, end1 = _parse_range(
-            specification['index1'],
-            specification['operation1'],
-            specification['bases1'])
-        start2, end2 = _parse_range(
-            specification['index2'],
-            specification['operation2'],
-            specification['bases2'])
+        # TODO: Remove need for a specification
         breakpoint1, breakpoint2     = _get_breakpoints(specification)
-
-        specification['start1']      = start1
-        specification['end1']        = end1
-        specification['start2']      = start2
-        specification['end2']        = end2
         specification['breakpoint1'] = breakpoint1
         specification['breakpoint2'] = breakpoint2
+        self._spec = specification
 
-        super().__init__(specification, *rows)
-
+    def __str__(self):
+        return self._STATEMENT_SKELETON.format(**self._spec)
 
     @staticmethod
-    def explode(statement):
+    def explode(statement, genome_annotation=None):
+        if genome_annotation is not None:
+            raise Exception(
+                "CoordinateProbe.explode does not take a genome_annotation")
+
         specification = _parse(statement)
         return [CoordinateProbe(specification)]
 
     def get_ranges(self):
+        start1, end1 = _parse_range(
+            self._spec['index1'],
+            self._spec['operation1'],
+            self._spec['bases1'])
+        start2, end2 = _parse_range(
+            self._spec['index2'],
+            self._spec['operation2'],
+            self._spec['bases2'])
         return (
             SequenceRange(
                 self._spec['chromosome1'],
-                self._spec['start1'],
-                self._spec['end1'],
-                reverse_complement= self._spec['rc_side_1']),
+                start1,
+                end1,
+                reverse_complement=self._spec['rc_side_1']),
             SequenceRange(
                 self._spec['chromosome2'],
-                self._spec['start2'],
-                self._spec['end2'],
-                reverse_complement= self._spec['rc_side_2']))
+                start2,
+                end2,
+                reverse_complement=self._spec['rc_side_2']))
 
 def _parse(statement):
     """Return a coordinate specification from a statement.

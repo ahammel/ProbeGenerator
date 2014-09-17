@@ -1,12 +1,12 @@
 """Test whether it's possible for a string to match more than one statement
 regular expression.
 
-Run this suite with nose.
-
 """
 import re
 import itertools
+import sys
 
+from nose.plugins.skip import SkipTest
 from greenery import lego
 
 import probe_generator
@@ -17,6 +17,7 @@ PROBE_MODULES = (
     probe_generator.exon_probe,
     probe_generator.amino_acid_probe,
     probe_generator.gene_snp_probe,
+    probe_generator.gene_indel_probe,
     )
 
 
@@ -45,6 +46,8 @@ def assert_non_overlapping(fsa1, fsa2):
     empty FSA.
 
     """
+    if not'--no-skip' in sys.argv:
+        raise SkipTest
     assert fsa1 & fsa2 == lego.charclass(), ("Overlapping regex: "
                                              "{}".format(fsa1 & fsa2))
 

@@ -1,44 +1,9 @@
-"""Nucleotide sequence manipulation library for ProbeGenerator.
+"""Nucleotide sequence manipulation utility functions for ProbeGenerator.
 
-Provides complement() and reverse_complemement() functions and the
-SequenceRange object.
+Provides complement() and reverse_complemement() functions.
 
 """
-from collections import namedtuple
-
 _COMPLEMENT = str.maketrans('acgtACGT', 'tgcaTGCA')
-
-
-class SequenceRange(namedtuple("SequenceRange",
-                               ["chromosome",
-                                "start",
-                                "end",
-                                "reverse_complement",
-                                "mutation"])):
-    """Data object for specifying a range of base pairs to be extracted from
-    the genome.
-
-    The 'start' and 'end' fields are 0-indexed, left-inclusive, right-exclusive
-    (like slices in Python).
-
-    The optional 'mutation' flag is used to mark a range which will be replaced
-    with a different sequence by a Probe object.
-
-    """
-    # I've subclassed the namedtuple rather than using it raw so I can use
-    # keyword-only args and default values.
-
-    __slots__ = () # Performance hack
-
-    def __new__(self, chromosome, start, end, *,
-                # Keyword only arguments:
-                reverse_complement=False, mutation=False):
-        return super().__new__(self,
-                               chromosome,
-                               start,
-                               end,
-                               reverse_complement,
-                               mutation)
 
 
 def complement(string):

@@ -2,9 +2,10 @@
 
 """
 import re
+from collections import namedtuple
 
 from probe_generator.probe import AbstractProbe, InvalidStatement
-from probe_generator.sequence import SequenceRange
+from probe_generator.sequence_range import SequenceRange
 
 _STATEMENT_REGEX = re.compile(r"""
         \s*
@@ -27,6 +28,8 @@ _STATEMENT_REGEX = re.compile(r"""
         (--.*|\s*)      # comment
         """, re.VERBOSE)
 
+# TODO: Fix this ugly hack
+FakeVariant = namedtuple("FakeVariant", "reference")
 
 
 class SnpProbe(AbstractProbe):
@@ -44,6 +47,13 @@ class SnpProbe(AbstractProbe):
     _STATEMENT_SKELETON = ("{chromosome}:{index}_"
                            "{reference}>{mutation}/{bases}{comment}")
 
+    def __init__(self, specification):
+        self._spec = specification
+        self.variant = FakeVariant(self._spec["reference"])
+
+    def __str__(self):
+        return self._STATEMENT_SKELETON.format(**self._spec)
+
     def get_ranges(self):
         bases = self._spec['bases']
         chromosome = self._spec['chromosome']
@@ -57,17 +67,21 @@ class SnpProbe(AbstractProbe):
             SequenceRange(chromosome,
                           index,
                           index+1,
-                          mutation=True),
+                          mutation=self._spec["mutation"]),
             SequenceRange(chromosome,
                           index+1,
                           index+right_buffer))
 
     @staticmethod
-    def explode(statement):
+    def explode(statement, genome_annotation=None):
         """Yield probe statements with globbed reference and mutation
         bases filled in.
 
         """
+        if genome_annotation is not None:
+            raise Exception(
+                "SnpProbe.explode does not take a 'genome_annotation' "
+                "argument")
         partial_spec = _parse(statement)
         specs = _expand(partial_spec)
         return [SnpProbe(spec) for spec in specs]
@@ -84,7 +98,12 @@ def _parse(statement):
             "could not parse snp statement {!r}".format(
                     statement))
 
-    chromosome, index, reference_base, mutation, bases, comment = match.groups()
+    (chromosome,
+     index,
+     reference_base,
+     mutation,
+     bases,
+     comment) = match.groups()
     return {"chromosome": chromosome,
             "index":      int(index),
             "reference":  reference_base,

@@ -11,6 +11,7 @@ from probe_generator.snp_probe        import SnpProbe
 from probe_generator.gene_snp_probe   import GeneSnpProbe
 from probe_generator.amino_acid_probe import AminoAcidProbe
 from probe_generator.exon_probe       import ExonProbe
+from probe_generator.gene_indel_probe import GeneIndelProbe
 # Exceptions
 from probe_generator.probe import InvalidStatement, NonFatalError
 
@@ -81,30 +82,32 @@ def print_probes(statement_file, genome_file, *annotation_files):
         for statement in statements:
             chain = TryChain(InvalidStatement)
             chain.bind_all(
-                lambda: list(CoordinateProbe.explode(statement)),
-                lambda: list(SnpProbe.explode(statement)),
-                lambda: list(GeneSnpProbe.explode(statement, annotations)),
-                lambda: list(AminoAcidProbe.explode(statement, annotations)),
-                lambda: list(ExonProbe.explode(statement, annotations)))
+                lambda: CoordinateProbe.explode(statement),
+                lambda: SnpProbe.explode(statement),
+                lambda: GeneSnpProbe.explode(statement, annotations),
+                lambda: AminoAcidProbe.explode(statement, annotations),
+                lambda: ExonProbe.explode(statement, annotations),
+                lambda: GeneIndelProbe.explode(statement, annotations))
 
             if chain.value is Nothing:
                 print(INVALID_STATEMENT_WARNING.format(statement),
                       file=sys.stderr)
-            probes = chain.value
+            else:
+                probes = chain.value
 
-            one_probe_printed = False
-            for probe in probes:
-                try:
-                    print_fasta(probe, probe.sequence(ref_genome))
-                except NonFatalError as error:
-                    print(
-                        "In probe: {}: {}".format(probe, error),
-                        file=sys.stderr)
-                else:
-                    one_probe_printed = True
+                one_probe_printed = False
+                for probe in probes:
+                    try:
+                        print_fasta(probe, probe.sequence(ref_genome))
+                    except NonFatalError as error:
+                        print(
+                            "In probe: {}: {}".format(probe, error),
+                            file=sys.stderr)
+                    else:
+                        one_probe_printed = True
 
-            if not one_probe_printed: # i.e., the generator was empty
-                print(NO_PROBES_WARNING.format(statement), file=sys.stderr)
+                if not one_probe_printed: # i.e., the generator was empty
+                    print(NO_PROBES_WARNING.format(statement), file=sys.stderr)
 
 
 def print_fasta(head, bases):

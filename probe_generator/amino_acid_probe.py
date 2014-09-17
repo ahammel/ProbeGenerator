@@ -5,11 +5,11 @@ import re
 import sys
 import itertools
 
-from probe_generator import annotation
-from probe_generator.sequence import reverse_complement, SequenceRange
+from probe_generator import annotation, transcript
+from probe_generator.variant import TranscriptVariant, GenomeVariant
 from probe_generator.probe import AbstractProbe, InvalidStatement
 
-_STATEMENT_REGEX = re.compile("""
+_STATEMENT_REGEX = re.compile(r"""
         \s*                                           # whitespace
         ([A-Za-z0-9_./-]+)                            # gene name
         \s*
@@ -19,7 +19,9 @@ _STATEMENT_REGEX = re.compile("""
         \s*
         ([0-9]+)                                      # codon number
         \s*
-        ([ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy*])
+        ([ACDEFGHIKLMNPQRSTVWYXacdefghiklmnpqrstvwyx*])
+        \s*
+        (\[trans\]|)                                  # transcript-only-sequence
         \s*
         /
         \s*
@@ -50,7 +52,14 @@ _DNA_CODON_TABLE = {
     'W': ("TGG",),
     'Y': ("TAT", "TAC"),
     '*': ("TAA", "TAG", "TGA"),
-}
+    'X': tuple(''.join(bases) for bases in itertools.product("ACGT", repeat=3)),
+    }
+
+_AMINO_ACID_TABLE = {
+    codon: amino_acid
+    for amino_acid, codons in _DNA_CODON_TABLE.items() if amino_acid != 'X'
+    for codon in codons
+    }
 
 
 class AminoAcidProbe(AbstractProbe):
@@ -59,30 +68,32 @@ class AminoAcidProbe(AbstractProbe):
 
     """
     _STATEMENT_SKELETON = ("{gene}:{reference_aa}{codon}{mutation_aa}"
-                           "({reference_bases}>{mutation_bases})/"
-                           "{bases}_{transcript}_{chromosome}:{index}{comment}")
+                           "({reference}>{mutation})"
+                           "{transcript_sequence}/{bases}_{transcript_name}_"
+                           "{chromosome}:{coordinate}{comment}")
+
+    def __init__(self, *, variant, index, comment):
+        self.variant = variant
+        self.index = index
+        self.comment = comment
+
+    def __str__(self):
+        return self._STATEMENT_SKELETON.format(
+            gene=self.variant.gene,
+            reference_aa=_AMINO_ACID_TABLE[self.variant.reference],
+            codon=self.index,
+            mutation_aa=_AMINO_ACID_TABLE[self.variant.mutation],
+            reference=self.variant.reference,
+            mutation=self.variant.mutation,
+            transcript_sequence='[trans]' if self.variant.is_transcript else '',
+            bases=len(self.variant),
+            transcript_name=self.variant.transcript_name,
+            chromosome=self.variant.chromosome,
+            coordinate=self.variant.coordinate,
+            comment=self.comment)
 
     def get_ranges(self):
-        index = self._spec['index']
-        bases = self._spec['bases']
-        chromosome = self._spec['chromosome']
-
-        left_buffer = bases // 2
-        if bases % 2 == 0:
-            left_buffer -= 1
-        right_buffer = bases - left_buffer
-
-        return (
-            SequenceRange(chromosome,
-                          index-left_buffer,
-                          index-1),
-            SequenceRange(chromosome,
-                          index-1,
-                          index+2,
-                          mutation=True),
-            SequenceRange(chromosome,
-                          index+2,
-                          index+right_buffer))
+        return self.variant.sequence_ranges()
 
     @staticmethod
     def explode(statement, genome_annotation=None):
@@ -93,51 +104,52 @@ class AminoAcidProbe(AbstractProbe):
         first is returned.
 
         """
+        probes = []
+
         if genome_annotation is None:
             genome_annotation = []
-        partial_spec = _parse(statement)
+
+        specification = _parse(statement)
         transcripts = annotation.lookup_gene(
-            partial_spec['gene'],
+            specification['gene'],
             genome_annotation)
+
+        if specification["transcript_sequence"] == '':
+            variant_class = GenomeVariant
+        else:
+            variant_class = TranscriptVariant
+
+        reference_aa = specification['reference_aa'].upper()
+        mutation_aa = specification['mutation_aa'].upper()
+        reference_codons = _DNA_CODON_TABLE[reference_aa]
+        mutation_codons = _DNA_CODON_TABLE[mutation_aa]
+
+        index = specification["index"]
+
         coordinate_cache = set()
-        for transcript in transcripts:
+        for txt, reference, mutation in itertools.product(
+            transcripts, reference_codons, mutation_codons):
             try:
-                index = annotation.codon_index(partial_spec['codon'], transcript)
-            except annotation.OutOfRange as error:
+                sequence_range_index = txt.codon_index(specification['index'])
+            except transcript.OutOfRange as error:
                 print("{} in statement: {!r}".format(error, statement),
                       file=sys.stderr)
             else:
-                chromosome = transcript['chrom'].lstrip('chr')
-                if (chromosome, index) not in coordinate_cache:
-                    coordinate_cache.add((chromosome, index))
-                    reference_codons = _DNA_CODON_TABLE[
-                        partial_spec['reference_aa'].upper()]
-                    mutation_codons = _DNA_CODON_TABLE[
-                        partial_spec['mutation_aa'].upper()]
-                    for reference_codon, mutation_codon in itertools.product(
-                        reference_codons, mutation_codons):
-                        if transcript['strand'] == '+':
-                            mutation = mutation_codon
-                            reference = reference_codon
-                        else:
-                            mutation = reverse_complement(mutation_codon)
-                            reference = reverse_complement(reference_codon)
-                        spec = dict(partial_spec,
-                                    index=index,
-                                    chromosome=chromosome,
-                                    strand=transcript['strand'],
-                                    transcript=transcript['name'],
-                                    reference=reference,
-                                    reference_bases=reference_codon,
-                                    mutation_bases=mutation_codon,
-                                    mutation=mutation)
-                        # 'mutation_bases' is displayed in the probe's string,
-                        # while 'mutation' is used internally to determine the
-                        # sequence.
-                        #
-                        # They are different sequences if the transcript is on
-                        # the '-' strand.
-                        yield AminoAcidProbe(spec)
+                variant = variant_class(
+                    transcript=txt,
+                    index=sequence_range_index,
+                    reference=reference,
+                    mutation=mutation,
+                    length=specification["bases"])
+                if _AMINO_ACID_TABLE[mutation] != reference_aa:
+                    if (variant.index, reference, mutation) not in coordinate_cache:
+                        coordinate_cache.add((variant.index, reference, mutation))
+                        probe = AminoAcidProbe(
+                            variant=variant,
+                            index=index,
+                            comment=specification["comment"])
+                        probes.append(probe)
+        return probes
 
 
 def _parse(statement):
@@ -153,14 +165,16 @@ def _parse(statement):
 
     (gene,
      reference_aa,
-     codon,
+     index,
      mutation_aa,
+     transcript_sequence,
      bases,
      comment) = match.groups()
 
-    return {"gene":          gene,
-            "reference_aa":  reference_aa,
-            "codon":         int(codon),
-            "mutation_aa":   mutation_aa,
-            "bases":         int(bases),
-            "comment":       comment}
+    return {"gene":                gene,
+            "reference_aa":        reference_aa,
+            "index":               int(index),
+            "mutation_aa":         mutation_aa,
+            "bases":               int(bases),
+            "transcript_sequence": transcript_sequence,
+            "comment":             comment}
