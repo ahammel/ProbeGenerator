@@ -9,28 +9,6 @@ from probe_generator import annotation, transcript
 from probe_generator.variant import TranscriptVariant, GenomeVariant
 from probe_generator.probe import AbstractProbe, InvalidStatement, NonFatalError
 
-_STATEMENT_REGEX = re.compile(r"""
-        \s*                # whitespace
-        ([a-zA-Z0-9_./-]+) # gene name
-        \s*
-        :
-        \s*
-        c\.
-        ([0-9]+)
-        \s*
-        (del\s*[acgtACGT]+|)
-        \s*
-        (ins\s*[acgtACGT]+|)
-        \s*
-        (\[trans\]|)
-        \s*
-        /
-        \s*
-        ([0-9]+)
-        \s*
-        (--.*|\s*)""", re.VERBOSE)
-
-
 class GeneIndelProbe(AbstractProbe):
     """A probe specifying an insertion or deletion event starting at a base
     pair given relative to the start of a transcript.

@@ -9,31 +9,6 @@ from probe_generator import annotation, transcript
 from probe_generator.variant import TranscriptVariant, GenomeVariant
 from probe_generator.probe import AbstractProbe, InvalidStatement
 
-_STATEMENT_REGEX = re.compile(r"""
-        \s*                # whitespace
-        ([a-zA-Z0-9_./-]+) # gene name
-        \s*
-        :
-        \s*
-        c\.
-        ([0-9]+)           # base number
-        \s*
-        ([ACGTacgt])       # reference base
-        \s*
-        >
-        \s*
-        ([ACGTacgt])       # mutation base
-        \s*
-        (\[trans\]|)       # transcript-only sequence
-        \s*
-        /
-        \s*
-        ([0-9]+)           # number of base pairs
-        \s*
-        (--.*|\s*)         # comment
-        """, re.VERBOSE)
-
-
 class GeneSnpProbe(AbstractProbe):
     """Probe for a single nucleotide mutation event at a base pair specified
     relative to the start of a transcript.

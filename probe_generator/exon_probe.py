@@ -9,36 +9,6 @@ from probe_generator import annotation, transcript
 from probe_generator.probe import AbstractProbe, InvalidStatement
 from probe_generator.sequence_range import SequenceRange
 
-_PROBE_STATEMENT = r"""    # The regex for one side of a probe statement
-        \s*                # non-significant whitespace
-        ([a-zA-Z0-9_./-]+) # gene name
-        \s*\#\s*           # hash-separator
-        exon
-        \s*\[\s*           # bracket-delimiter
-        (\d+|\*)           # exon number
-        \s*\]\s*
-        ([*+-])            # feature side
-        \s*
-        (\d+|\*)           # number of bases
-        \s*
-"""
-
-_SEPARATOR = r"""
-    (/      # standard separator
-    |
-    ->)     # read-through separator
-"""
-
-_STATEMENT_REGEX = re.compile(r"""
-        {statement}
-        {separator}
-        {statement}
-        (--.*|\s*)   # comment
-        """.format(statement=_PROBE_STATEMENT,
-                   separator=_SEPARATOR),
-        re.VERBOSE)
-
-
 class ExonProbe(AbstractProbe):
     """Probe for a mutation event specified as a fusion of two exons.
 

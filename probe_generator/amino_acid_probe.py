@@ -9,27 +9,6 @@ from probe_generator import annotation, transcript
 from probe_generator.variant import TranscriptVariant, GenomeVariant
 from probe_generator.probe import AbstractProbe, InvalidStatement
 
-_STATEMENT_REGEX = re.compile(r"""
-        \s*                                           # whitespace
-        ([A-Za-z0-9_./-]+)                            # gene name
-        \s*
-        :
-        \s*
-        ([ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy*]) # IUPAC amino acid code
-        \s*
-        ([0-9]+)                                      # codon number
-        \s*
-        ([ACDEFGHIKLMNPQRSTVWYXacdefghiklmnpqrstvwyx*])
-        \s*
-        (\[trans\]|)                                  # transcript-only-sequence
-        \s*
-        /
-        \s*
-        ([0-9]+)                                      # number of base pairs
-        \s*
-        (--.*|\s*)                                    # comment
-        """, re.VERBOSE)
-
 _DNA_CODON_TABLE = {
     'A': ("GCT", "GCC", "GCA", "GCG"),
     'C': ("TGT", "TGC"),

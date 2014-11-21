@@ -6,26 +6,6 @@ import re
 from probe_generator.probe import AbstractProbe, InvalidStatement
 from probe_generator.sequence_range import SequenceRange
 
-_COORDINATE = r"""
-    \s*
-    ([a-zA-Z0-9.]+) # chromosome
-    \s*:\s*         # colon-separator
-    (\d+)           # start
-    \s*
-    ([+-])          # side
-    \s*
-    (\d+)           # range
-    \s*
-"""
-
-_STATEMENT_REGEX = re.compile(r"""
-        {0}
-        /
-        {0}
-        (--.*|\s*)       # comment
-        """.format(_COORDINATE), re.VERBOSE)
-
-
 class CoordinateProbe(AbstractProbe):
     """A probe for a fusion event using the coordinates for the breakpoints.
 

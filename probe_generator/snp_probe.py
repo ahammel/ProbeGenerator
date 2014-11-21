@@ -7,27 +7,6 @@ from collections import namedtuple
 from probe_generator.probe import AbstractProbe, InvalidStatement
 from probe_generator.sequence_range import SequenceRange
 
-_STATEMENT_REGEX = re.compile(r"""
-        \s*
-        ([a-zA-Z0-9.]+) # chromosome
-        \s*
-        :               # colon separator
-        \s*
-        (\d+)           # base pair index
-        \s*
-        ([acgtACGT*])   # reference base
-        \s*
-        >               # arrow separator
-        \s*
-        ([acgtACGT*])   # mutant base
-        \s*
-        /               # solidus separator
-        \s*
-        (\d+)           # bases
-        \s*
-        (--.*|\s*)      # comment
-        """, re.VERBOSE)
-
 # TODO: Fix this ugly hack
 FakeVariant = namedtuple("FakeVariant", "reference")
 
