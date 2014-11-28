@@ -93,7 +93,7 @@ class ReferenceMismatch(NonFatalError):
     """
 
 
-class InvalidStatement(Exception):
+class InvalidStatement(NonFatalError):
     """Raised when a probe statement cannot be parsed.
 
     Note that this is a fatal error.
