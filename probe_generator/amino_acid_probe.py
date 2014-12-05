@@ -8,6 +8,7 @@ import itertools
 from probe_generator import annotation, transcript
 from probe_generator.variant import TranscriptVariant, GenomeVariant
 from probe_generator.probe import AbstractProbe, InvalidStatement
+from probe_generator.sequence import DNA_CODON_TABLE, AMINO_ACID_TABLE
 
 _STATEMENT_REGEX = re.compile(r"""
         \s*                                           # whitespace
@@ -30,37 +31,6 @@ _STATEMENT_REGEX = re.compile(r"""
         (--.*|\s*)                                    # comment
         """, re.VERBOSE)
 
-_DNA_CODON_TABLE = {
-    'A': ("GCT", "GCC", "GCA", "GCG"),
-    'C': ("TGT", "TGC"),
-    'D': ("GAT", "GAC"),
-    'E': ("GAA", "GAG"),
-    'F': ("TTT", "TTC"),
-    'G': ("GGT", "GGC", "GGA", "GGG"),
-    'H': ("CAT", "CAC"),
-    'I': ("ATT", "ATC", "ATA"),
-    'K': ("AAA", "AAG"),
-    'L': ("CTT", "CTC", "CTA", "CTG", "TTA", "TTG"),
-    'M': ("ATG",),
-    'N': ("AAT", "AAC"),
-    'P': ("CCT", "CCC", "CCA", "CCG"),
-    'Q': ("CAA", "CAG"),
-    'R': ("CGT", "CGC", "CGA", "CGG", "AGA", "AGG"),
-    'S': ("TCT", "TCC", "TCA", "TCG", "AGT", "AGC"),
-    'T': ("ACT", "ACC", "ACA", "ACG"),
-    'V': ("GTT", "GTC", "GTA", "GTG"),
-    'W': ("TGG",),
-    'Y': ("TAT", "TAC"),
-    '*': ("TAA", "TAG", "TGA"),
-    'X': tuple(''.join(bases) for bases in itertools.product("ACGT", repeat=3)),
-    }
-
-_AMINO_ACID_TABLE = {
-    codon: amino_acid
-    for amino_acid, codons in _DNA_CODON_TABLE.items() if amino_acid != 'X'
-    for codon in codons
-    }
-
 
 class AminoAcidProbe(AbstractProbe):
     """Probe for a single nucleotide polymorphism from an amino acid change at
@@ -80,9 +50,9 @@ class AminoAcidProbe(AbstractProbe):
     def __str__(self):
         return self._STATEMENT_SKELETON.format(
             gene=self.variant.gene,
-            reference_aa=_AMINO_ACID_TABLE[self.variant.reference],
+            reference_aa=AMINO_ACID_TABLE[self.variant.reference],
             codon=self.index,
-            mutation_aa=_AMINO_ACID_TABLE[self.variant.mutation],
+            mutation_aa=AMINO_ACID_TABLE[self.variant.mutation],
             reference=self.variant.reference,
             mutation=self.variant.mutation,
             transcript_sequence='[trans]' if self.variant.is_transcript else '',
@@ -121,8 +91,8 @@ class AminoAcidProbe(AbstractProbe):
 
         reference_aa = specification['reference_aa'].upper()
         mutation_aa = specification['mutation_aa'].upper()
-        reference_codons = _DNA_CODON_TABLE[reference_aa]
-        mutation_codons = _DNA_CODON_TABLE[mutation_aa]
+        reference_codons = DNA_CODON_TABLE[reference_aa]
+        mutation_codons = DNA_CODON_TABLE[mutation_aa]
 
         index = specification["index"]
 
@@ -141,7 +111,7 @@ class AminoAcidProbe(AbstractProbe):
                     reference=reference,
                     mutation=mutation,
                     length=specification["bases"])
-                if _AMINO_ACID_TABLE[mutation] != reference_aa:
+                if AMINO_ACID_TABLE[mutation] != reference_aa:
                     if (variant.index, reference, mutation) not in coordinate_cache:
                         coordinate_cache.add((variant.index, reference, mutation))
                         probe = AminoAcidProbe(

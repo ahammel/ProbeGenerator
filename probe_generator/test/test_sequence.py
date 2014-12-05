@@ -23,6 +23,14 @@ class TestSequence(unittest.TestCase):
                 sequence.reverse_complement('aNNNgg'),
                 'ccNNNt')
 
+    def test_translate(self):
+        self.assertEqual(sequence.translate("AAAACGGCT"), "KTA")
+
+    def test_reverse_translate(self):
+        self.assertCountEqual(
+                sequence.reverse_translate("GM"),
+                ["GGAATG", "GGCATG", "GGGATG", "GGTATG"])
+
 
 class TestSequenceRange(unittest.TestCase):
     def setUp(self):

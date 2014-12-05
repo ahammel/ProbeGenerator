@@ -18,6 +18,7 @@ PROBE_MODULES = (
     probe_generator.amino_acid_probe,
     probe_generator.gene_snp_probe,
     probe_generator.gene_indel_probe,
+    probe_generator.amino_acid_indel_probe,
     )
 
 

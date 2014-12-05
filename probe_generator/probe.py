@@ -2,7 +2,6 @@
 
 """
 from abc import ABCMeta, abstractmethod
-import sys
 
 from probe_generator import reference
 from probe_generator.exceptions import NonFatalError

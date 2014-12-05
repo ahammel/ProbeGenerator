@@ -2,6 +2,7 @@ import unittest
 
 from probe_generator.test.test_constants import GENOME, ANNOTATION
 from probe_generator.amino_acid_probe import AminoAcidProbe
+from probe_generator.amino_acid_indel_probe import AminoAcidIndelProbe
 
 class TestAminoAcidProbe(unittest.TestCase):
     def setUp(self):
@@ -48,11 +49,30 @@ class TestAminoAcidProbe(unittest.TestCase):
             len(list(AminoAcidProbe.explode("GHI: M2X /9", ANNOTATION))), 63)
 
 
+class TestAminoAcidIndelProbe(unittest.TestCase):
+    """Test case docstring.
+
+    """
+    def setUp(self):
+        self.probe = select_reference_codon(
+            AminoAcidIndelProbe.explode("GHI:P2-P3 ins M /9", ANNOTATION),
+            "CCCCCC")
+        # self.transcript_probe = select_reference_codon(
+        #     AminoAcidIndelProbe.explode("MNO: G2M [trans]/9", ANNOTATION),
+        #     "GGG")
+
+    def test_amino_acid_probe_str(self):
+        self.assertEqual(
+                str(self.probe),
+                "GHI:2.delPPinsPMP(delCCCCCCinsCCTATGCCT)/9_BAZ_3:13")
+
+
 def select_reference_codon(probes, codon):
     for probe in probes:
         if probe.variant.reference == codon:
             the_probe = probe
             break
     else:
-        raise Exception("No such codon")
+        raise Exception(
+                "No such codon. Found: {}".format(probe.variant.reference))
     return the_probe
