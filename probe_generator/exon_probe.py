@@ -344,8 +344,8 @@ def _get_breakpoints(spec):
     specification.
 
     """
-    chromosome1, start1, end1, _, _ = spec['exon_range_1']
-    chromosome2, start2, end2, _, _ = spec['exon_range_2']
+    chromosome1, start1, end1, _, _, _ = spec['exon_range_1']
+    chromosome2, start2, end2, _, _, _ = spec['exon_range_2']
     index1 = start1 - 1 if spec['side1'] == spec['strand1'] else end1
     index2 = start2     if spec['side2'] == spec['strand2'] else end2 - 1
     return ("{}:{}".format(chromosome1, index1),
@@ -357,7 +357,7 @@ def _get_range(exon_range, side, strand, bases):
     start of the exon requested, and the number of base pairs.
 
     """
-    _, start, end, _, _ = exon_range
+    _, start, end, _, _, _ = exon_range
     if (side == '+') == (strand == '+'):
         return (start, start + bases)
     else:

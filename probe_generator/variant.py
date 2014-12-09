@@ -50,7 +50,7 @@ class TranscriptVariant(AbstractVariant):
         the range of the transcript.
 
         """
-        chromosome, start, end, _, _ = self.index
+        chromosome, start, end, _, _, _= self.index
 
         reference_length = len(self.reference)
         mutation_length = len(self.mutation)
@@ -72,6 +72,7 @@ class TranscriptVariant(AbstractVariant):
                            start,
                            start+reference_length,
                            mutation=self.mutation,
+                           reference=self.reference,
                            reverse_complement=reverse_complement)] +
             self.transcript.transcript_range(base+reference_length,
                                              base+reference_length+right_buffer)
@@ -95,7 +96,7 @@ class GenomeVariant(AbstractVariant):
         buffering sequence taken from the surrounding genomic sequence.
 
         """
-        chromosome, start, end, _, _ = self.index
+        chromosome, start, end, _, _, _ = self.index
 
         reference_length = len(self.reference)
         mutation_length = len(self.mutation)
@@ -112,6 +113,7 @@ class GenomeVariant(AbstractVariant):
                           start,
                           start+reference_length,
                           mutation=self.mutation,
+                          reference=self.reference,
                           reverse_complement=not self.transcript.plus_strand),
             SequenceRange(chromosome,
                           start+reference_length,

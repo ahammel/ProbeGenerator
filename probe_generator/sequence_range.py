@@ -1,4 +1,4 @@
-"""Provides the SequenceRange object.
+"""Provides the SequenceRange object.  
 
 """
 from probe_generator import sequence
@@ -11,6 +11,7 @@ class SequenceRange(namedtuple("SequenceRange",
                                 "start",
                                 "end",
                                 "reverse_complement",
+                                "reference",
                                 "mutation"])):
     """Data object for specifying a range of base pairs to be extracted from
     the genome.
@@ -27,7 +28,7 @@ class SequenceRange(namedtuple("SequenceRange",
     # object.
 
     def __new__(cls, chromosome, start, end, *,
-                reverse_complement=False, mutation=None):
+                reverse_complement=False, reference=None, mutation=None):
         """As in the standard `namedtuple` __new__ method, but
         `reverse_complement` and `mutation` are keyword-only arguments with
         default values.
@@ -45,6 +46,7 @@ class SequenceRange(namedtuple("SequenceRange",
                                start,
                                end,
                                reverse_complement,
+                               reference,
                                the_mutation)
 
     def concat(self, other):

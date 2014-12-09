@@ -46,13 +46,14 @@ class AbstractProbe(object, metaclass=ABCMeta):
 
         """
         bases = reference.bases(seq_range, genome)
+        if seq_range.reference is not None:
+            self._assert_reference_matches(seq_range.reference, bases)
         if seq_range.mutation is not None:
-            self._assert_reference_matches(bases)
             return seq_range.mutation
         else:
             return bases
 
-    def _assert_reference_matches(self, bases):
+    def _assert_reference_matches(self, expected, actual):
         """If the 'bases' string is not the same as the reference bases
         specified by the probe, raise a ReferenceMismatch exception.
 
@@ -61,13 +62,10 @@ class AbstractProbe(object, metaclass=ABCMeta):
         this method should never be called).
 
         """
-        if not self.variant.reference.lower() == bases.lower():
+        if not expected.lower() == actual.lower():
             raise ReferenceMismatch(
-                "Reference sequence {!r} does not match requested mutation "
-                "{!r} => {!r}".format(bases,
-                                      self.variant.reference,
-                                      self.variant.mutation))
-
+                "In probe '{!s}': expected sequence {!r} but got {!r}" .format(
+                    self, expected, actual))
 
     @abstractmethod
     def get_ranges(self):
@@ -98,4 +96,3 @@ class InvalidStatement(NonFatalError):
     Note that this is a fatal error.
 
     """
-
