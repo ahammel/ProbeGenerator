@@ -70,3 +70,23 @@ class TestSequenceRange(unittest.TestCase):
                 self.range_56),
             [SequenceRange('0', 1, 4),
              self.range_56])
+
+    def test_between(self):
+        self.assertEqual(
+                SequenceRange.between(
+                    self.range_12,
+                    self.range_24),
+                SequenceRange('0', 2, 2))
+
+    def test_span(self):
+        self.assertEqual(
+                SequenceRange.span(
+                    self.range_12,
+                    self.range_24),
+                SequenceRange('0', 1, 4))
+        self.assertEqual(
+                SequenceRange.span(
+                    self.range_12,
+                    self.range_56),
+                SequenceRange('0', 1, 6))
+

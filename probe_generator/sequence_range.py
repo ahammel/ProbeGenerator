@@ -1,4 +1,4 @@
-"""Provides the SequenceRange object.  
+"""Provides the SequenceRange object.
 
 """
 from probe_generator import sequence
@@ -49,6 +49,20 @@ class SequenceRange(namedtuple("SequenceRange",
                                reference,
                                the_mutation)
 
+    def adjacent(self, other):
+        """Return True if the SequenceRange object ends where the other starts
+        or vice-versa.
+
+        The chromosome, mutation, and reverse_complement status must be equal
+        for both SequenceRange objects.
+
+        """
+        return (((self.chromosome         == other.chromosome)          and
+                 (self.mutation           == other.mutation)            and
+                 (self.reverse_complement == other.reverse_complement)) and
+                ((self.start              == other.end)                 or
+                 (self.end                == other.start)))
+
     def concat(self, other):
         """Return a new SequenceRange object representing the combined genomic
         region of the two SequenceRanges.
@@ -71,20 +85,6 @@ class SequenceRange(namedtuple("SequenceRange",
         else:
             assert False, "unreachable"
 
-    def adjacent(self, other):
-        """Return True if the SequenceRange object ends where the other starts
-        or vice-versa.
-
-        The chromosome, mutation, and reverse_complement status must be equal
-        for both SequenceRange objects.
-
-        """
-        return (((self.chromosome         == other.chromosome)          and
-                 (self.mutation           == other.mutation)            and
-                 (self.reverse_complement == other.reverse_complement)) and
-                ((self.start              == other.end)                 or
-                 (self.end                == other.start)))
-
     def condense(self, *others):
         """Given an iterable of SequenceRange objects, recursively concatenate
         ranges which are adjacent to `self` until no two consecutive ranges in
@@ -101,3 +101,36 @@ class SequenceRange(namedtuple("SequenceRange",
                 chunk = other
         ranges.append(chunk)
         return ranges
+
+    def between(self, other):
+        """Given two adjacent SequenceRange objects, return the SequenceRange
+        representing the space between the two.
+
+        """
+        if not self.adjacent(other):
+            raise ValueError(
+                "Cannot return sequence between non-adjacent "
+                "SequenceRange objects {} and {}".format(self, other))
+
+        if self.start == other.end:
+            return SequenceRange(self.chromosome, self.start, self.start)
+        elif self.end == other.start:
+            return SequenceRange(self.chromosome, self.end, self.end)
+        else:
+            assert False, "unreachable"
+
+    def span(self, other):
+        """Given two SequenceRanges on the same chromosome, return a
+        SequenceRange object cover all the bases between the two inclusive.
+
+        """
+        if not self.chromosome == other.chromosome:
+            raise ValueError(
+                    "Span is undefined for SequenceRange objects on different "
+                    "chromosomes: {} and {}".format(self,other))
+
+        coordinates = (self.start, self.end, other.start, other.end)
+        return SequenceRange(
+                self.chromosome,
+                min(coordinates),
+                max(coordinates))
