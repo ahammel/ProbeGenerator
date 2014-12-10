@@ -54,17 +54,48 @@ class TestAminoAcidIndelProbe(unittest.TestCase):
 
     """
     def setUp(self):
-        self.probe = select_reference_codon(
-            AminoAcidIndelProbe.explode("GHI:P2-P3 ins M /9", ANNOTATION),
-            "CCCCCC")
-        # self.transcript_probe = select_reference_codon(
-        #     AminoAcidIndelProbe.explode("MNO: G2M [trans]/9", ANNOTATION),
-        #     "GGG")
+        self.insertion = select_check_codons(
+                AminoAcidIndelProbe.explode("GHI2:P1-G2 ins M /9", ANNOTATION),
+                "CCC",
+                "GGG")
+        self.deletion = select_check_codons(
+                AminoAcidIndelProbe.explode("GHI2:del P1-G2 /9", ANNOTATION),
+                "CCC",
+                "GGG")
+        self.indel = select_check_codons(
+                AminoAcidIndelProbe.explode("GHI2:del P1-G2 ins M/9", ANNOTATION),
+                "CCC",
+                "GGG")
 
-    def test_amino_acid_probe_str(self):
+    def test_insertion_probe(self):
         self.assertEqual(
-                str(self.probe),
-                "GHI:2.delPPinsPMP(delCCCCCCinsCCTATGCCT)/9_BAZ_3:13")
+                self.insertion.sequence(GENOME),
+                "cccATGGGG")
+
+    def test_deletion_probe(self):
+        self.assertEqual(
+                self.deletion.sequence(GENOME),
+                "aaaacccaa")
+
+    def test_indel_prober(self):
+        self.assertEqual(
+                self.indel.sequence(GENOME),
+                "aaaATGccc")
+
+    def test_insertion_probe_str(self):
+        self.assertEqual(
+                str(self.insertion),
+                "GHI2:P1-G2insM(ATG)/9_BAZ2_3:13")
+
+    def test_deletion_probe_str(self):
+        self.assertEqual(
+                str(self.deletion),
+                "GHI2:delP1-G2/9_BAZ2_3:10")
+
+    def test_indel_probe(self):
+        self.assertEqual(
+                str(self.indel),
+                "GHI2:delP1-G2insM(ATG)/9_BAZ2_3:10")
 
 
 def select_reference_codon(probes, codon):
@@ -75,4 +106,17 @@ def select_reference_codon(probes, codon):
     else:
         raise Exception(
                 "No such codon. Found: {}".format(probe.variant.reference))
+    return the_probe
+
+
+def select_check_codons(probes, left_check, right_check):
+    for probe in probes:
+        checks = [index.reference for index in probe.variant.check_sequences]
+        if checks == [left_check, right_check]:
+            the_probe = probe
+            break
+    else:
+        raise Exception(
+                "No such checks. Found {}".format(
+                    probe.variant.check_sequences))
     return the_probe

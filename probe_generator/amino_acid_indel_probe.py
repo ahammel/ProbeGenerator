@@ -9,12 +9,15 @@ from probe_generator import annotation, transcript
 from probe_generator.variant import TranscriptVariant, GenomeVariant
 from probe_generator.probe import AbstractProbe, InvalidStatement
 from probe_generator.sequence import translate, reverse_translate
+from probe_generator.sequence_range import SequenceRange
 
 _STATEMENT_REGEX = re.compile(r"""
         \s*                                                     # whitespace
         ([A-Za-z0-9_./-]+)                                      # gene name
         \s*
         :
+        \s*
+        (del|)
         \s*
         ([ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy*])           # IUPAC amino acid code
         \s*
@@ -25,8 +28,6 @@ _STATEMENT_REGEX = re.compile(r"""
         ([ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy*])
         \s*
         ([0-9]+)
-        \s*
-        (del|)
         \s*
         (ins\s*[ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy*]+|)
         \s*
@@ -44,8 +45,9 @@ class AminoAcidIndelProbe(AbstractProbe):
     a codon.
 
     """
-    _STATEMENT_SKELETON = ("{gene}:{codon}.{deletion}{insertion}"
-                           "({deletion_nucleotides}{insertion_nucleotides})"
+    _STATEMENT_SKELETON = ("{gene}:{deletion}"
+                           "{left_aa}{left_index}-{right_aa}{right_index}"
+                           "{insertion}{insertion_nucleotides}"
                            "{transcript_sequence}/{bases}_{transcript_name}_"
                            "{chromosome}:{coordinate}{comment}")
 
@@ -55,15 +57,19 @@ class AminoAcidIndelProbe(AbstractProbe):
         self.comment = comment
 
     def __str__(self):
-        reference_aa=translate(self.variant.reference)
+        is_deletion = self.variant.index.start != self.variant.index.end
+        left_index, right_index = self.index
+        left_check, right_check = self.variant.check_sequences
         mutation_aa=translate(self.variant.mutation)
         return self._STATEMENT_SKELETON.format(
             gene=self.variant.gene,
-            codon=self.index,
+            deletion='del' if is_deletion else '',
+            left_aa=translate(left_check.reference),
+            left_index=left_index,
+            right_aa=translate(right_check.reference),
+            right_index=right_index,
             insertion=_ins(mutation_aa),
-            deletion=_del(reference_aa),
-            insertion_nucleotides=_ins(self.variant.mutation),
-            deletion_nucleotides=_del(self.variant.reference),
+            insertion_nucleotides=_bracket(self.variant.mutation),
             transcript_sequence='[trans]' if self.variant.is_transcript else '',
             bases=len(self.variant),
             transcript_name=self.variant.transcript_name,
@@ -93,50 +99,52 @@ class AminoAcidIndelProbe(AbstractProbe):
             specification['gene'],
             genome_annotation)
 
-        reference_peptide = _xify(
-                specification["left_aa"],
-                specification["right_aa"],
-                (specification["right_codon"]-specification["left_codon"])-1)
-
-        if specification["deletion"]:
-            mutation_peptide = specification["insertion"]
-        else:
-            mutation_peptide = (
-                    specification["left_aa"] +
-                    specification["insertion"] +
-                    specification["right_aa"])
-
-        reference_sequences = reverse_translate(reference_peptide)
-        mutation_sequences = reverse_translate(mutation_peptide)
+        left_codon_seqs = reverse_translate(specification["left_aa"])
+        right_codon_seqs = reverse_translate(specification["right_aa"])
+        insertion_seqs = reverse_translate(specification["insertion"])
 
         if specification["transcript_sequence"] == '':
             variant_class = GenomeVariant
         else:
             variant_class = TranscriptVariant
 
-        index = specification["left_codon"]
-
         coordinate_cache = set()
-        for txt, reference, mutation in itertools.product(
-            transcripts, reference_sequences, mutation_sequences):
+        for txt, left_seq, right_seq, insertion in itertools.product(
+            transcripts, left_codon_seqs, right_codon_seqs, insertion_seqs):
             try:
-                sequence_range_index = txt.codon_index(
-                        specification["left_codon"])
+                left_index = txt.codon_index(
+                        specification["left_codon"],
+                        reference=left_seq,
+                        mutation='')
+                right_index = txt.codon_index(
+                        specification["right_codon"],
+                        reference=right_seq,
+                        mutation='')
             except transcript.OutOfRange as error:
                 print("{} in statement: {!r}".format(error, statement),
                       file=sys.stderr)
             else:
+                if specification["deletion"] == '':
+                    sequence_range_index = SequenceRange.between(
+                            left_index, right_index)
+                else:
+                    sequence_range_index = SequenceRange.span(
+                            left_index, right_index)
                 variant = variant_class(
                     transcript=txt,
                     index=sequence_range_index,
-                    reference=reference,
-                    mutation=mutation,
-                    length=specification["bases"])
-                if (variant.index, reference, mutation) not in coordinate_cache:
-                    coordinate_cache.add((variant.index, reference, mutation))
+                    mutation=insertion,
+                    reference=None,
+                    length=specification["bases"],
+                    checks=[left_index, right_index]
+                    )
+                variant_spec = (variant.index, left_index, right_index, insertion)
+                if variant_spec not in coordinate_cache:
+                    coordinate_cache.add(variant_spec)
                     probe = AminoAcidIndelProbe(
                         variant=variant,
-                        index=index,
+                        index=[specification["left_codon"],
+                               specification["right_codon"]],
                         comment=specification["comment"])
                     probes.append(probe)
         return probes
@@ -154,11 +162,11 @@ def _parse(statement):
         raise InvalidStatement
 
     (gene,
+     deletion,
      left_aa,
      left_codon,
      right_aa,
      right_codon,
-     deletion,
      insertion,
      transcript_sequence,
      bases,
@@ -167,30 +175,23 @@ def _parse(statement):
     if deletion == '' and insertion == '':
         raise InvalidStatement
 
+    if deletion == '' and int(right_codon) - int(left_codon) != 1:
+        raise InvalidStatement(
+                "Amino acids must be adjacent when specifying an insertion")
+
     return {"gene" :                gene,
             "left_aa" :             left_aa,
             "left_codon" :          int(left_codon),
             "right_aa" :            right_aa,
             "right_codon" :         int(right_codon),
-            "deletion" :            bool(deletion),
+            "deletion" :            deletion,
             "insertion" :           re.sub(r"^ins +", "", insertion),
             "bases" :               int(bases),
             "transcript_sequence" : transcript_sequence,
             "comment" :             comment}
 
 
-def _xify(head, tail, n):
-    """Return the string generated by joining the head to the tail with n "x"s
-    in between.
-
-    Pronounced "ex-if-fye"
-
-    """
-    return head + ("X"*n) + tail
-
-
 def _ins(string):
     return string if string == '' else "ins"+string
-
-def _del(string):
-    return string if string == '' else "del"+string
+def _bracket(string):
+    return string if string == '' else "({})".format(string)

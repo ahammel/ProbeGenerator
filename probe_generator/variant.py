@@ -18,7 +18,8 @@ class AbstractVariant(object):
     sequence.
 
     """
-    def __init__(self, *, transcript, index, reference, mutation, length):
+    def __init__(self, *,
+            transcript, index, reference, mutation, length, checks=None):
         self.transcript = transcript
         self.index = index
         self.reference = reference
@@ -29,6 +30,15 @@ class AbstractVariant(object):
         self.transcript_name = self.transcript.name
         self.chromosome = self.transcript.chromosome
         self.coordinate = self.index.start + 1
+
+        if checks is None:
+            self.check_sequences = []
+        else:
+            for check in checks:
+                assert check.mutation == '' , ("The mutation sequence must be "
+                                               "the empty string "
+                                               "in check sequences")
+            self.check_sequences = checks
 
     def __len__(self):
         return self._length
@@ -52,7 +62,7 @@ class TranscriptVariant(AbstractVariant):
         """
         chromosome, start, end, _, _, _= self.index
 
-        reference_length = len(self.reference)
+        reference_length = end - start if self.reference is None else len(self.reference)
         mutation_length = len(self.mutation)
 
         total_buffer = len(self) - mutation_length
@@ -75,7 +85,8 @@ class TranscriptVariant(AbstractVariant):
                            reference=self.reference,
                            reverse_complement=reverse_complement)] +
             self.transcript.transcript_range(base+reference_length,
-                                             base+reference_length+right_buffer)
+                                             base+reference_length+right_buffer) +
+            self.check_sequences
             )
 
         if self.transcript.plus_strand:
@@ -98,7 +109,7 @@ class GenomeVariant(AbstractVariant):
         """
         chromosome, start, end, _, _, _ = self.index
 
-        reference_length = len(self.reference)
+        reference_length = end - start if self.reference is None else len(self.reference)
         mutation_length = len(self.mutation)
 
         total_buffer = len(self) - mutation_length
@@ -117,4 +128,5 @@ class GenomeVariant(AbstractVariant):
                           reverse_complement=not self.transcript.plus_strand),
             SequenceRange(chromosome,
                           start+reference_length,
-                          start+reference_length+right_buffer)]
+                          start+reference_length+right_buffer)] + self.check_sequences
+

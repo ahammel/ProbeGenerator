@@ -170,16 +170,29 @@ class Transcript(object):
         base_index = self._transcript_index(index)
         return SequenceRange(self.chromosome, base_index, base_index+1)
 
-    def codon_index(self, index):
+    def codon_index(self, index, reference=None, mutation=None):
         """Given a 1-based codon index, return a SequenceRange object
         representing that codon.
+
+        The `reference` and `mutation` parameters are passed to the
+        SequenceRange object.
 
         """
         base_index = self._transcript_index(index*3)
         if self.plus_strand:
-            return SequenceRange(self.chromosome, base_index-2, base_index+1)
+            return SequenceRange(
+                    self.chromosome,
+                    base_index-2,
+                    base_index+1,
+                    reference=reference,
+                    mutation=mutation)
         else:
-            return SequenceRange(self.chromosome, base_index, base_index+3)
+            return SequenceRange(
+                    self.chromosome,
+                    base_index,
+                    base_index+3,
+                    reference=reference,
+                    mutation=mutation)
 
     def base_index(self, sequence_range):
         """Given a SequenceRange object representing a genomic location within
