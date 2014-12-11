@@ -19,7 +19,13 @@ class AbstractVariant(object):
 
     """
     def __init__(self, *,
-            transcript, index, reference, mutation, length, checks=None):
+            transcript,   # Transcript
+            index,        # SequenceRange
+            reference,    # string or None
+            mutation,     # string or None
+            length,       # int
+            checks=None   # [SequenceRange] or None
+            ):
         self.transcript = transcript
         self.index = index
         self.reference = reference

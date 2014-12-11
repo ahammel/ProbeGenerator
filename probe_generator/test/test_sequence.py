@@ -51,11 +51,11 @@ class TestSequenceRange(unittest.TestCase):
 
     def test_adjacent(self):
         self.assertTrue(
-            self.range_12.adjacent(self.range_24))
+            self.range_12.is_adjacent(self.range_24))
         self.assertTrue(
-            self.range_24.adjacent(self.range_12))
+            self.range_24.is_adjacent(self.range_12))
         self.assertFalse(
-            self.range_12.adjacent(self.range_56))
+            self.range_12.is_adjacent(self.range_56))
 
     def test_condense(self):
         self.assertEqual(
