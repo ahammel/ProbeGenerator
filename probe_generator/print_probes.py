@@ -18,6 +18,9 @@ from probe_generator.probe import InvalidStatement, NonFatalError
 NO_PROBES_WARNING = (
     "WARNING: no probes could be generated for statement {!r}")
 
+INVALID_STATEMENT_WARNING = (
+    "WARNING: the statement {!r} could not be parsed")
+
 
 class Nothing(object):
     """Represents a failed computation.
@@ -77,7 +80,7 @@ def print_probes(statement_file, genome_file, *annotation_files):
         ref_genome = reference.reference_genome(genome)
         annotations = _combine_annotations(annotation_files)
         for statement in statements:
-            chain = TryChain(NonFatalError)
+            chain = TryChain(InvalidStatement)
             chain.bind_all(
                 lambda: CoordinateProbe.explode(statement),
                 lambda: SnpProbe.explode(statement),
@@ -87,7 +90,7 @@ def print_probes(statement_file, genome_file, *annotation_files):
                 lambda: GeneIndelProbe.explode(statement, annotations))
 
             if chain.value is Nothing:
-                print(NO_PROBES_WARNING.format(statement),
+                print(INVALID_STATEMENT_WARNING.format(statement),
                       file=sys.stderr)
             else:
                 probes = chain.value
