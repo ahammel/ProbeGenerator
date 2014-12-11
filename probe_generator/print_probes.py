@@ -6,12 +6,13 @@ import sys
 # Utilities
 from probe_generator import reference, annotation
 # Probe classes
-from probe_generator.coordinate_probe import CoordinateProbe
-from probe_generator.snp_probe        import SnpProbe
-from probe_generator.gene_snp_probe   import GeneSnpProbe
-from probe_generator.amino_acid_probe import AminoAcidProbe
-from probe_generator.exon_probe       import ExonProbe
-from probe_generator.gene_indel_probe import GeneIndelProbe
+from probe_generator.coordinate_probe       import CoordinateProbe
+from probe_generator.snp_probe              import SnpProbe
+from probe_generator.gene_snp_probe         import GeneSnpProbe
+from probe_generator.amino_acid_probe       import AminoAcidProbe
+from probe_generator.exon_probe             import ExonProbe
+from probe_generator.gene_indel_probe       import GeneIndelProbe
+from probe_generator.amino_acid_indel_probe import AminoAcidIndelProbe
 # Exceptions
 from probe_generator.probe import InvalidStatement, NonFatalError
 
@@ -87,8 +88,8 @@ def print_probes(statement_file, genome_file, *annotation_files):
                 lambda: GeneSnpProbe.explode(statement, annotations),
                 lambda: AminoAcidProbe.explode(statement, annotations),
                 lambda: ExonProbe.explode(statement, annotations),
-                lambda: GeneIndelProbe.explode(statement, annotations))
-
+                lambda: GeneIndelProbe.explode(statement, annotations),
+                lambda: AminoAcidIndelProbe.explode(statement, annotations))
             if chain.value is Nothing:
                 print(INVALID_STATEMENT_WARNING.format(statement),
                       file=sys.stderr)

@@ -185,14 +185,16 @@ class Transcript(object):
                     base_index-2,
                     base_index+1,
                     reference=reference,
-                    mutation=mutation)
+                    mutation=mutation,
+                    reverse_complement=not self.plus_strand)
         else:
             return SequenceRange(
                     self.chromosome,
                     base_index,
                     base_index+3,
                     reference=reference,
-                    mutation=mutation)
+                    mutation=mutation,
+                    reverse_complement=not self.plus_strand)
 
     def base_index(self, sequence_range):
         """Given a SequenceRange object representing a genomic location within

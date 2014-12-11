@@ -66,9 +66,11 @@ class TestTranscript(unittest.TestCase):
     def test_codon_index(self):
         transcript1, transcript2, transcript3, *rest = ANNOTATION
         self.assertEqual(
-            transcript3.codon_index(1), SequenceRange('3', 20, 23)),
+            transcript3.codon_index(1),
+            SequenceRange('3', 20, 23, reverse_complement=True)),
         self.assertEqual(
-            transcript3.codon_index(2), SequenceRange('3', 12, 15)),
+            transcript3.codon_index(2),
+            SequenceRange('3', 12, 15, reverse_complement=True))
 
     def test_transcript_range(self):
         self.assertEqual(
