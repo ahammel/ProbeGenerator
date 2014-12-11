@@ -62,6 +62,10 @@ class TestAminoAcidIndelProbe(unittest.TestCase):
                 AminoAcidIndelProbe.explode("GHI2:del P1-G2 /9", ANNOTATION),
                 "CCC",
                 "GGG")
+        self.single_deletion = select_check_codons(
+                AminoAcidIndelProbe.explode("GHI2:del P1-P1 /9", ANNOTATION),
+                "CCC",
+                "CCC")
         self.indel = select_check_codons(
                 AminoAcidIndelProbe.explode("GHI2:del P1-G2 ins M/9", ANNOTATION),
                 "CCC",
@@ -77,7 +81,12 @@ class TestAminoAcidIndelProbe(unittest.TestCase):
                 self.deletion.sequence(GENOME),
                 "aaaacccaa")
 
-    def test_indel_prober(self):
+    def test_single_deletion_probe(self):
+        self.assertEqual(
+                self.single_deletion.sequence(GENOME),
+                "aaaaGGGcc")
+
+    def test_indel_probe(self):
         self.assertEqual(
                 self.indel.sequence(GENOME),
                 "aaaATGccc")
@@ -92,7 +101,7 @@ class TestAminoAcidIndelProbe(unittest.TestCase):
                 str(self.deletion),
                 "GHI2:delP1-G2/9_BAZ2_3:10")
 
-    def test_indel_probe(self):
+    def test_indel_probe_str(self):
         self.assertEqual(
                 str(self.indel),
                 "GHI2:delP1-G2insM(ATG)/9_BAZ2_3:10")

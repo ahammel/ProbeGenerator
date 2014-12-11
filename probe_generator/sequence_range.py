@@ -49,7 +49,7 @@ class SequenceRange(namedtuple("SequenceRange",
                                reference,
                                the_mutation)
 
-    def adjacent(self, other):
+    def is_adjacent(self, other):
         """Return True if the SequenceRange object ends where the other starts
         or vice-versa.
 
@@ -70,7 +70,7 @@ class SequenceRange(namedtuple("SequenceRange",
         Raise a ValueError if the two SequenceRanges are not adjacent.
 
         """
-        if not self.adjacent(other):
+        if not self.is_adjacent(other):
             raise ValueError(
                 "Cannot concatenate non-adjacent "
                 "SequenceRange objects {} and {}".format(self, other))
@@ -94,7 +94,7 @@ class SequenceRange(namedtuple("SequenceRange",
         ranges = []
         chunk = self
         for other in others:
-            if chunk.adjacent(other):
+            if chunk.is_adjacent(other):
                 chunk = chunk.concat(other)
             else:
                 ranges.append(chunk)
@@ -107,7 +107,7 @@ class SequenceRange(namedtuple("SequenceRange",
         representing the space between the two.
 
         """
-        if not self.adjacent(other):
+        if not self.is_adjacent(other):
             raise ValueError(
                 "Cannot return sequence between non-adjacent "
                 "SequenceRange objects {} and {}".format(self, other))
