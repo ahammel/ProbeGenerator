@@ -1,4 +1,4 @@
-"""Probe based on a blah blah blah FIXME.
+"""Probe based on the insertion or deletion of a specified range of codons.
 
 """
 import re
