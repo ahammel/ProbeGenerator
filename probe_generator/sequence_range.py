@@ -113,9 +113,17 @@ class SequenceRange(namedtuple("SequenceRange",
                 "SequenceRange objects {} and {}".format(self, other))
 
         if self.start == other.end:
-            return SequenceRange(self.chromosome, self.start, self.start)
+            return SequenceRange(
+                    self.chromosome,
+                    self.start,
+                    self.start,
+                    reverse_complement=self.reverse_complement)
         elif self.end == other.start:
-            return SequenceRange(self.chromosome, self.end, self.end)
+            return SequenceRange(
+                    self.chromosome,
+                    self.end,
+                    self.end,
+                    reverse_complement=self.reverse_complement)
         else:
             assert False, "unreachable"
 
@@ -128,9 +136,14 @@ class SequenceRange(namedtuple("SequenceRange",
             raise ValueError(
                     "Span is undefined for SequenceRange objects on different "
                     "chromosomes: {} and {}".format(self,other))
+        if not self.reverse_complement == other.reverse_complement:
+            raise ValueError(
+                    "Span is undefined for SequenceRange objects on opposite "
+                    "strands: {} and {}".format(self, other))
 
         coordinates = (self.start, self.end, other.start, other.end)
         return SequenceRange(
                 self.chromosome,
                 min(coordinates),
-                max(coordinates))
+                max(coordinates),
+                reverse_complement=self.reverse_complement)
