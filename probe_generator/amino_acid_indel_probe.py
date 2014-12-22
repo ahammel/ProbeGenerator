@@ -29,7 +29,7 @@ _STATEMENT_REGEX = re.compile(r"""
         \s*
         ([0-9]+)
         \s*
-        (ins\s*[ACDEFGHIKLMNPQRSTVWYacdefghiklmnpqrstvwy*]+|)
+        (ins\s*[ACDEFGHIKLMNPQRSTVWXYacdefghiklmnpqrstvwxy*]+|)
         \s*
         (\[trans\]|)                                            # transcript-only-sequence
         \s*
